@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:go_test_ver/homescreen.dart';
+import 'package:go_test_ver/homeScreen.dart';
 import 'package:go_test_ver/postcard.dart';
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
 

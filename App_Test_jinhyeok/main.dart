@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 
-// Import 'flutter_spinkit' plugin
+// import : 로딩 애니메이션 패키지
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'dart:async';
 
-// Import : 로그인 페이지
+// import : 로그인 페이지로 이어짐
 import 'package:go_test_ver/login.dart';
-
-// Import : 목종이 작업물들
 
 void main() {
   runApp(const MyApp());
 }
 
+// 로딩 페이지를 앱 시작점으로 설정.
+// 로딩 시간 동안 데이터 불러오기
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      // home: MainPage(), // MainPage를 홈으로 설정합니다.
       home: LoadingPage(), // 로딩 페이지를 홈으로 설정
     );
   }
@@ -42,6 +41,7 @@ class _LoadingPageState extends State<LoadingPage> {
   @override
   void initState() {
     super.initState();
+    // 시간 설정
     Timer(Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,

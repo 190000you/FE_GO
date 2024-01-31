@@ -1,6 +1,9 @@
 // 회원가입 페이지
 import 'package:flutter/material.dart';
 
+// import : 로그인 페이지로 이동
+// import 'package:go_test_ver/login.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -11,12 +14,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '회원가입',
+      title: 'Sign Up',
       home: SignUpPage(),
     );
   }
 }
 
+// 회원가입 페이지
 class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -26,21 +30,17 @@ class SignUpPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 1. 회원가입 위 글자 삽입
             SizedBox(height: 20),
             Text(
+              // 글자 및 폰트, 크기 수정
               'Let\'s go?',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(height: 20),
-            TextField(
-              decoration: InputDecoration(
-                labelText: '아이디',
-                border: OutlineInputBorder(),
-              ),
-            ),
+            // 2. 이름 입력칸
             SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
@@ -48,13 +48,15 @@ class SignUpPage extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
+            // 3. ID 입력칸
             SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
-                labelText: '사용자 닉네임',
+                labelText: '아이디',
                 border: OutlineInputBorder(),
               ),
             ),
+            // 4. PW 입력칸
             SizedBox(height: 20),
             TextField(
               obscureText: true,
@@ -63,6 +65,15 @@ class SignUpPage extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
+            // 5. 닉네임 입력칸
+            SizedBox(height: 20),
+            TextField(
+              decoration: InputDecoration(
+                labelText: '사용자 닉네임',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            // 6. 회원가입 버튼
             SizedBox(height: 20),
             SizedBox(
               height: 60,

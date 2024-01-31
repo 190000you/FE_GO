@@ -1,6 +1,11 @@
+// 로그인 페이지
 import 'package:flutter/material.dart';
-import 'package:go_test_ver/mainpage.dart'; // mainpage.dart 파일 import
-import 'package:go_test_ver/signup.dart'; // signup.dart 파일 import
+
+// import : 순서대로 메인페이지/회원가입/아이디 찾기/비밀번호 찾기 페이지로 이어짐
+import 'package:go_test_ver/mainPage.dart'; // mainpage.dart 파일 import
+import 'package:go_test_ver/signUp.dart'; // signup.dart 파일 import
+// import 'package:go_test_ver/id.dart';
+// import 'package:go_test_ver/password.dart';
 
 void main() {
   runApp(MyApp());
@@ -18,28 +23,32 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// 로그인 페이지
 class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // appBar : 제목 삭제함
       appBar: AppBar(
-        // Login Page 글자 제거
         automaticallyImplyLeading: false,
         title: SizedBox.shrink(),
       ),
+      // body
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             SizedBox(height: 100),
+            // 1. 로그인 위 글자 삽입함 : Let's go?
             Text(
-              'Let\'s go?',
+              'Let\'s go?', // 폰트는 나중에 통일하기
               style: TextStyle(
                 fontSize: 36, // 글씨 크기 키움
                 fontWeight: FontWeight.bold,
               ),
             ),
+            // 2. ID 입력칸 : 관리자 == admin
             SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
@@ -47,6 +56,7 @@ class LoginPage extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
+            // 3. PW 입력칸 : 관리자 == 1234
             SizedBox(height: 20),
             TextField(
               obscureText: true,
@@ -55,6 +65,7 @@ class LoginPage extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
+            // 4. 로그인 버튼
             SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
@@ -78,13 +89,16 @@ class LoginPage extends StatelessWidget {
                 ),
               ),
             ),
+            // 5. 회원가입 버튼
             SizedBox(height: 10), // 간격 조정
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween, // 왼쪽과 오른쪽으로 정렬
+              mainAxisAlignment:
+                  MainAxisAlignment.spaceBetween, // 회원가입 버튼 : 왼쪽과 오른쪽으로 정렬
               children: [
                 SizedBox(
-                  width: 140, // 버튼 크기 작게 조정
-                  height: 40, // 버튼 높이 작게 조정
+                  // 회원가입 버튼 크기 조정
+                  width: 140, // 버튼 너비 조정
+                  height: 40, // 버튼 높이 조정
                   child: ElevatedButton(
                     onPressed: () {
                       // 회원가입 버튼 눌렀을 때의 동작 추가
@@ -94,7 +108,7 @@ class LoginPage extends StatelessWidget {
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.transparent, // 배경색 투명하게 설정
+                      primary: Colors.transparent, // 버튼 배경색 투명하게 설정
                       elevation: 0, // 그림자 없애기
                     ),
                     child: Text(
@@ -103,16 +117,19 @@ class LoginPage extends StatelessWidget {
                     ),
                   ),
                 ),
+                // 6. 계정 찾기 버튼
                 SizedBox(
-                  width: 140, // 버튼 크기 작게 조정
-                  height: 40, // 버튼 높이 작게 조정
+                  // 계정 찾기 버튼 크기 조정
+                  width: 140, // 버튼 너비 조정
+                  height: 40, // 버튼 높이 조정
                   child: ElevatedButton(
                     onPressed: () {
                       // 계정 찾기 버튼 눌렀을 때의 동작 추가
+                      // 계정 찾기 페이지 생성 후 페이지 이동
                       print("계정 찾기 버튼 클릭");
                     },
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.transparent, // 배경색 투명하게 설정
+                      primary: Colors.transparent, // 버튼 배경색 투명하게 설정
                       elevation: 0, // 그림자 없애기
                     ),
                     child: Text(
@@ -122,15 +139,17 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
                 SizedBox(
-                  width: 140, // 버튼 크기 작게 조정
-                  height: 40, // 버튼 높이 작게 조정
+                  // 7. 비밀번호 찾기 버튼
+                  width: 140, // 버튼 너비 조정
+                  height: 40, // 버튼 높이 조정
                   child: ElevatedButton(
                     onPressed: () {
                       // 비밀번호 찾기 버튼 눌렀을 때의 동작 추가
+                      // 비밀번호 찾기 페이지 생성 후 페이지 이동
                       print("비밀번호 찾기 버튼 클릭");
                     },
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.transparent, // 배경색 투명하게 설정
+                      primary: Colors.transparent, // 버튼 배경색 투명하게 설정
                       elevation: 0, // 그림자 없애기
                     ),
                     child: Text(

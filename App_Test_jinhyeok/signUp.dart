@@ -1,8 +1,8 @@
 // 회원가입 페이지
 import 'package:flutter/material.dart';
 
-// import : 로그인 페이지로 이동
-// import 'package:go_test_ver/login.dart';
+// import : google 폰트
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(MyApp());
@@ -25,6 +25,18 @@ class SignUpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // appBar : Appbar
+      appBar: AppBar(
+        // 뒤로가기 버튼
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+          onPressed: () {
+            Navigator.of(context).pop(); // 현재 페이지를 스택에서 제거하여 이전 페이지로 이동
+          },
+        ),
+        title: SizedBox.shrink(),
+      ),
+      // body : Padding
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -35,10 +47,7 @@ class SignUpPage extends StatelessWidget {
             Text(
               // 글자 및 폰트, 크기 수정
               'Let\'s go?',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: GoogleFonts.oleoScript(fontSize: 36),
             ),
             // 2. 이름 입력칸
             SizedBox(height: 20),

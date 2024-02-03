@@ -1,3 +1,4 @@
+// 메인 페이지
 import 'package:flutter/material.dart';
 
 // import : 로딩 애니메이션 패키지
@@ -6,6 +7,8 @@ import 'dart:async';
 
 // import : 로그인 페이지로 이어짐
 import 'package:go_test_ver/login.dart';
+// import : google 폰트
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());

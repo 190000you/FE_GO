@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:dots_indicator/dots_indicator.dart';
 
 class PostCard extends StatefulWidget {
   int number;
@@ -11,6 +13,38 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   PageController _pageController = PageController();
+  Timer? _timer;
+  double _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(Duration(seconds: 5), (timer) {
+      if (_pageController.page == _pageController.initialPage + 2) {
+        _pageController.animateToPage(
+          _pageController.initialPage,
+          duration: Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      } else {
+        _pageController.nextPage(
+          duration: Duration(milliseconds: 800),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
+    _pageController.addListener(() {
+      setState(() {
+        _currentPage = _pageController.page!;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,20 +60,27 @@ class _PostCardState extends State<PostCard> {
             onPageChanged: (int page) {
               print('Page changed to: $page');
             },
-            itemCount: 3, // 페이지 수를 설정하세요.
+            itemCount: 3, // 페이지 수
             itemBuilder: (context, position) {
               return Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15), // 테두리
                   image: DecorationImage(
-                    image:
-                        AssetImage('assets/image/${position + 1}.png'), // 이미지
+                    image: NetworkImage(
+                        'https://source.unsplash.com/random/${position + 1}'), // 이미지
                     fit: BoxFit.cover,
                   ),
                 ),
               );
             },
           ),
+        ),
+      ),
+      DotsIndicator(
+        dotsCount: 3, // 페이지 수를 설정하세요.
+        position: _currentPage,
+        decorator: DotsDecorator(
+          activeColor: Colors.red,
         ),
       ),
       Container(

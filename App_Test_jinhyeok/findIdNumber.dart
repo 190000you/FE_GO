@@ -1,21 +1,16 @@
-// 계정 찾기 페이지
-// !! 이메일로 인증하기 페이지 UI 다시 수정
+// 계정 찾기 페이지 - 휴대폰 번호
 import 'package:flutter/material.dart';
 
 // import : google 폰트
 import 'package:google_fonts/google_fonts.dart';
 
-import 'package:go_test_ver/findIdNumber.dart';
-import 'package:go_test_ver/findIdEmail.dart';
-
-
-class FindIdPage extends StatefulWidget {
+class FindIdNumberPage extends StatefulWidget {
   @override
-  FindIdPageState createState() => FindIdPageState();
+  FindIdNumberPageState createState() => FindIdNumberPageState();
 }
 
 // 계정 찾기 페이지 코드
-class FindIdPageState extends State<FindIdPage> {
+class FindIdNumberPageState extends State<FindIdNumberPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,44 +38,36 @@ class FindIdPageState extends State<FindIdPage> {
               'Let\'s go?',
               style: GoogleFonts.oleoScript(fontSize: 36),
             ),
-            // 2. 아이디 찾는 방법 버튼 (1)
+            // 2. 휴대폰 인증 방법 (1)
             SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               height: 60,
               child: ElevatedButton(
                 onPressed: () {
-                  // 휴대폰 번호로 계정 찾기
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => FindIdNumberPage()),
-                  );
-                  print("휴대폰 번호로 찾기 이동");
+                  // !! 통신사 PASS로 찾기 UI 넣기
+                  print("통신사 PASS");
                 },
                 // !! 버튼 글자 수정
                 child: Text(
-                  '휴대폰 번호로 계정 찾기',
+                  '통신사 PASS',
                   style: TextStyle(fontSize: 18),
                 ),
               ),
             ),
-            // 3. 아이디 찾는 방법 버튼 (2)
+            // 3. 휴대폰 인증 방법 (2)
             SizedBox(height: 20),
             SizedBox(
               width: double.infinity,
               height: 60,
               child: ElevatedButton(
                 onPressed: () {
-                  // 이메일 주소로 계정 찾기
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => FindIdEmailPage()),
-                  );
-                  print("이메일 주소로 찾기 이동");
+                  // !! SMS 문자 인증으로 찾기 UI 넣기
+                  print("SMS 문자 인증");
                 },
                 // !! 버튼 글자 수정
                 child: Text(
-                  '이메일 주소로 계정 찾기',
+                  'SMS 문자 인증',
                   style: TextStyle(fontSize: 18),
                 ),
               ),

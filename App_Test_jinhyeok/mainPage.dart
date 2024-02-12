@@ -42,9 +42,7 @@ class _MainPageState extends State<MainPage> {
     // 1. 메인 페이지
     HomeScreen(),
     // 2. 검색 페이지
-    Container(
-      child: Center(child: Text("2번")),
-    ),
+    SearchPage(),
     // 3. 챗봇 페이지
     ChatBotPage(),
     // 4. 마이 페이지
@@ -61,7 +59,7 @@ class _MainPageState extends State<MainPage> {
         title: Padding(
             // 제목에 패딩을 추가합니다.
             padding:
-                EdgeInsets.only(top: 14.0, left: 65.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
+                EdgeInsets.only(top: 5.0, left: 35.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
             child: Center(
               // 제목 글자 : 가볼까?
               child: Text(
@@ -74,7 +72,7 @@ class _MainPageState extends State<MainPage> {
           // AppBar의 오른쪽 끝에 아이콘을 추가합니다.
           Padding(
             // 아이콘에 패딩을 추가합니다.
-            padding: EdgeInsets.only(top: 14.0), // 위쪽에 패딩을 추가합니다.
+            padding: EdgeInsets.only(top: 6.5), // 위쪽에 패딩을 추가합니다.
             child: Icon(Icons.search,
                 size: 40), // 돋보기 아이콘을 추가하고, 아이콘 크기를 40으로 설정합니다.
           ),

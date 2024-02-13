@@ -8,7 +8,7 @@ import 'dart:async';
 // import : 로그인 페이지로 이어짐
 import 'package:go_test_ver/login.dart';
 // import : google 폰트
-import 'package:google_fonts/google_fonts.dart';
+import 'package:google_fonts/google_fonts.dart'; // 구글 폰트 사용 X?
 
 void main() {
   runApp(const MyApp());

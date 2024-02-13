@@ -1,7 +1,6 @@
-// 계정 찾기 페이지 - 휴대폰 번호
+// 계정 찾기 페이지 - 이메일
 import 'package:flutter/material.dart';
 
-// import : google 폰트
 import 'package:google_fonts/google_fonts.dart';
 
 class FindIdEmailPage extends StatefulWidget {
@@ -9,64 +8,118 @@ class FindIdEmailPage extends StatefulWidget {
   FindIdEmailPageState createState() => FindIdEmailPageState();
 }
 
-// 계정 찾기 페이지 코드
 class FindIdEmailPageState extends State<FindIdEmailPage> {
+  TextEditingController _emailController = TextEditingController();
+  TextEditingController _phoneController = TextEditingController();
+  TextEditingController _verificationCodeController = TextEditingController();
+
+  bool _isEmailSent = false;
+  bool _isCodeVerified = false;
+
+  String _emailVerificationCode = "aaaaaa";
+
+  void _sendEmailVerificationCode() {
+    setState(() {
+      _isEmailSent = true;
+    });
+  }
+
+  void _verifyCode(String enteredCode, String correctCode) {
+    if (enteredCode == correctCode) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("인증 성공"),
+            content: Text("해당 이메일로 계정 정보를 보냈습니다."),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("확인"),
+              ),
+            ],
+          );
+        },
+      );
+      setState(() {
+        _isCodeVerified = true;
+      });
+    } else {
+      showDialog(
+  context: context,
+  builder: (BuildContext context) {
+    return AlertDialog(
+      title: Center(child: Text("인증 실패")),
+      content: Text("인증 코드가 올바르지 않습니다."),
+      actions: [
+        Center(
+          child: TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            child: Text("확인"),
+          ),
+        ),
+      ],
+    );
+  },
+);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // 뒤로가기 버튼
         leading: IconButton(
-          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
+          icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.of(context).pop(); // 현재 페이지를 스택에서 제거하여 이전 페이지로 이동
+            Navigator.of(context).pop();
           },
         ),
-        title: SizedBox.shrink(),
+        title: Text("계정 찾기"),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
-          SizedBox(height: 100),
-          // 1. 로그인 위 글자 삽입함 : Let's go?
-          Text(
-            'Let\'s go?', // 폰트는 나중에 통일하기
-            style: GoogleFonts.oleoScript(fontSize: 36),
-          ),
-          // 2. ID 입력칸 : 관리자 == admin
-          SizedBox(height: 20),
-          TextField(
-            decoration: InputDecoration(
-              labelText: '아이디',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          // 3. 이메일 입력칸
-          SizedBox(height: 20),
-          TextField(
-            obscureText: true,
-            decoration: InputDecoration(
-              labelText: '이메일',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          // 4. 인증하기 버튼
-          SizedBox(height: 20),
-          SizedBox(
-            width: double.infinity,
-            height: 60, // 로그인 버튼 높이 조정
-            child: ElevatedButton(
-              onPressed: () {
-                // !! 이메일 인증하기 버튼 누르면, 본 이메일로 메일 보내야함
-                // !! 주의
-              },
-              child: Text(
-                '이메일 인증하기',
-                style: TextStyle(fontSize: 18),
+        padding: EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: "이메일 주소",
               ),
             ),
-          ),
-        ]),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _sendEmailVerificationCode,
+              child: Text("이메일에 인증코드 보내기"),
+            ),
+            if (_isEmailSent)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 20),
+                  TextField(
+                    controller: _verificationCodeController,
+                    decoration: InputDecoration(
+                      labelText: "인증 코드",
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      _verifyCode(
+                          _verificationCodeController.text, _emailVerificationCode);
+                    },
+                    child: Text("인증하기"),
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }

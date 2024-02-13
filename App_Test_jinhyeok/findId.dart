@@ -55,7 +55,7 @@ class FindIdPageState extends State<FindIdPage> {
                     context,
                     MaterialPageRoute(builder: (context) => FindIdNumberPage()),
                   );
-                  print("휴대폰 번호로 찾기 이동");
+                  print("휴대폰 번호로 계정 찾기 이동");
                 },
                 // !! 버튼 글자 수정
                 child: Text(
@@ -76,7 +76,7 @@ class FindIdPageState extends State<FindIdPage> {
                     context,
                     MaterialPageRoute(builder: (context) => FindIdEmailPage()),
                   );
-                  print("이메일 주소로 찾기 이동");
+                  print("이메일 주소로 계정 찾기 이동");
                 },
                 // !! 버튼 글자 수정
                 child: Text(

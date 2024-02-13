@@ -46,11 +46,10 @@ class FindPwPageState extends State<FindPwPage> {
               child: ElevatedButton(
                 onPressed: () {
                   //
-                  print("방법으로 찾기 이동");
+                  print("휴대폰 번호로 비밀번호 찾기 이동");
                 },
-                // !! 버튼 글자 수정
                 child: Text(
-                  '~~방법으로 비밀번호 찾기',
+                  '휴대폰 번호로 비밀번호 찾기',
                   style: TextStyle(fontSize: 18),
                 ),
               ),
@@ -63,26 +62,10 @@ class FindPwPageState extends State<FindPwPage> {
               child: ElevatedButton(
                 onPressed: () {
                   //
-                  print("방법으로 찾기 이동");
+                  print("이메일 주소로 비밀번호 찾기 이동");
                 },
                 child: Text(
-                  '~~방법으로 비밀번호 찾기',
-                  style: TextStyle(fontSize: 18),
-                ),
-              ),
-            ),
-            // 4. 비밀번호 찾는 방법 버튼 (3)
-            SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: () {
-                  //
-                  print("방법으로 찾기 이동");
-                },
-                child: Text(
-                  '~~방법으로 비밀번호 찾기',
+                  '이메일 주소로 비밀번호 찾기',
                   style: TextStyle(fontSize: 18),
                 ),
               ),

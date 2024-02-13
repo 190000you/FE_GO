@@ -1,86 +1,87 @@
-// 챗봇 페이지
-// !! 메인 페이지 내 챗봇 페이지 구현으로 바꿈
 import 'package:flutter/material.dart';
 
-class ChatbotScreen extends StatefulWidget {
+class ChatBotPage extends StatefulWidget {
   @override
-  _ChatbotScreenState createState() => _ChatbotScreenState();
+  ChatBotPageState createState() => ChatBotPageState();
 }
 
-class _ChatbotScreenState extends State<ChatbotScreen> {
+class ChatBotPageState extends State<ChatBotPage> {
   TextEditingController _textController = TextEditingController();
-  List<String> messages = [
-    "안녕하세요! 무엇을 도와드릴까요?",
-  ];
+  // !! 처음 인사도 역시 챗봇이 인사하는 것처럼 채팅 박스 만들기 !!
+  List<Map<String, dynamic>> messages = [{"text": "챗봇입니다.", "isBot": true}];
 
+  // !! 채팅 답변 임의로 정해둠
+  // !! 나중에 AI 합치면은 다시 되돌아봐야함.
   void _sendMessage(String message) {
     setState(() {
-      messages.add(message);
+      messages.add({"text": message, "isBot": false});
+      if (message == "안녕" || message == "안녕하세요" || message == "ㅎㅇ") {
+        messages.add({"text": "안녕하세요! 저는 가볼까? 의 챗봇입니다. 무엇이든지 질문해주세요!", "isBot": true});
+      } else if (message == "인기있는 여행지는 어디인가요?") {
+        messages.add({"text": "파리, 런던, 도쿄 등이 인기있는 여행지입니다.", "isBot": true});
+      } else {
+        messages.add({"text": "죄송합니다. 제가 알아들을 수 없는 질문입니다.", "isBot": true});
+      }
       _textController.clear();
-      // 여기에 챗봇의 답변 로직을 추가할 수 있습니다.
     });
   }
 
+  // 챗봇 페이지 UI
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // 뒤로가기 버튼
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
-          onPressed: () {
-            Navigator.of(context).pop(); // 현재 페이지를 스택에서 제거하여 이전 페이지로 이동
-          },
-        ),
-        title: Text("챗봇"),
-      ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            child: ListView.builder(
-              itemCount: messages.length,
-              itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Text(messages[index]),
-                  dense: true,
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: <Widget>[
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    decoration: InputDecoration(
-                      hintText: "메시지 입력",
-                    ),
-                    onSubmitted: (String message) {
-                      _sendMessage(message);
-                    },
+    return Column(
+      // children 으로 묶음 (1)
+      children: <Widget>[
+        Expanded(
+          child: ListView.builder(
+            itemCount: messages.length,
+            itemBuilder: (BuildContext context, int index) {
+              bool isBot = messages[index]["isBot"] ?? false;
+              return Align(
+                alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
+                child: Container(
+                  margin: EdgeInsets.all(8),
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: isBot ? Colors.blue[100] : Colors.green[100],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    messages[index]["text"] ?? "",
+                    style: TextStyle(fontSize: 18),
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    if (_textController.text.isNotEmpty) {
-                      _sendMessage(_textController.text);
-                    }
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: <Widget>[
+              Expanded(
+                child: TextField(
+                  controller: _textController,
+                  decoration: InputDecoration(
+                    hintText: "메시지 입력",
+                  ),
+                  onSubmitted: (String message) {
+                    _sendMessage(message);
                   },
                 ),
-              ],
-            ),
+              ),
+              IconButton(
+                icon: Icon(Icons.send),
+                onPressed: () {
+                  if (_textController.text.isNotEmpty) {
+                    _sendMessage(_textController.text);
+                  }
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: ChatbotScreen(),
-  ));
 }

@@ -13,19 +13,35 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false, // 뒤로가기 버튼 제거
-        title: TextField(
-          onChanged: (value) {
-            setState(() {
-              query = value;
-            });
-          },
-          decoration: InputDecoration(
-            hintText: "검색",
-            prefixIcon: Icon(Icons.search),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(25.0)),
+        title: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                onChanged: (value) {
+                  setState(() {
+                    query = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  hintText: "검색",
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(25.0)),
+                  ),
+                ),
+              ),
             ),
-          ),
+            IconButton(
+              icon: Icon(Icons.map),
+              onPressed: () {
+                // Navigate to the map screen when the map icon is pressed
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MapScreen()),
+                );
+              },
+            ),
+          ],
         ),
       ),
       body: Center(
@@ -37,3 +53,18 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 }
+
+class MapScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('지도'),
+      ),
+      body: Center(
+        child: Text('지도를 표시하는 위젯이나 페이지를 만들어 주세요.'),
+      ),
+    );
+  }
+}
+

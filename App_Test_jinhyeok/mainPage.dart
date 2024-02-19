@@ -64,7 +64,7 @@ class _MainPageState extends State<MainPage> {
         title: Padding(
             // 제목에 패딩을 추가합니다.
             padding:
-                EdgeInsets.only(top: 5.0, left: 35.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
+                EdgeInsets.only(top: 5.0, right: 45.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
             child: Center(
               // 제목 글자 : 가볼까?
               child: Text(
@@ -73,16 +73,6 @@ class _MainPageState extends State<MainPage> {
                 // 글꼴을 'Oleo Script regular font'로 설정하고, 글자 크기를 36으로 설정합니다.
               ),
             )),
-        actions: [
-          // AppBar의 오른쪽 끝에 아이콘을 추가합니다.
-          Padding(
-            // 아이콘에 패딩을 추가합니다.
-            padding: EdgeInsets.only(top: 6.5), // 위쪽에 패딩을 추가합니다.
-            child: Icon(Icons.search,
-                size: 40), // 돋보기 아이콘을 추가하고, 아이콘 크기를 40으로 설정합니다.
-          ),
-          SizedBox(width: 40), // 아이콘과 AppBar의 오른쪽 끝 사이에 공간을 추가합니다.
-        ],
       ),
       // 하단 네비게이션 바 UI
       // 색상 및 크기

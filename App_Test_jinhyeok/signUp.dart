@@ -1,8 +1,9 @@
 // 회원가입 페이지
 import 'package:flutter/material.dart';
 
-// import : google 폰트
-import 'package:google_fonts/google_fonts.dart';
+// import : 
+import 'package:google_fonts/google_fonts.dart'; // google 폰트
+import 'package:email_validator/email_validator.dart'; // 이메일 유효성 라이브러리
 
 void main() {
   runApp(MyApp());
@@ -49,7 +50,16 @@ class SignUpPage extends StatelessWidget {
               'Let\'s go?',
               style: GoogleFonts.oleoScript(fontSize: 36),
             ),
-            // 2. 이름 입력칸
+            // 2. 이메일 인증
+            SizedBox(height: 20),
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: '이메일 입력',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            // 3. 이름 입력칸
             SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
@@ -57,7 +67,7 @@ class SignUpPage extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
-            // 3. ID 입력칸
+            // 4. ID 입력칸
             SizedBox(height: 20),
             TextField(
               decoration: InputDecoration(
@@ -65,7 +75,7 @@ class SignUpPage extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
-            // 4. PW 입력칸
+            // 5. PW 입력칸
             SizedBox(height: 20),
             TextField(
               obscureText: true,
@@ -74,6 +84,17 @@ class SignUpPage extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
+            // 6. 비밀번호 재입력
+            SizedBox(height: 20),
+            TextField(
+              obscureText: true,
+              decoration: InputDecoration(
+                labelText: '비밀번호 재입력',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            
+            /* 다른 페이지에서 진행
             // 5. 닉네임 입력칸
             SizedBox(height: 20),
             TextField(
@@ -82,6 +103,7 @@ class SignUpPage extends StatelessWidget {
                 border: OutlineInputBorder(),
               ),
             ),
+            */
             // 6. 회원가입 버튼
             SizedBox(height: 20),
             SizedBox(

@@ -2,13 +2,12 @@
 import 'package:flutter/material.dart';
 
 // import : 로딩 애니메이션 패키지
-import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'dart:async';
+import 'package:flutter_spinkit/flutter_spinkit.dart'; // import : 로딩 애니메이션
+import 'dart:async'; // ?
+import 'package:go_test_ver/loadingText.dart';
 
 // import : 로그인 페이지로 이어짐
-import 'package:go_test_ver/login.dart';
-// import : google 폰트
-import 'package:google_fonts/google_fonts.dart'; // 구글 폰트 사용 X?
+// import 'package:go_test_ver/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,6 +29,7 @@ class MyApp extends StatelessWidget {
       home: LoadingPage(), // 로딩 페이지를 홈으로 설정
     );
   }
+  
 }
 
 // 1. 로딩 페이지 (메인 페이지)
@@ -45,10 +45,10 @@ class _LoadingPageState extends State<LoadingPage> {
   void initState() {
     super.initState();
     // 시간 설정
-    Timer(Duration(seconds: 3), () {
+    Timer(Duration(seconds: 1), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(builder: (context) => LoadingTextPage()),
       );
     });
   }

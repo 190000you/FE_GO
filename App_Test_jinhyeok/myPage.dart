@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 
 // 이후 import로 더 추가할 예정
+import 'package:flutter_slidable/flutter_slidable.dart'; // 슬라이더 (delete / share)
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'; // 아이템 정렬 애니메이션
 
 class MyPage extends StatefulWidget {
   @override
@@ -132,21 +134,31 @@ class MyPageState extends State<MyPage> {
   }
 
   Widget _buildSelectedInfo() {
+    int columnCount = 3;
     // 3-1) 찜목록 데이터
     if (isFavoriteSelected) {
       return Expanded(
         child: GridView.builder(
           padding: EdgeInsets.all(10),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: gridViewCrossAxisCount,
+            crossAxisCount: columnCount,
             mainAxisSpacing: 10,
             crossAxisSpacing: 10,
           ),
-          itemCount: 9,
+          itemCount: 100,
           itemBuilder: (context, index) {
-            return Container(
-              color: Colors.grey[300],
-              child: Center(child: Text("찜목록 데이터")),
+            return AnimationConfiguration.staggeredGrid(
+              position: index,
+              duration: const Duration(milliseconds: 375),
+              columnCount: columnCount,
+              child: ScaleAnimation(
+                child: FadeInAnimation(
+                  child: Container(
+                    color: Colors.grey[300],
+                    child: Center(child: Text("찜목록 데이터")),
+                  )
+                ),
+              ),
             );
           },
         ),
@@ -159,43 +171,54 @@ class MyPageState extends State<MyPage> {
           padding: EdgeInsets.all(20),
           children: List.generate(
             3, // 샘플 데이터 개수
-            (index) => GestureDetector(
-              onTap: () {
-                // TODO: 상세 일정표 화면으로 이동
-              },
-              child: Container(
-                margin: EdgeInsets.only(bottom: 20),
-                padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      index == 0
-                          ? "주말 애인이랑 데이트" // 첫 번째 플랜 데이터
-                          : index == 1
-                              ? "동네 친구랑 술약속" // 두 번째 플랜 데이터
-                              : "가족 여행", // 세 번째 플랜 데이터
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+            (index) {
+              return AnimationConfiguration.staggeredList(
+                position: index,
+                duration: const Duration(milliseconds: 375),
+                child: SlideAnimation(
+                  verticalOffset: 50.0,
+                  child: FadeInAnimation(
+                    child: GestureDetector(
+                      onTap: () {
+                        // TODO: 상세 일정표 화면으로 이동
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 20),
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              index == 0
+                                  ? "주말 애인이랑 데이트" // 첫 번째 플랜 데이터
+                                  : index == 1
+                                      ? "동네 친구랑 술약속" // 두 번째 플랜 데이터
+                                      : "가족 여행", // 세 번째 플랜 데이터
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              "2024.03.1${index + 4}", // 날짜 (임의의 값)
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    SizedBox(height: 5),
-                    Text(
-                      "2024.03.1${index + 4}", // 날짜 (임의의 값)
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       );
@@ -207,45 +230,55 @@ class MyPageState extends State<MyPage> {
           padding: EdgeInsets.all(20),
           children: List.generate(
             2, // 샘플 데이터 개수 : 2개로 고정함
-            (index) => GestureDetector(
-              onTap: () {
-                // TODO: 상세 일정표 화면으로 이동
-              },
-              child: Container(
-                margin: EdgeInsets.only(bottom: 20),
-                padding: EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      index == 0 ? "크리스마스 데이트" // 첫 번째 플랜 데이터
-                          : "새해 데이트", // 두 번째 플랜 데이터
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+            (index) {
+              return AnimationConfiguration.staggeredList(
+                position: index,
+                duration: const Duration(milliseconds: 375),
+                child: SlideAnimation(
+                  verticalOffset: 50.0,
+                  child: FadeInAnimation(
+                    child: GestureDetector(
+                      onTap: () {
+                        // TODO: 상세 일정표 화면으로 이동
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: 20),
+                        padding: EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              index == 0 ? "크리스마스 데이트" : "새해 데이트",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              "2023.12.2${index + 4}", // 날짜 (임의의 값)
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    SizedBox(height: 5),
-                    Text(
-                      "2023.12.2${index + 4}", // 날짜 (임의의 값)
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
         ),
       );
-    } else {
-      return SizedBox();
     }
+    else return SizedBox();
   }
+  
 }

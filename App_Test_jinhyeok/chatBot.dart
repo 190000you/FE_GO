@@ -7,51 +7,100 @@ class ChatBotPage extends StatefulWidget {
 
 class ChatBotPageState extends State<ChatBotPage> {
   TextEditingController _textController = TextEditingController();
-  // !! 처음 인사도 역시 챗봇이 인사하는 것처럼 채팅 박스 만들기 !!
-  List<Map<String, dynamic>> messages = [{"text": "챗봇입니다.", "isBot": true}];
+  ScrollController _scrollController = ScrollController();
 
-  // !! 채팅 답변 임의로 정해둠
-  // !! 나중에 AI 합치면은 다시 되돌아봐야함.
-  void _sendMessage(String message) {
+  List<Map<String, dynamic>> messages = [
+    {"text": "챗봇입니다.", "isBot": true}
+  ];
+
+  void _addMessageAndScroll(String message, bool isBot) {
     setState(() {
-      messages.add({"text": message, "isBot": false});
-      if (message == "안녕" || message == "안녕하세요" || message == "ㅎㅇ") {
-        messages.add({"text": "안녕하세요! 저는 가볼까? 의 챗봇입니다. 무엇이든지 질문해주세요!", "isBot": true});
-      } else if (message == "인기있는 여행지는 어디인가요?") {
-        messages.add({"text": "파리, 런던, 도쿄 등이 인기있는 여행지입니다.", "isBot": true});
-      } else {
-        messages.add({"text": "죄송합니다. 제가 알아들을 수 없는 질문입니다.", "isBot": true});
+      messages.add({"text": message, "isBot": isBot});
+
+      if (messages.length > 20) {
+        messages.removeRange(0, messages.length - 20);
       }
+
       _textController.clear();
     });
+
+    // 스크롤 최하단으로 이동
+    _scrollController.animateTo(
+      _scrollController.position.maxScrollExtent,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 
-  // 챗봇 페이지 UI
+  void _sendMessage(String message) {
+    if (message.isNotEmpty) {
+      // 사용자가 보낸 메시지를 채팅창에 표시
+      _addMessageAndScroll(message, false);
+
+      if (message.toLowerCase() == '추천해줘') {
+        // '추천 여행지 확인하기' 버튼을 리스트에 추가
+        _addMessageAndScroll("추천 여행지 확인하기", true);
+      } else {
+        // 일반적인 챗봇 응답 메시지
+        _addMessageAndScroll("챗봇 응답 메시지", true);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
-      // children 으로 묶음 (1)
       children: <Widget>[
         Expanded(
           child: ListView.builder(
+            controller: _scrollController,
+            shrinkWrap: false,
             itemCount: messages.length,
             itemBuilder: (BuildContext context, int index) {
               bool isBot = messages[index]["isBot"] ?? false;
-              return Align(
-                alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
-                child: Container(
-                  margin: EdgeInsets.all(8),
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: isBot ? Colors.blue[100] : Colors.green[100],
-                    borderRadius: BorderRadius.circular(12),
+              String text = messages[index]["text"] ?? "";
+
+              if (isBot && text == "추천 여행지 확인하기") {
+                // 챗봇 응답 창에 버튼을 나타내기
+                return Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // '추천 여행지 확인하기' 버튼을 눌렀을 때의 동작 추가
+                      _addMessageAndScroll("추천 여행지 확인하기 버튼이 눌렸습니다.", true);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey,
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: Text(
+                      '추천 여행지 확인하기',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   ),
-                  child: Text(
-                    messages[index]["text"] ?? "",
-                    style: TextStyle(fontSize: 18),
+                );
+              } else {
+                // 일반적인 메시지 표시
+                return Align(
+                  alignment:
+                      isBot ? Alignment.centerLeft : Alignment.centerRight,
+                  child: Container(
+                    margin: EdgeInsets.all(8),
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isBot ? Colors.blue[100] : Colors.green[100],
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      text,
+                      style: TextStyle(fontSize: 18),
+                    ),
                   ),
-                ),
-              );
+                );
+              }
             },
           ),
         ),

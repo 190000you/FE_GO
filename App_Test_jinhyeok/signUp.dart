@@ -1,10 +1,76 @@
 // 회원가입 페이지
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_test_ver/login.dart';
+import 'package:go_test_ver/signUp.dart';
 
-// import : 
+// import :
 import 'package:google_fonts/google_fonts.dart'; // google 폰트
 import 'package:email_validator/email_validator.dart'; // 이메일 유효성 라이브러리
+import 'dart:convert'; // API 호출
+import 'package:http/http.dart' as http; // API 호출 2
+
+// 회원 가입 API (1)
+class signUpAPI {
+  String? userEmail;
+  String? userName;
+  String? userId;
+  String? userPassword;
+  String? userPasswordCheck;
+
+  signUpAPI(
+      {this.userEmail,
+      this.userName,
+      this.userId,
+      this.userPassword,
+      this.userPasswordCheck});
+
+  signUpAPI.fromJson(Map<String, dynamic> json) {
+    userEmail = json['userEmail'];
+    userName = json['userName'];
+    userId = json['userId'];
+    userPassword = json['userPassword'];
+    userPasswordCheck = json['userPasswordCheck'];
+  }
+
+  Map<String, dynamic> toJson() {
+    // 토큰 또는 (String)아이디 / 이메일로 구분?
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['userEmail'] = this.userEmail;
+    data['userName'] = this.userName;
+    data['userId'] = this.userId;
+    data['userPassword'] = this.userPassword;
+    data['userPasswordCheck'] = this.userPasswordCheck;
+    return data;
+  }
+}
+
+// 회원 가입 API (2)
+Future<void> fetchsignUpAPI(email, name, id, password, passwordcheck) async {
+  final signUpUser = signUpAPI(
+    userEmail: email,
+    userName: name,
+    userId: id,
+    userPassword: password,
+    userPasswordCheck: passwordcheck,
+  );
+
+  final response = await http.post(
+    Uri.parse('http://43.203.61.149/user/signup/'),
+    headers: {"Accept": "application/json"},
+    body: signUpUser.toJson(),
+  );
+
+  if (response.statusCode == 201) {
+    // 회원가입 성공 시의 처리
+    print('회원가입 성공');
+    return; // 반환값이 없을 경우 void 반환
+  } else {
+    // 회원가입 실패 시의 처리
+    print('회원가입 실패');
+    throw Exception('회원가입 실패: ${response.statusCode}');
+  }
+}
 
 void main() {
   runApp(MyApp());
@@ -22,35 +88,37 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class SignUpPage extends StatefulWidget { // Stateful : 유저 화면에도 정보 반영
+class SignUpPage extends StatefulWidget {
+  // Stateful : 유저 화면에도 정보 반영
   @override
   _SignUpPageState createState() => _SignUpPageState();
 }
 
 // 회원가입 페이지
-class _SignUpPageState extends State<SignUpPage> { 
+class _SignUpPageState extends State<SignUpPage> {
   // Form Key
   final formKey = GlobalKey<FormState>(); // formKey 정의
   bool isOk = false;
 
   // 변수
+  String role = ""; // 사용자 OR 관리자
   String userEmail = "";
   String userName = "";
   String userId = "";
   String userPassword = "";
   String userPasswordCheck = "";
 
-
   // 인증
   void tryValidation() {
     final isValid = formKey.currentState!.validate(); // 인증된 상태 여부 확인
 
-    if (isValid) { // 인증 완료
+    if (isValid) {
+      // 인증 완료
       formKey.currentState!.save();
-      isOk = true;
-    }
-    else{ // 인증 실패
-      print("인증 실패");
+      isOk = true; // 승인
+    } else {
+      // 인증 실패
+      isOk = false; // 거부
     }
   }
 
@@ -71,194 +139,219 @@ class _SignUpPageState extends State<SignUpPage> {
       // body : Padding
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Form(
-          key: formKey,
-          child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. 회원가입 위 글자 삽입
-            SizedBox(height: 20),
-            Text(
-              // 글자 및 폰트, 크기 수정
-              'Let\'s go?',
-              style: GoogleFonts.oleoScript(fontSize: 36),
-            ),
-            // 2. 이메일 인증
-            SizedBox(height: 20),
-            TextFormField(
-              validator: (value) {
-                if (value!.isEmpty || value.length < 2) {
-                  // 이메일 입력란이 비어있으면 '이메일을 입력해주세요' 리턴
-                  return "이메일을 입력해주세요";
-                } else if (!EmailValidator.validate(value.toString())) {
-                  // 입력값이 이메일 형식에 맞지 않으면 '이메일 형식을 맞춰주세요를 리턴
-                  return "이메일 형식을 맞춰주세요";
-                } else {
-                  return null;
-                }
-              },
-              onSaved: (value) async { // 이메일 저장
-                userEmail = value!;
-              },
-              onChanged: (value) {
-                userEmail = value;
-              },
-              // obscureText: true, // *로 표시 설정/해제
-              decoration: InputDecoration(
-                labelText: '이메일 입력',
-                border: OutlineInputBorder(),
-              ),
-              key: const ValueKey(1), // 이메일 오류
-            ),
-            // 3. 이름 입력칸
-            SizedBox(height: 20),
-            TextFormField(
-              validator: (value) {
-                if (value!.isEmpty) {
-                  // 이름 입력란이 비어 있을 때
-                  return "이름을 입력해주세요";
-                } else {
-                  return null;
-                }
-              },
-              onSaved: (value) { // 이름 저장
-                userName = value!;
-              },
-              onChanged: (value) {
-                userName = value;
-              },
-              decoration: InputDecoration(
-                labelText: '이름',
-                border: OutlineInputBorder(),
-              ),
-              key: const ValueKey(2), // 이름 오류
-            ),
-            // 4. ID 입력칸
-            SizedBox(height: 20),
-            TextFormField(
-              validator: (value) {
-                if (value!.isEmpty || value.length < 6) {
-                  // ID 입력란이 비어 있거나, ID가 설정해둔 자릿수 미만이면, '최소 6자리로 ID를 설정해주세요' 리턴
-                  return "최소 6자리로 아이디를 설정해주세요";
-                } else {
-                  return null;
-                }
-              },
-              onSaved: (value) { // Id 저장
-                userId = value!;
-              },
-              onChanged: (value) {
-                userId = value;
-              },
-              decoration: InputDecoration(
-                labelText: '아이디',
-                border: OutlineInputBorder(),
-              ),
-              key: const ValueKey(3), // ID 오류
-            ),
-            // 5. PW 입력칸
-            SizedBox(height: 20),
-            TextFormField(
-              validator: (value) {
-                if (value!.isEmpty || value.length < 6) {
-                  // 비밀번호 입력란이 비어 있거나, 비밀번호가 설정해둔 자릿수 미만이면, '최소 6자리로 비밀번호를 설정해주세요' 리턴
-                  return "최소 6자리로 비밀번호를 설정해주세요";
-                } else {
-                  return null;
-                }
-              },
-              onSaved: (value) {
-                userPassword = value!;
-              },
-              onChanged: (value) {
-                userPassword = value;
-              },
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: '비밀번호',
-                border: OutlineInputBorder(),
-              ),
-              key: const ValueKey(4), // PW 오류
-            ),
-            // 6. 비밀번호 재입력
-            SizedBox(height: 20),
-            TextFormField(
-              validator: (value) {
-                if (value!.isEmpty || value.length < 6 || value != userPassword) {
-                  return '비밀번호를 다시 확인해주세요.';
-                } else {
-                  return null;
-                }
-              },
-              onSaved: (value) {
-                userPasswordCheck = value!;
-              },
-              onChanged: (value) {
-                userPasswordCheck = value;
-              },
-              obscureText: true,
-              decoration: InputDecoration(
-                labelText: '비밀번호 재입력',
-                border: OutlineInputBorder(),
-              ),
-              key: const ValueKey(5), // PW 확인 오류
-            ),
-            // 6. 회원가입 버튼
-            SizedBox(height: 20),
-            SizedBox(
-              height: 60,
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  tryValidation(); // 인증 진행
-                  // 인증 완료 시, user 정보 출력
-                  print(userEmail);
-                  print(userName);
-                  print(userId);
-                  print(userPassword);
-                  print(userPasswordCheck);
-                  // 이메일 패스워드 확인
-                  if (userEmail != '' && userName != '' && userId != '' && userPassword != '' && userPasswordCheck != ''   && isOk == true) {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          title: Text('회원가입 성공'),
-                          content: Text('회원가입에 성공했습니다.'),
-                          actions: [
-                            TextButton(
-                              child: Text('확인'),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => LoginPage()),
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    ).then((value) {
-                      // 확인 버튼을 누른 후에 로그인 페이지로 이동
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginPage()),
-                      );
-                    });
-                  }
-                  // 실패 시, 로그인 창으로 이동하는데, 팝업창 띄우기로? 
-                  else {
-                  }
-                },
-                child: Text(
-                  '회원가입',
-                  style: TextStyle(fontSize: 18),
+        child: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 1. 회원가입 위 글자 삽입
+                SizedBox(height: 20),
+                Text(
+                  // 글자 및 폰트, 크기 수정
+                  'Let\'s go?',
+                  style: GoogleFonts.oleoScript(fontSize: 36),
                 ),
-              ),
+                // 2. 이메일 인증
+                SizedBox(height: 20),
+                TextFormField(
+                  maxLength: 30, // 글자수 제한
+                  validator: (value) {
+                    if (value!.isEmpty || value.length < 2) {
+                      // 이메일 입력란이 비어있으면 '이메일을 입력해주세요' 리턴
+                      return "이메일을 입력해주세요";
+                    } else if (!EmailValidator.validate(value.toString())) {
+                      // 입력값이 이메일 형식에 맞지 않으면 '이메일 형식을 맞춰주세요를 리턴
+                      return "이메일 형식을 맞춰주세요";
+                    } else {
+                      return null;
+                    }
+                  },
+                  onSaved: (value) async {
+                    // 이메일 저장
+                    userEmail = value!;
+                  },
+                  onChanged: (value) {
+                    userEmail = value;
+                  },
+                  // obscureText: true, // *로 표시 설정/해제
+                  decoration: InputDecoration(
+                    labelText: '이메일 입력',
+                    border: OutlineInputBorder(),
+                  ),
+                  key: const ValueKey(1), // 이메일 오류
+                ),
+                // 3. 이름 입력칸
+                SizedBox(height: 20),
+                TextFormField(
+                  maxLength: 15, // 글자수 제한
+                  validator: (value) {
+                    if (value!.isEmpty) {
+                      // 이름 입력란이 비어 있을 때
+                      return "이름을 입력해주세요.\n영어 또는 한글만 지원합니다.";
+                    } else {
+                      return null;
+                    }
+                  },
+                  onSaved: (value) {
+                    // 이름 저장
+                    userName = value!;
+                  },
+                  onChanged: (value) {
+                    userName = value;
+                  },
+                  inputFormatters: [
+                    // 한글 입력만 제한
+                    FilteringTextInputFormatter(
+                      RegExp('[a-z A-Z ㄱ-ㅎ|가-힣|·|：]'),
+                      allow: true,
+                    )
+                  ],
+                  decoration: InputDecoration(
+                    labelText: '이름',
+                    border: OutlineInputBorder(),
+                  ),
+                  key: const ValueKey(2), // 이름 오류
+                ),
+                // 4. ID 입력칸
+                SizedBox(height: 20),
+                TextFormField(
+                  maxLength: 15, // 글자수 제한
+                  validator: (value) {
+                    if (value!.isEmpty || value.length < 6) {
+                      // ID 입력란이 비어 있거나, ID가 설정해둔 자릿수 미만이면, '최소 6자리로 ID를 설정해주세요' 리턴
+                      return "최소 6자리로 아이디를 설정해주세요";
+                    } else {
+                      return null;
+                    }
+                  },
+                  onSaved: (value) {
+                    // Id 저장
+                    userId = value!;
+                  },
+                  onChanged: (value) {
+                    userId = value;
+                  },
+                  decoration: InputDecoration(
+                    labelText: '아이디',
+                    border: OutlineInputBorder(),
+                  ),
+                  key: const ValueKey(3), // ID 오류
+                ),
+                // 5. PW 입력칸
+                SizedBox(height: 20),
+                TextFormField(
+                  maxLength: 15, // 글자수 제한
+                  validator: (value) {
+                    if (value!.isEmpty || value.length < 6) {
+                      // 비밀번호 입력란이 비어 있거나, 비밀번호가 설정해둔 자릿수 미만이면, '최소 6자리로 비밀번호를 설정해주세요' 리턴
+                      return "최소 6자리로 비밀번호를 설정해주세요";
+                    } else {
+                      return null;
+                    }
+                  },
+                  onSaved: (value) {
+                    userPassword = value!;
+                  },
+                  onChanged: (value) {
+                    userPassword = value;
+                  },
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: '비밀번호',
+                    border: OutlineInputBorder(),
+                  ),
+                  key: const ValueKey(4), // PW 오류
+                ),
+                // 6. 비밀번호 재입력
+                SizedBox(height: 20),
+                TextFormField(
+                  maxLength: 15, // 글자수 제한
+                  validator: (value) {
+                    if (value!.isEmpty ||
+                        value.length < 6 ||
+                        value != userPassword) {
+                      return '비밀번호를 다시 확인해주세요.';
+                    } else {
+                      return null;
+                    }
+                  },
+                  onSaved: (value) {
+                    userPasswordCheck = value!;
+                  },
+                  onChanged: (value) {
+                    userPasswordCheck = value;
+                  },
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: '비밀번호 재입력',
+                    border: OutlineInputBorder(),
+                  ),
+                  key: const ValueKey(5), // PW 확인 오류
+                ),
+                // 6. 회원가입 버튼
+                SizedBox(height: 20),
+                SizedBox(
+                  height: 60,
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      tryValidation(); // 인증 진행
+                      // 인증 완료 시, user 정보 출력
+                      print(userEmail);
+                      print(userName);
+                      print(userId);
+                      print(userPassword);
+                      print(userPasswordCheck);
+                      // 이메일 패스워드 확인
+                      if (userEmail != '' &&
+                          userName != '' &&
+                          userId != '' &&
+                          userPassword != '' &&
+                          userPasswordCheck != '' &&
+                          isOk == true) {
+                        await fetchsignUpAPI(userEmail, userName, userId,
+                            userPassword, userPasswordCheck);
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('회원가입 성공'),
+                              content: Text('회원가입에 성공했습니다.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // 팝업창 닫기
+                                  },
+                                  child: Text('로그인으로 이동'),
+                                ),
+                              ],
+                            );
+                          },
+                        ).then((value) {
+                          // 확인 버튼을 누른 후에 로그인 페이지로 이동
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => LoginPage()),
+                          );
+                        });
+                      }
+                      // 실패 오류 메시지 출력
+                      else {}
+                    },
+                    child: Text(
+                      '회원가입',
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                ),
+                // 빈 공간 추가
+                SizedBox(height: 20),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
       ),
     );
   }

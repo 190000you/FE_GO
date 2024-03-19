@@ -1,4 +1,6 @@
 // 로그인 페이지
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 // import : 순서대로 메인페이지/회원가입/아이디 찾기/비밀번호 찾기 페이지로 이어짐
@@ -9,6 +11,8 @@ import 'package:go_test_ver/findPw.dart'; // findPw.dart 파일 import
 
 // import : google 폰트
 import 'package:google_fonts/google_fonts.dart';
+import 'dart:convert'; // API 호출
+import 'package:http/http.dart' as http; // API 호출 2
 
 void main() {
   runApp(MyApp());
@@ -26,6 +30,67 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Login API(1): 데이터 저장
+class loginAPI {
+  String? userId;
+  String? userPassword;
+
+  loginAPI({this.userId, this.userPassword});
+
+  loginAPI.fromJson(Map<String, dynamic> json) {
+    userId = json['userId'];
+    userPassword = json['userPassword'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['userId'] = this.userId;
+    data['userPassword'] = this.userPassword;
+    return data;
+  }
+}
+
+// Login API(2) : 함수 호출 및 API URL 연결
+Future<void> fetchloginAPI(id, password, context) async {
+  // 데이터 저장 변수 : signUpAPI
+  final signUpUser = loginAPI(
+    userId: id,
+    userPassword: password,
+  );
+
+  // API 연결
+  final response = await http.post(
+    Uri.parse('http://43.203.61.149/user/login/'),
+    headers: {"Accept": "application/json"},
+    body: signUpUser.toJson(),
+  );
+
+  // 로그인 처리 과정
+  // 200 : 로그인 성공
+  // 오류 400 : 데이터 처리 오류
+
+  // 로그인 성공 & 실패
+  if (response.statusCode == 200) {
+    // 로그인 성공
+    print('로그인 성공');
+    // 메인 페이지로 이동
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MainPage()), // 다음 화면으로 이동
+    );
+  } else if (response.statusCode == 400) {
+    // 로그인 실패 : 아이디, 비밀번호 일치 X
+    final snackBar = SnackBar(content: Text('회원 정보가 없습니다.'));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    print('회원 정보가 없습니다.');
+  } else {
+    // 로그인 실패 : 아이디, 비밀번호 입력 X
+    final snackBar = SnackBar(content: Text('아이디와 비밀번호를 정확하게 입력해주세요.'));
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    // throw Exception('회원가입 실패: ${response.statusCode}');
+  }
+}
+
 class LoginPage extends StatefulWidget {
   // StatefulWidget : User 정보 반영하기 위해
   @override
@@ -34,6 +99,8 @@ class LoginPage extends StatefulWidget {
 
 // 로그인 페이지
 class LoginPageState extends State<LoginPage> {
+  final formKey = GlobalKey<FormState>(); // formKey 정의
+
   // 변수
   String userId = "";
   String userPassword = "";
@@ -63,9 +130,26 @@ class LoginPageState extends State<LoginPage> {
                     'Let\'s go?', // 폰트는 나중에 통일하기
                     style: GoogleFonts.oleoScript(fontSize: 36),
                   ),
-                  // 2. ID 입력칸 : 관리자 == admin
+                  // 2. ID 입력칸 : 관리자 == admin // ID 입력칸
                   SizedBox(height: 20),
                   TextFormField(
+                    maxLength: 15, // 글자수 제한
+                    validator: (value) {
+                      if (value!.isEmpty || value.length < 6) {
+                        // ID 입력란이 비어 있거나, ID가 설정해둔 자릿수 미만이면, '아이디를 입력해주세요' 리턴
+                        return "아이디를 입력해주세요";
+                      } else {
+                        return null;
+                      }
+                    },
+                    onSaved: (value) {
+                      // ID 저장(1)
+                      userId = value!;
+                    },
+                    onChanged: (value) {
+                      // ID 저장(2)
+                      userId = value;
+                    },
                     key: const ValueKey(1), // ID 오류
                     decoration: InputDecoration(
                       prefixIcon: Icon(
@@ -88,9 +172,24 @@ class LoginPageState extends State<LoginPage> {
                       border: OutlineInputBorder(),
                     ),
                   ),
-                  // 3. PW 입력칸 : 관리자 == 1234
+                  // 3. PW 입력칸 : 관리자 == 1234 // PW 입력칸 안 넣었음
                   SizedBox(height: 20),
                   TextFormField(
+                    maxLength: 15, // 글자수 제한
+                    validator: (value) {
+                      if (value!.isEmpty || value.length < 6) {
+                        // 비밀번호 입력란이 비어 있거나, 비밀번호가 설정해둔 자릿수 미만이면, '최소 6자리로 비밀번호를 설정해주세요' 리턴
+                        return "최소 6자리로 비밀번호를 설정해주세요";
+                      } else {
+                        return null;
+                      }
+                    },
+                    onSaved: (value) {
+                      userPassword = value!;
+                    },
+                    onChanged: (value) {
+                      userPassword = value;
+                    },
                     obscureText: true,
                     key: const ValueKey(2),
                     decoration: InputDecoration(
@@ -120,16 +219,15 @@ class LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 60, // 로그인 버튼 높이 조정
                     child: ElevatedButton(
-                      onPressed: () {
-                        // 아이디와 비밀번호가 admin, 1234일 때 mainpage로 이동
-                        if (_checkLogin("admin", "1234")) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => MainPage()),
-                          );
+                      onPressed: () async {
+                        // tryValidation(); // 인증 진행
+                        if (userId != '' && userPassword != '') {
+                          await fetchloginAPI(
+                              userId, userPassword, context); // loginAPI 시도
                         } else {
-                          // 로그인 실패 시 처리
-                          print("로그인 실패");
+                          final snackBar =
+                              SnackBar(content: Text('아이디와 비밀번호를 입력해주세요.'));
+                          ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -243,10 +341,5 @@ class LoginPageState extends State<LoginPage> {
         ),
       ),
     );
-  }
-
-  // 아이디와 비밀번호가 일치하는지 확인하는 함수
-  bool _checkLogin(String userId, String userPassword) {
-    return userId == "admin" && userPassword == "1234";
   }
 }

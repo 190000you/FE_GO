@@ -10,7 +10,7 @@ import 'package:email_validator/email_validator.dart'; // 이메일 유효성 �
 import 'dart:convert'; // API 호출
 import 'package:http/http.dart' as http; // API 호출 2
 
-// 회원 가입 API (1)
+// 회원 가입 API (1) : 데이터 저장
 class signUpAPI {
   String? userEmail;
   String? userName;
@@ -45,8 +45,9 @@ class signUpAPI {
   }
 }
 
-// 회원 가입 API (2)
+// 회원 가입 API (2) : 데이터 저장 변수 호출 및 API 연결, 매개변수 필수
 Future<void> fetchsignUpAPI(email, name, id, password, passwordcheck) async {
+  // 데이터 저장 변수 : signUpAPI
   final signUpUser = signUpAPI(
     userEmail: email,
     userName: name,
@@ -55,12 +56,17 @@ Future<void> fetchsignUpAPI(email, name, id, password, passwordcheck) async {
     userPasswordCheck: passwordcheck,
   );
 
+  // API 연결
   final response = await http.post(
     Uri.parse('http://43.203.61.149/user/signup/'),
     headers: {"Accept": "application/json"},
     body: signUpUser.toJson(),
   );
 
+  // 회원가입 처리 과정
+  // 오류 200 : 미연결
+  // 오류 400 : 데이터 처리 오류
+  // 201 : 성공
   if (response.statusCode == 201) {
     // 회원가입 성공 시의 처리
     print('회원가입 성공');
@@ -76,6 +82,7 @@ void main() {
   runApp(MyApp());
 }
 
+// 시작
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
@@ -98,7 +105,7 @@ class SignUpPage extends StatefulWidget {
 class _SignUpPageState extends State<SignUpPage> {
   // Form Key
   final formKey = GlobalKey<FormState>(); // formKey 정의
-  bool isOk = false;
+  bool isOk = false; // 회원가입 조건 충족 변수
 
   // 변수
   String role = ""; // 사용자 OR 관리자
@@ -289,7 +296,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   key: const ValueKey(5), // PW 확인 오류
                 ),
-                // 6. 회원가입 버튼
+                // 7. 회원가입 버튼
                 SizedBox(height: 20),
                 SizedBox(
                   height: 60,
@@ -297,12 +304,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       tryValidation(); // 인증 진행
-                      // 인증 완료 시, user 정보 출력
-                      print(userEmail);
-                      print(userName);
-                      print(userId);
-                      print(userPassword);
-                      print(userPasswordCheck);
                       // 이메일 패스워드 확인
                       if (userEmail != '' &&
                           userName != '' &&

@@ -29,7 +29,6 @@ class MyApp extends StatelessWidget {
       home: LoadingPage(), // 로딩 페이지를 홈으로 설정
     );
   }
-  
 }
 
 // 1. 로딩 페이지 (메인 페이지)

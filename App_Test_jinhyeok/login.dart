@@ -11,7 +11,7 @@ import 'package:go_test_ver/findPw.dart'; // findPw.dart 파일 import
 
 // import : google 폰트
 import 'package:google_fonts/google_fonts.dart';
-import 'dart:convert'; // API 호출
+import 'dart:convert'; // API 호출 : 디코딩
 import 'package:http/http.dart' as http; // API 호출 2
 
 void main() {
@@ -71,13 +71,26 @@ Future<void> fetchloginAPI(id, password, context) async {
 
   // 로그인 성공 & 실패
   if (response.statusCode == 200) {
-    // 로그인 성공
-    print('로그인 성공');
-    // 메인 페이지로 이동
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => MainPage()), // 다음 화면으로 이동
-    );
+    Map<String, dynamic> jsonResponse =
+        jsonDecode(response.body); // JSON 데이터 피싱
+    String message = jsonResponse['message']; // 응답 메시지 확인
+    if (message == "login success") {
+      String access = jsonResponse['token']['access'];
+      String refresh = jsonResponse['token']['refresh'];
+      print(access);
+      print(refresh);
+
+      // 로그인 성공
+      final snackBar = SnackBar(content: Text("로그인 성공"));
+      // 메인 페이지로 이동
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+            builder: (context) => MainPage(access, refresh)), // 다음 화면으로 이동
+      );
+    } else {
+      final snackBar = SnackBar(content: Text('Token 인증에 실패했습니다.'));
+    }
   } else if (response.statusCode == 400) {
     // 로그인 실패 : 아이디, 비밀번호 일치 X
     final snackBar = SnackBar(content: Text('회원 정보가 없습니다.'));

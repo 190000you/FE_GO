@@ -13,6 +13,11 @@ import 'package:go_test_ver/myPage.dart';
 // 메인 페이지
 // 이후에 mainpage.dart 파일 만들어서 옮기기.
 class MainPage extends StatefulWidget {
+  final String access; // access 데이터를 저장하는 변수 추가
+  final String refresh; // refresh 데이터를 저장하는 변수 추가
+
+  MainPage(this.access, this.refresh); // 생성자 업데이트
+
   @override
   _MainPageState createState() => _MainPageState();
 }
@@ -48,10 +53,13 @@ class _MainPageState extends State<MainPage> {
   List pages = [
     // 1. 메인 페이지
     HomeScreen(),
+
     // 2. 검색 페이지
     SearchPage(),
+
     // 3. 챗봇 페이지
     ChatBotPage(),
+
     // 4. 마이 페이지
     MyPage(),
   ];

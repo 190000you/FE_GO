@@ -4,14 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
 
 // import package 파일
-import 'package:flutter_application_2/homeScreen.dart';
-import 'package:flutter_application_2/searchPage.dart';
-import 'package:flutter_application_2/chatBot.dart';
-import 'package:flutter_application_2/myPage.dart';
+import 'package:go_test_ver/homeScreen.dart';
+import 'package:go_test_ver/postcard.dart';
+import 'package:go_test_ver/searchPage.dart';
+import 'package:go_test_ver/chatBot.dart';
+import 'package:go_test_ver/myPage.dart';
 
 // 메인 페이지
 // 이후에 mainpage.dart 파일 만들어서 옮기기.
 class MainPage extends StatefulWidget {
+  final String access; // access 데이터를 저장하는 변수 추가
+  final String refresh; // refresh 데이터를 저장하는 변수 추가
+
+  MainPage(this.access, this.refresh); // 생성자 업데이트
+
   @override
   _MainPageState createState() => _MainPageState();
 }

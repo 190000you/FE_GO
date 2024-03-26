@@ -6,6 +6,11 @@ import 'package:flutter_slidable/flutter_slidable.dart'; // 슬라이더 (delete
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart'; // 아이템 정렬 애니메이션
 
 class MyPage extends StatefulWidget {
+  final String access;
+  final String refresh;
+
+  MyPage(this.access, this.refresh);
+
   @override
   MyPageState createState() => MyPageState();
 }
@@ -17,6 +22,12 @@ class MyPageState extends State<MyPage> {
   bool isReviewSelected = false;
   int gridViewCrossAxisCount = 3; // 찜목록 1줄에 n개 개수
   // 나중에 토글할 수 있도록 수정.
+
+  void initState() {
+    super.initState();
+    print("myPage access : " + widget.access);
+    print("myPage refresh : " + widget.refresh);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +43,7 @@ class MyPageState extends State<MyPage> {
                 // 1-1) 이미지 보여주는 모양 + 이미지 선택
                 CircleAvatar(
                   radius: 50,
-                  backgroundImage: AssetImage("assets/profile_image.png"),
+                  // backgroundImage: AssetImage("assets/profile_image.png"),
                 ),
                 Positioned(
                   bottom: 0,
@@ -110,7 +121,7 @@ class MyPageState extends State<MyPage> {
   // 찜목록 / 리뷰 / 리뷰 외곽 버튼
   ButtonStyle _buttonStyle(bool isSelected) {
     return ElevatedButton.styleFrom(
-      primary: isSelected ? Colors.blue : null,
+      backgroundColor: isSelected ? Colors.blue : null,
       padding: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.zero,
@@ -137,6 +148,7 @@ class MyPageState extends State<MyPage> {
     int columnCount = 3;
     // 3-1) 찜목록 데이터
     if (isFavoriteSelected) {
+      print("찜목록 데이터 출력");
       return Expanded(
         child: GridView.builder(
           padding: EdgeInsets.all(10),
@@ -153,11 +165,10 @@ class MyPageState extends State<MyPage> {
               columnCount: columnCount,
               child: ScaleAnimation(
                 child: FadeInAnimation(
-                  child: Container(
-                    color: Colors.grey[300],
-                    child: Center(child: Text("찜목록 데이터")),
-                  )
-                ),
+                    child: Container(
+                  color: Colors.grey[300],
+                  child: Center(child: Text("찜목록 데이터")),
+                )),
               ),
             );
           },
@@ -166,6 +177,7 @@ class MyPageState extends State<MyPage> {
     }
     // 3-2) 플랜 데이터
     else if (isPlanSelected) {
+      print("플랜 데이터 출력");
       return Expanded(
         child: ListView(
           padding: EdgeInsets.all(20),
@@ -225,6 +237,7 @@ class MyPageState extends State<MyPage> {
     }
     // 3-3) 리뷰 데이터
     else if (isReviewSelected) {
+      print("리뷰 데이터 출력");
       return Expanded(
         child: ListView(
           padding: EdgeInsets.all(20),
@@ -277,8 +290,7 @@ class MyPageState extends State<MyPage> {
           ),
         ),
       );
-    }
-    else return SizedBox();
+    } else
+      return SizedBox();
   }
-  
 }

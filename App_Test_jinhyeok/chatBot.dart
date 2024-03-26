@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 
 class ChatBotPage extends StatefulWidget {
+  final String access;
+  final String refresh;
+
+  ChatBotPage(this.access, this.refresh);
+
   @override
   ChatBotPageState createState() => ChatBotPageState();
 }
 
 class ChatBotPageState extends State<ChatBotPage> {
-  TextEditingController _textController = TextEditingController();
+  final TextEditingController _textController = TextEditingController();
   ScrollController _scrollController = ScrollController();
 
   List<Map<String, dynamic>> messages = [
     {"text": "챗봇입니다.", "isBot": true}
   ];
 
+  // 채팅 전송
   void _addMessageAndScroll(String message, bool isBot) {
     setState(() {
       messages.add({"text": message, "isBot": isBot});
@@ -45,6 +51,12 @@ class ChatBotPageState extends State<ChatBotPage> {
         _addMessageAndScroll("챗봇 응답 메시지", true);
       }
     }
+  }
+
+  void initState() {
+    super.initState();
+    print("chatBot access : " + widget.access);
+    print("chatBot refresh : " + widget.refresh);
   }
 
   @override

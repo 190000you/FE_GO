@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 �
 
 // import package 파일
 import 'package:go_test_ver/homeScreen.dart';
-import 'package:go_test_ver/postcard.dart';
+import 'package:go_test_ver/postCard.dart';
 import 'package:go_test_ver/searchPage.dart';
 import 'package:go_test_ver/chatBot.dart';
 import 'package:go_test_ver/myPage.dart';
@@ -50,16 +50,21 @@ class _MainPageState extends State<MainPage> {
     ),
   ];
 
-  List pages = [
-    // 1. 메인 페이지
-    HomeScreen(),
-    // 2. 검색 페이지
-    SearchPage(),
-    // 3. 챗봇 페이지
-    ChatBotPage(),
-    // 4. 마이 페이지
-    MyPage(),
-  ];
+  List<Widget> pages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    print("access : " + widget.access);
+    print("refresh : " + widget.refresh);
+    pages = [
+      HomeScreen(widget.access, widget.refresh),
+      SearchPage(),
+      // SearchPage(widget.access, widget.refresh),
+      ChatBotPage(widget.access, widget.refresh),
+      MyPage(widget.access, widget.refresh),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {

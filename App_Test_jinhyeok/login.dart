@@ -73,12 +73,18 @@ Future<void> fetchloginAPI(id, password, context) async {
   if (response.statusCode == 200) {
     Map<String, dynamic> jsonResponse =
         jsonDecode(response.body); // JSON 데이터 피싱
+    // 응답 메시지 디코드
+    // 문제 : 디코드 전 Token 데이터 값을 쿠키에 저장
     String message = jsonResponse['message']; // 응답 메시지 확인
     if (message == "login success") {
+      // Toekn을 디코드 후 저장
       String access = jsonResponse['token']['access'];
       String refresh = jsonResponse['token']['refresh'];
+      // 문제 : ID 추출
       print(access);
       print(refresh);
+
+      // 문제 : 사용자 ID별 데이터 불러오기
 
       // 로그인 성공
       final snackBar = SnackBar(content: Text("로그인 성공"));

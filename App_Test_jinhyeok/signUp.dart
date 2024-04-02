@@ -71,10 +71,12 @@ Future<void> fetchsignUpAPI(email, name, id, password, passwordcheck) async {
     // 회원가입 성공 시의 처리
     print('회원가입 성공');
     return; // 반환값이 없을 경우 void 반환
+  } else if (response.statusCode == 500) {
+    final snackBar = SnackBar(content: Text("중복된 ID입니다."));
   } else {
     // 회원가입 실패 시의 처리
-    print('회원가입 실패');
-    throw Exception('회원가입 실패: ${response.statusCode}');
+    final snackBar = SnackBar(content: Text("회원가입에 실패하였습니다."));
+    // throw Exception('회원가입 실패: ${response.statusCode}');
   }
 }
 

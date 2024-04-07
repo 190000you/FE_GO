@@ -13,6 +13,7 @@ import 'package:go_test_ver/findPw.dart'; // findPw.dart 파일 import
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:http/http.dart' as http; // API 호출 2
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 
 void main() {
   runApp(MyApp());
@@ -65,10 +66,25 @@ Future<void> fetchloginAPI(id, password, context) async {
     body: signUpUser.toJson(),
   );
 
+  // Token 데이터 저장소 생성 및 초기화
+  final storage = new FlutterSecureStorage();
+  dynamic userInfo = ''; // storage에 있는 유저 정보를 저장
+
+  // _asyncMethod 함수 생성 : 데이터 있는지 확인하는 함수
+  _asyncMethod() async {
+    // read 함수로 key값에 맞는 정보를 불러오고 데이터타입은 String 타입
+    // 데이터가 없을때는 null을 반환
+    userInfo = await storage.read(key: 'login');
+  }
+
+  //flutter_secure_storage 사용을 위한 초기화 작업
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _asyncMethod();
+  });
+
   // 로그인 처리 과정
   // 200 : 로그인 성공
   // 오류 400 : 데이터 처리 오류
-
   // 로그인 성공 & 실패
   if (response.statusCode == 200) {
     Map<String, dynamic> jsonResponse =
@@ -84,18 +100,31 @@ Future<void> fetchloginAPI(id, password, context) async {
       print(access);
       print(refresh);
 
+      // 저장소에 토큰 저장
+      await storage.write(
+        key: 'login',
+        value: access,
+      );
+
       // 문제 : 사용자 ID별 데이터 불러오기
 
       // 로그인 성공
-      final snackBar = SnackBar(content: Text("로그인 성공"));
-      // 메인 페이지로 이동
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => MainPage(access, refresh)), // 다음 화면으로 이동
-      );
+      // userInfo == (access) Token
+      if (userInfo != null) {
+        print("access Token : " + access);
+        // 메인 페이지로 이동
+        final snackBar = SnackBar(content: Text("로그인 성공"));
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => MainPage(access, refresh)), // 다음 화면으로 이동
+        );
+      } // 로그인 실패
+      else {
+        final snackBar = SnackBar(content: Text("로그인 또는 Token 인증에 실패했습니다."));
+      }
     } else {
-      final snackBar = SnackBar(content: Text('Token 인증에 실패했습니다.'));
+      final snackBar = SnackBar(content: Text('로그인에 실패하셨습니다.'));
     }
   } else if (response.statusCode == 400) {
     // 로그인 실패 : 아이디, 비밀번호 일치 X

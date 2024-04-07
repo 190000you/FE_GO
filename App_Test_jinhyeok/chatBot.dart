@@ -5,7 +5,9 @@ import 'package:webview_flutter/webview_flutter.dart'; // 앱 안에 웹 브라�
 
 // 챗봇 URL
 final Uri url = Uri.parse(
-    'https://langchaindaegutour-y99rwahhnv9tmrvkrin8sb.streamlit.app/');
+    'https://langchaindaegutour-9mqtnttwtajpztax689bw4.streamlit.app/');
+
+// https://langchaindaegutour-9mqtnttwtajpztax689bw4.streamlit.app/
 
 class ChatBotPage extends StatefulWidget {
   final String access; // 토큰
@@ -23,7 +25,7 @@ class ChatBotPageState extends State<ChatBotPage> {
   void initState() {
     _webViewController = WebViewController() // webview_flutter 사용
       ..loadRequest(Uri.parse(
-          'https://langchaindaegutour-y99rwahhnv9tmrvkrin8sb.streamlit.app/'))
+          'https://langchaindaegutour-9mqtnttwtajpztax689bw4.streamlit.app/'))
       ..setJavaScriptMode(JavaScriptMode.unrestricted);
     super.initState();
   }

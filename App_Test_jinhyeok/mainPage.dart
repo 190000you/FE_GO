@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 
 // import package 파일
 import 'package:go_test_ver/homeScreen.dart';
@@ -24,6 +25,11 @@ class MainPage extends StatefulWidget {
 
 // 메인페이지 코드
 class _MainPageState extends State<MainPage> {
+  //데이터를 이전 페이지에서 전달 받은 정보를 저장하기 위한 변수
+  static final storage = FlutterSecureStorage();
+  late String access;
+  late String refresh;
+
   int _selectedIndex = 0;
 
   // 하단 네비게이션 바
@@ -55,17 +61,21 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
-    print("access : " + widget.access);
-    print("refresh : " + widget.refresh);
+    access = widget.access; // 이전 페이지에서 Access Token 받아서 저장
+    refresh = widget.refresh; // 이전 페이지에서 Refresh Token 받아서 저장
+    // print("access 2 : " + widget.access);
+    // print("refresh 2 : " + widget.refresh);
     pages = [
-      HomeScreen(widget.access, widget.refresh),
-      SearchPage(),
+      HomeScreen(access, refresh), // 저장한 Token 전달
+      SearchPage(), // 저장한 Token 전달
       // SearchPage(widget.access, widget.refresh),
-      ChatBotPage(widget.access, widget.refresh),
-      MyPage(widget.access, widget.refresh),
+      ChatBotPage(widget.access, widget.refresh), // 저장한 Token 전달
+      MyPage(widget.access, widget.refresh), // 저장한 Token 전달
     ];
   }
 
+  // Token 읽어오는법
+  //  String userInfo = await storage.read(key: "login");
   @override
   Widget build(BuildContext context) {
     return Scaffold(

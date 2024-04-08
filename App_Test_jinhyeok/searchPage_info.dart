@@ -34,9 +34,22 @@ class PlaceDetailPage extends StatelessWidget {
               fallbackHeight: 200, // 이미지의 높이
             ),
             SizedBox(height: 20),
+
+            // !!
+            // API 기능 넣기
+            // 항목(ICON): 찜 / 일정추가 / 리뷰쓰기 / 공유하기
+            //
+            // 1. 정보 추가 : location, 평균 체류 시간 등
+            // 2. 구글 지도 API 추가
+            // 3. 다른 사용자의 장소에 대한 리뷰 내용 추가 (API)
+            // !!
+
             _buildDetailItem('분류', placeDetails['classification']),
+            SizedBox(height: 20),
             _buildDetailItem('주차 여부', placeDetails['parking'] ? '가능' : '불가능'),
+            SizedBox(height: 20),
             _buildDetailItem('자세한 정보', placeDetails['info']),
+            SizedBox(height: 20),
             _buildDetailItem('전화번호', placeDetails['call']),
             SizedBox(height: 20),
             Text(

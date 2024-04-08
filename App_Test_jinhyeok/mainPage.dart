@@ -9,6 +9,7 @@ import 'package:go_test_ver/homeScreen.dart';
 import 'package:go_test_ver/postCard.dart';
 import 'package:go_test_ver/searchPage.dart';
 import 'package:go_test_ver/chatBot.dart';
+import 'package:go_test_ver/survey.dart';
 import 'package:go_test_ver/myPage.dart';
 
 // 메인 페이지
@@ -45,10 +46,12 @@ class _MainPageState extends State<MainPage> {
       icon: Icon(Icons.search),
     ),
     // 3. 챗봇 페이지 : 라벨, 페이지
+    // 교체 -> 설무조사 페이지 완성
     BottomNavigationBarItem(
       label: '챗봇',
       icon: Icon(Icons.question_answer),
     ),
+
     // 4. 마이 페이지 : 라벨, 페이지
     BottomNavigationBarItem(
       label: '내 정보',
@@ -65,11 +68,13 @@ class _MainPageState extends State<MainPage> {
     refresh = widget.refresh; // 이전 페이지에서 Refresh Token 받아서 저장
     // print("access 2 : " + widget.access);
     // print("refresh 2 : " + widget.refresh);
+
     pages = [
       HomeScreen(access, refresh), // 저장한 Token 전달
-      SearchPage(), // 저장한 Token 전달
-      // SearchPage(widget.access, widget.refresh),
-      ChatBotPage(widget.access, widget.refresh), // 저장한 Token 전달
+      SearchPage(access, refresh), // 저장한 Token 전달
+      // if문 + storage 사용해서, API 연결 - user 데이터에 is_survey : 0 OR 1 보고
+      SurveyScreen(access, refresh),
+      // ChatBotPage(widget.access, widget.refresh), // 저장한 Token 전달
       MyPage(widget.access, widget.refresh), // 저장한 Token 전달
     ];
   }

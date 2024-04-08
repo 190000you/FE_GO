@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_2/searchPage_info.dart'; // 경로 설정.
+
+// 내부 import
+import 'package:go_test_ver/searchPage_info.dart'; // 경로 설정.
+
+// 외부 import
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-void main() => runApp(MyApp());
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: SearchPage(),
-    );
-  }
-}
-
 class SearchPage extends StatefulWidget {
+  final String access;
+  final String refresh;
+
+  SearchPage(this.access, this.refresh);
+
   @override
   _SearchPageState createState() => _SearchPageState();
 }
 
 class _SearchPageState extends State<SearchPage> {
+  //데이터를 이전 페이지에서 전달 받은 정보를 저장하기 위한 변수
+  static final storage = FlutterSecureStorage();
+  late String access;
+  late String refresh;
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String query = '';
   final List<String> _tags = ['#태그'];
@@ -46,8 +50,8 @@ class _SearchPageState extends State<SearchPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
-      List placesByName = data['places_by_name'];
-      List placesByTag = data['places_by_tag'];
+      List placesByName = data['places_by_name']; // name으로 검색
+      List placesByTag = data['places_by_tag']; // tag로 검색
 
       Set<Map<String, dynamic>> matchedPlaces = {};
 
@@ -130,6 +134,7 @@ class _SearchPageState extends State<SearchPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => PlaceDetailPage(
+                            // 상세보기 정보 클릭
                             placeDetails: _searchResults[index]),
                       ),
                     );
@@ -138,7 +143,8 @@ class _SearchPageState extends State<SearchPage> {
               },
             ),
           ),
-          if (_showMoreButton && _totalResultsCount > 5) _buildMoreButton(),
+          if (_showMoreButton && _totalResultsCount > 5)
+            _buildMoreButton(), // 추가로 더보기 버튼
         ],
       ),
     );
@@ -156,6 +162,7 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  // 더보기
   Widget _buildMoreButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),

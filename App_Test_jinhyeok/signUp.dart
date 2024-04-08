@@ -1,4 +1,6 @@
 // 회원가입 페이지
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_test_ver/login.dart';

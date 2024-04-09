@@ -84,7 +84,7 @@ class _SearchPageState extends State<SearchPage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        automaticallyImplyLeading: false, // 뒤로가기 버튼 숨기기
+        automaticallyImplyLeading: false,
         title: Container(
           decoration: BoxDecoration(
             color: Colors.grey[200],
@@ -121,30 +121,80 @@ class _SearchPageState extends State<SearchPage> {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(8.0),
-              itemCount: _searchResults.length,
+              itemCount: _searchResults.length +
+                  (_showMoreButton && _totalResultsCount > 5 ? 1 : 0),
               separatorBuilder: (BuildContext context, int index) => Divider(),
               itemBuilder: (BuildContext context, int index) {
-                return ListTile(
-                  title: Text(
-                    _searchResults[index]['name'],
-                    style: TextStyle(fontSize: 24),
-                  ),
+                if (index == _searchResults.length &&
+                    _showMoreButton &&
+                    _totalResultsCount > 5) {
+                  return _buildMoreButton(); // "더보기" button as the last item
+                }
+
+                // Item widget code
+                var item = _searchResults[index];
+                var tags = item['tag'] != null && item['tag'].isNotEmpty
+                    ? item['tag'].map((tag) => tag['name']).join(' ')
+                    : ' ';
+                var imageUrl =
+                    item['image'] ?? 'https://via.placeholder.com/80';
+
+                return InkWell(
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PlaceDetailPage(
-                            // 상세보기 정보 클릭
-                            placeDetails: _searchResults[index]),
+                        builder: (context) =>
+                            PlaceDetailPage(placeDetails: item),
                       ),
                     );
                   },
+                  child: Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Image.network(
+                          imageUrl,
+                          width: 60,
+                          height: 60, // Correct height value
+                          fit: BoxFit.cover,
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  item['name'],
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                SizedBox(height: 10.0),
+                                Visibility(
+                                  visible: tags.isNotEmpty,
+                                  child: Text(
+                                    tags,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 );
               },
             ),
           ),
-          if (_showMoreButton && _totalResultsCount > 5)
-            _buildMoreButton(), // 추가로 더보기 버튼
         ],
       ),
     );
@@ -162,7 +212,6 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  // 더보기
   Widget _buildMoreButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),

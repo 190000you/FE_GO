@@ -69,27 +69,34 @@ class _MainPageState extends State<MainPage> {
     // print("access 2 : " + widget.access);
     // print("refresh 2 : " + widget.refresh);
 
+    // 1. 사용자 토큰을 저장한 storage
+    // 2. 토큰을 이용해서 사용자의 정보를 알아와야함
+    // 3. User model - servey == null이면, SurveyScreen으로
     pages = [
       HomeScreen(access, refresh), // 저장한 Token 전달
       SearchPage(access, refresh), // 저장한 Token 전달
+      // if(storage.read(key: "login") == null)
+      SurveyPage(access, refresh),
+      // else
+      // ChatBotPage(widget.access, widget.refresh)
       // if문 + storage 사용해서, API 연결 - user 데이터에 is_survey : 0 OR 1 보고
-      SurveyScreen(access, refresh),
-      // ChatBotPage(widget.access, widget.refresh), // 저장한 Token 전달
       MyPage(widget.access, widget.refresh), // 저장한 Token 전달
     ];
   }
 
   // Token 읽어오는법
   //  String userInfo = await storage.read(key: "login");
-  @override
+  //
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         titleSpacing: 0.0, // 제목과 아이콘 사이의 공간을 제거합니다.
         title: Padding(
             // 제목에 패딩을 추가합니다.
             padding:
-                EdgeInsets.only(top: 5.0, right: 45.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
+                EdgeInsets.only(top: 5.0, right: 0.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
             child: Center(
               // 제목 글자 : 가볼까?
               child: Text(

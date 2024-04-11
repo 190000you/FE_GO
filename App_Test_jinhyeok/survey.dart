@@ -41,6 +41,9 @@ class _SurveyScreenState extends State<SurveyScreen> {
     print("homeScreen refresh : " + refresh);
   }
 
+  String selectedGender = ""; // 성별(String형) : M / W
+  int selectedAge = 10; // 나이(int형) : 10, 20, 30...
+
   int selectedNature = 3; // 1. 자연<->도시
   int selectedSleep = 3; // 2. 숙박<->당일치기
   int selectedNew = 3; // 3. 새로운 지역 <-> 익숙한 지역
@@ -49,6 +52,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   int selectedPopular = 3; // 6. 잘 알려지지 않은 장소 <-> 잘 알려진 장소 선택
   int selectedJ = 3; // 7. 계힉적인 <-> 즉흥적인 선택
   int selectedPhoto = 3; // 8. 사진으로 남기기 <-> 기억으로 남기기
+  int selectedWith = 3; // 9. 동반자 적음 <-> 동반자 많음
 
   var scoreNature = createScoreMap(); // 1. 자연<->도시
   var scoreSleep = createScoreMap(); // 2. 숙박<->당일치기
@@ -58,6 +62,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
   var scorePopular = createScoreMap(); // 6. 잘 알려지지 않은 장소 <-> 잘 알려진 장소 선택
   var scoreJ = createScoreMap(); // 7. 계힉적인 <-> 즉흥적인 선택
   var scorePhoto = createScoreMap(); // 8. 사진으로 남기기 <-> 기억으로 남기기
+  var scoreWith = createScoreMap(); // 9. 동반자 적음 <-> 동반자 많음
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +73,70 @@ class _SurveyScreenState extends State<SurveyScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // 1. 자연<->도시
+            // 성별 설문조사
+            SizedBox(height: 20),
+            Card(
+              elevation: 4,
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text(
+                      '성별:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  RadioListTile<String>(
+                    title: Text('남자'),
+                    value: 'M',
+                    groupValue: selectedGender,
+                    onChanged: (String? value) {
+                      setState(() {
+                        selectedGender = value!;
+                      });
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: Text('여자'),
+                    value: 'W',
+                    groupValue: selectedGender,
+                    onChanged: (String? value) {
+                      setState(() {
+                        selectedGender = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 20),
+            // 나이 설문조사
+            Card(
+              elevation: 4,
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text(
+                      '나이:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Slider(
+                    min: 10,
+                    max: 100,
+                    divisions: 9,
+                    value: selectedAge.toDouble(),
+                    label: selectedAge.toString(),
+                    onChanged: (double newValue) {
+                      setState(() {
+                        selectedAge = newValue.round();
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 40),
+            // 1. 자연<->도시 (장소)
             buildOptionSection(
               '자연',
               '도시',
@@ -81,7 +149,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               },
             ),
             SizedBox(height: 70),
-            // 2. 숙박<->당일치기
+            // 2. 숙박<->당일치기 (기간)
             buildOptionSection(
               '숙박',
               '당일치기',
@@ -94,7 +162,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               },
             ),
             SizedBox(height: 70),
-            // 3. 새로운 지역 <-> 익숙한 지역
+            // 3. 새로운 지역 <-> 익숙한 지역 (지역)
             buildOptionSection(
               '새로운 장소',
               '익숙한 장소',
@@ -107,7 +175,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               },
             ),
             SizedBox(height: 70),
-            // 4. 편하고 비싼 숙소 <-> 불편하고 싼 숙소 선택
+            // 4. 편하고 비싼 숙소 <-> 불편하고 싼 숙소 선택 (숙소)
             buildOptionSection(
               '편하지만 비싼 숙소',
               '불편하지만 싼 숙소',
@@ -120,7 +188,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               },
             ),
             SizedBox(height: 70),
-            // 5. 휴식 <-> 체험 선택
+            // 5. 휴식 <-> 체험 선택 (활동)
             buildOptionSection(
               '휴식',
               '체험',
@@ -133,7 +201,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               },
             ),
             SizedBox(height: 70),
-            // 6. 잘 알려지지 않은 장소 <-> 잘 알려진 장소 선택
+            // 6. 잘 알려지지 않은 장소 <-> 잘 알려진 장소 선택 (방문지)
             buildOptionSection(
               '구석진 장소',
               '알려진 장소',
@@ -146,7 +214,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               },
             ),
             SizedBox(height: 70),
-            // 7. 계힉적인 <-> 즉흥적인 선택
+            // 7. 계힉적인 <-> 즉흥적인 선택 (계획)
             buildOptionSection(
               '계획적인',
               '즉흥적인',
@@ -159,7 +227,7 @@ class _SurveyScreenState extends State<SurveyScreen> {
               },
             ),
             SizedBox(height: 70),
-            // 8. 사진으로 남기기 <-> 기억으로 남기기
+            // 8. 사진으로 남기기 <-> 기억으로 남기기 (사진)
             buildOptionSection(
               '사진으로 남기기',
               '기억으로 남기기',
@@ -171,30 +239,31 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 });
               },
             ),
-
+            SizedBox(height: 70),
+            // 9. 동반자 적음 <-> 동반자 많음 (동반자)
+            buildOptionSection(
+              '동반자 적음',
+              '동반자 많음',
+              selectedWith,
+              7,
+              (index) {
+                setState(() {
+                  selectedWith = index;
+                });
+              },
+            ),
             // "제출" 버튼
             SizedBox(height: 50),
             ElevatedButton(
               onPressed: () {
-                // 선택된 점수 출력
-                int? selectedScoreNature = scoreNature[selectedNature]; // 1.
-                int? selectedScoreSleep = scoreSleep[selectedSleep]; // 2.
-                int? selectedScoreNew = scoreSleep[selectedNew]; // 3.
-                int? selectedScoreExpensive =
-                    scoreSleep[selectedExpensive]; // 4.
-                int? selectedScoreRest = scoreSleep[selectedRest]; // 5.
-                int? selectedScorePopular = scoreSleep[selectedPopular]; // 6.
-                int? selectedScoreJ = scoreSleep[selectedJ]; // 7.
-                int? selectedScorePhoto = scoreSleep[selectedPhoto]; // 8.
+                // 선택된 점수 출력 및 다른 로직 구현...
 
-                /*
-                print('Selected nature-city score: $selectedNature');
-                */
+                // 사용자별 설문조사 데이터 입력 API 사용...
+                final snackBar = SnackBar(content: Text("성공적으로 제출했습니다."));
+                ScaffoldMessenger.of(context).showSnackBar(snackBar);
 
-                // !!
-                // 사용자별 설문조사 데이터 입력 API 사용
-                // !!
-
+                // 챗봇 페이지 또는 메인 페이지로 이동
+                // 메인 페이지로 이동하는게 더 맞을듯?
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -202,8 +271,23 @@ class _SurveyScreenState extends State<SurveyScreen> {
                           ChatBotPage(access, refresh)), // 다음 화면으로 이동
                 );
               },
-              child: Text('제출'),
+              child: Text(
+                '제출',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.blue, // 버튼의 텍스트 색상
+                shape: RoundedRectangleBorder(
+                  // 버튼의 모양을 정의
+                  borderRadius: BorderRadius.zero, // 네모난 모양으로 만들기
+                ),
+                padding: EdgeInsets.symmetric(
+                    horizontal: 50, vertical: 20), // 버튼 내부 패딩
+                elevation: 5, // 버튼의 그림자 깊이
+              ),
             ),
+            SizedBox(height: 50),
           ],
         ),
       ),

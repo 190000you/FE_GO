@@ -35,7 +35,7 @@ class _SurveyPageState extends State<SurveyPage> {
     // 2. 설문조사 안 했을 때 : Unknown값
     // 설문조사 상태를 체크하고, 필요한 경우 페이지를 이동합니다.
 
-    // 여기 부분 오류 !!
+    // 여기서 사용자 구분
     if (widget.userSurvey != "Unknown" && widget.userSurvey != null) {
       // userSurvey 값이 null 또는 Unknown이 아니라면, ChatBotPage로 바로 이동합니다.
       WidgetsBinding.instance.addPostFrameCallback((_) {

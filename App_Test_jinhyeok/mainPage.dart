@@ -14,16 +14,13 @@ import 'package:go_test_ver/chatBot.dart';
 import 'package:go_test_ver/survey.dart';
 import 'package:go_test_ver/myPage.dart';
 
-String? userId = "";
-String? userName = "";
-String? userAccessToken = "";
-String? userRefreshToken = "";
-String? userSurvey = "";
-
 // 1. 메인 페이지에서 userName을 마이 페이지에게 넘겨주는 방식은?
 // 2. userSurvey를 검사해서 null이면은 설문조사 안 한 것.
 // 2.1 null일 때, (post) /survey/enroll 사용해서 입력..?
 // 2.2 제출을 눌렀을 때에, mainPage로 이동하게끔
+
+String? userName = "";
+String? userSurvey = "";
 
 // 메인 페이지
 // 이후에 mainpage.dart 파일 만들어서 옮기기.
@@ -71,7 +68,13 @@ class _MainPageState extends State<MainPage> {
     // storage 생성
     final storage = new FlutterSecureStorage();
 
-    // storage 값 읽어오기
+    // login때 저장한 storage 값 읽어오기
+    /*
+    // if (storedUserId != null) {
+      setState(() {
+        userId = storedUserId;
+      });
+    */
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
     String? userRefreshToken = await storage.read(key: "login_refresh_token");
@@ -96,11 +99,14 @@ class _MainPageState extends State<MainPage> {
       // response body 전체 응답 받기
       print("MyPage User 정보 받음: ${response.body}");
       var responseData = json.decode(response.body);
+
+      // 데이터 선택해서 저장
       userName = responseData['userName'];
-      userSurvey = responseData['servey']; // 오타 수정해야함
-      // null 값일 때 -> Unknown 값 나옴
-      print("MainPage 'userName' : " + (userName ?? "Unknown"));
-      print("MainPage 'servey' : " + (userSurvey ?? "null"));
+      userSurvey = responseData['survey'];
+
+      // 값 확인 : null 값일 때 -> Unknown 값 나옴
+      // print("MainPage 'userName' : " + (userName ?? "Unknown"));
+      // print("MainPage 'servey' : " + (userSurvey ?? "null"));
     } else {
       // 서버로부터 오류 응답을 받음
       print("Failed to load user details");
@@ -114,7 +120,7 @@ class _MainPageState extends State<MainPage> {
     super.initState();
     fetchUserInfo(); // 사용
 
-    print("Page 이동 전 'servey' : " + (userSurvey ?? "Unknown"));
+    print("Page 이동 전 'survey' : " + (userSurvey ?? "Unknown"));
     pages = [
       HomeScreen(), // 저장한 Token 전달
       SearchPage(), // 저장한 Token 전달
@@ -122,7 +128,8 @@ class _MainPageState extends State<MainPage> {
           ? SurveyPage(userSurvey)
           : ChatBotPage(),
       // ChatBotPage()
-      MyPage(userName), // 저장한 Token 전달
+      MyPage(), // 저장한 Token 전달
+      // MyPage(userName), // 저장한 Token 전달
     ];
   }
 

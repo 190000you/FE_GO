@@ -19,7 +19,7 @@ import 'package:go_test_ver/myPage.dart';
 // 2.1 null일 때, (post) /survey/enroll 사용해서 입력..?
 // 2.2 제출을 눌렀을 때에, mainPage로 이동하게끔
 
-String? userName = "";
+String userName = "";
 String? userSurvey = "";
 
 // 메인 페이지
@@ -35,6 +35,9 @@ class _MainPageState extends State<MainPage> {
   static final storage = FlutterSecureStorage();
 
   int _selectedIndex = 0;
+
+  // pages 선언
+  List<Widget> pages = [];
 
   // 하단 네비게이션 바
   List<BottomNavigationBarItem> bottomItems = [
@@ -60,8 +63,6 @@ class _MainPageState extends State<MainPage> {
       icon: Icon(Icons.person),
     ),
   ];
-
-  List<Widget> pages = [];
 
   // USER 정보 얻는 API
   Future<void> fetchUserInfo() async {
@@ -101,14 +102,27 @@ class _MainPageState extends State<MainPage> {
       var responseData = json.decode(response.body);
 
       // 데이터 선택해서 저장
-      userName = responseData['userName'];
-      userSurvey = responseData['survey'];
+      setState(() {
+        userName = responseData['userName'];
+        userSurvey = responseData['survey'];
+
+        pages = [
+          HomeScreen(), // 여기에 필요한 Token 전달
+          SearchPage(), // 여기에 필요한 Token 전달
+          userSurvey == null || userSurvey == "null"
+              ? SurveyPage(userSurvey)
+              : ChatBotPage(),
+          MyPage(userName), // 여기에 필요한 Token 전달
+        ];
+      });
 
       // 값 확인 : null 값일 때 -> Unknown 값 나옴
+      print("MainPage - fetch userName : " + userName);
+      print("MainPage - fetch userSurvey : " + (userSurvey ?? "null"));
+
       // print("MainPage 'userName' : " + (userName ?? "Unknown"));
       // print("MainPage 'servey' : " + (userSurvey ?? "null"));
     } else {
-      // 서버로부터 오류 응답을 받음
       print("Failed to load user details");
     }
     // 상태 업데이트
@@ -119,18 +133,6 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     fetchUserInfo(); // 사용
-
-    print("Page 이동 전 'survey' : " + (userSurvey ?? "Unknown"));
-    pages = [
-      HomeScreen(), // 저장한 Token 전달
-      SearchPage(), // 저장한 Token 전달
-      userSurvey == null || userSurvey == "null"
-          ? SurveyPage(userSurvey)
-          : ChatBotPage(),
-      // ChatBotPage()
-      MyPage(), // 저장한 Token 전달
-      // MyPage(userName), // 저장한 Token 전달
-    ];
   }
 
   Widget build(BuildContext context) {
@@ -172,7 +174,9 @@ class _MainPageState extends State<MainPage> {
         items: bottomItems,
       ),
       // 하단에서 선택된 페이지 보여줌
-      body: pages[_selectedIndex], // 선택된 인덱스에 해당하는 페이지를 보여줍니다.
+      body: pages.isEmpty
+          ? CircularProgressIndicator() // fetch에서 pages가 만들어질 때까지, 대기중(데이터 로딩 중) 표시
+          : pages[_selectedIndex], // 선택된 인덱스의 페이지 표시
     );
   }
 }

@@ -9,8 +9,13 @@ import 'package:http/http.dart' as http; // API 사용
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:intl/intl.dart'; // yyyy.mm.dd형식을 yy.mm.dd형식으로
 
+// 아직 사용 X
+String? userAccessToken = "";
+String? userRefreshToken = "";
+
 class MyPage extends StatefulWidget {
-  MyPage();
+  String userName; // 이전 페이지에서 userName 받아와서 업로드
+  MyPage(this.userName);
 
   @override
   MyPageState createState() => MyPageState();
@@ -79,12 +84,16 @@ class MyPageState extends State<MyPage> {
   bool isPlanSelected = false;
   bool isReviewSelected = false;
   List<Map<String, dynamic>> userPlans = [];
-  String userId = '';
+  String userId = "";
+  String userName = "";
   final storage = FlutterSecureStorage();
 
   @override
   void initState() {
     super.initState();
+
+    userName = widget.userName;
+    print("userName : " + userName);
     _loadUserId();
   }
 
@@ -195,13 +204,14 @@ class MyPageState extends State<MyPage> {
               ],
             ),
           ),
+          // 2. 사용자 이름 설정
           SizedBox(height: 20),
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: TextFormField(
-              initialValue: "사용자 이름",
+              readOnly: true,
+              initialValue: userName ?? "사용자 이름", // 전역 변수 사용
               textAlign: TextAlign.center,
-              onChanged: (value) {},
             ),
           ),
           SizedBox(height: 20),

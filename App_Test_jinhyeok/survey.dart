@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:go_test_ver/chatBot.dart';
 
+// 내부 import
+import 'package:go_test_ver/chatBot.dart';
+import 'package:go_test_ver/mainPage.dart';
+
+// 외부 import
 import 'package:introduction_screen/introduction_screen.dart'; // 사용자별 한 번 설무조사 UI
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 import 'package:http/http.dart' as http; // API 사용
@@ -12,11 +16,121 @@ Map<int, int> createScoreMap() {
     0: 0,
     1: 1,
     2: 3,
-    3: 5,
+    3: 5, // Default
     4: 7,
     5: 9,
     6: 10,
   };
+}
+
+// Survey API(1): 데이터 저장
+class SurveyAPI {
+  String? gender;
+  int? ageGrp;
+  int? travelStyl1;
+  int? travelStyl2;
+  int? travelStyl3;
+  int? travelStyl4;
+  int? travelStyl5;
+  int? travelStyl6;
+  int? travelStyl7;
+  int? travelStyl8;
+  String? userId;
+
+  SurveyAPI(
+      {this.gender,
+      this.ageGrp,
+      this.travelStyl1,
+      this.travelStyl2,
+      this.travelStyl3,
+      this.travelStyl4,
+      this.travelStyl5,
+      this.travelStyl6,
+      this.travelStyl7,
+      this.travelStyl8,
+      this.userId});
+
+  SurveyAPI.fromJson(Map<String, dynamic> json) {
+    gender = json['gender'];
+    ageGrp = json['ageGrp'];
+    travelStyl1 = json['travelStyl1'];
+    travelStyl2 = json['travelStyl2'];
+    travelStyl3 = json['travelStyl3'];
+    travelStyl4 = json['travelStyl4'];
+    travelStyl5 = json['travelStyl5'];
+    travelStyl6 = json['travelStyl6'];
+    travelStyl7 = json['travelStyl7'];
+    travelStyl8 = json['travelStyl8'];
+    userId = json['userId'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['gender'] = this.gender;
+    data['ageGrp'] = this.ageGrp;
+    data['travelStyl1'] = this.travelStyl1;
+    data['travelStyl2'] = this.travelStyl2;
+    data['travelStyl3'] = this.travelStyl3;
+    data['travelStyl4'] = this.travelStyl4;
+    data['travelStyl5'] = this.travelStyl5;
+    data['travelStyl6'] = this.travelStyl6;
+    data['travelStyl7'] = this.travelStyl7;
+    data['travelStyl8'] = this.travelStyl8;
+    data['userId'] = this.userId;
+    return data;
+  }
+}
+
+// 설문조사 제출 API
+Future<void> fetchSurvey(String Gender, int Age, int Nature, int Sleep, int New,
+    int Expensive, int Rest, int Popular, int J, int With) async {
+  print("Survey API 시작");
+  // storage 생성
+  final storage = new FlutterSecureStorage();
+
+  // storage 값 읽어오기
+  String? userId = await storage.read(key: "login_id");
+  String? userAccessToken = await storage.read(key: "login_access_token");
+  String? userRefreshToken = await storage.read(key: "login_refresh_token");
+
+  /*
+    print("MainPage userId : " + (userId ?? "Unknown"));
+    print("MainPage access Token : " + (userAccessToken ?? "Unknown"));
+    print("MainPage refresh Token : " + (userRefreshToken ?? "Unknown"));
+  */
+
+  final surveyData = SurveyAPI(
+    gender: Gender,
+    ageGrp: Age,
+    travelStyl1: Nature,
+    travelStyl2: Sleep,
+    travelStyl3: New,
+    travelStyl4: Expensive,
+    travelStyl5: Rest,
+    travelStyl6: Popular,
+    travelStyl7: J,
+    travelStyl8: With,
+    userId: userId,
+  );
+
+  print("Survey API 실행 중");
+  // API 연결
+  final response = await http.post(
+    Uri.parse('http://43.203.61.149/survey/enroll/'),
+    headers: {"Accept": "application/json"},
+    body: surveyData.toJson(),
+  );
+
+  // 요청이 성공적으로 완료됨
+  if (response.statusCode == 201) {
+    print("요청 성공");
+    final snackBar = SnackBar(content: Text("성공적으로 제출하였습니다."));
+    // 각 변수에 값 넣기
+  } else {
+    // 서버로부터 오류 응답을 받음
+    final snackBar = SnackBar(content: Text("알 수 없는 오류가 발생하였습니다. 다시 시도해주세요."));
+  }
+  // 상태 업데이트
 }
 
 class SurveyPage extends StatefulWidget {
@@ -31,10 +145,8 @@ class _SurveyPageState extends State<SurveyPage> {
   @override
   void initState() {
     super.initState();
-    // 1. 설문조사 했을 때 : int값 들어감
-    // 2. 설문조사 안 했을 때 : Unknown값
-    // 설문조사 상태를 체크하고, 필요한 경우 페이지를 이동합니다.
 
+    /*
     // 여기서 사용자 구분
     if (widget.userSurvey != "Unknown" && widget.userSurvey != null) {
       // userSurvey 값이 null 또는 Unknown이 아니라면, ChatBotPage로 바로 이동합니다.
@@ -45,6 +157,7 @@ class _SurveyPageState extends State<SurveyPage> {
         );
       });
     }
+    */
   }
 
   static final storage = FlutterSecureStorage();
@@ -73,43 +186,6 @@ class _SurveyPageState extends State<SurveyPage> {
   var scoreJ = createScoreMap(); // 7. 계힉적인 <-> 즉흥적인 선택
   var scorePhoto = createScoreMap(); // 8. 사진으로 남기기 <-> 기억으로 남기기
   var scoreWith = createScoreMap(); // 9. 동반자 적음 <-> 동반자 많음
-
-  // 설문조사 제출 API
-  Future<void> fetchRegistSurvey() async {
-    // storage 생성
-    final storage = new FlutterSecureStorage();
-
-    // storage 값 읽어오기
-    String? userId = await storage.read(key: "login_id");
-    String? userAccessToken = await storage.read(key: "login_access_token");
-    String? userRefreshToken = await storage.read(key: "login_refresh_token");
-
-    print("MainPage userId : " + (userId ?? "Unknown"));
-    print("MainPage access Token : " + (userAccessToken ?? "Unknown"));
-    print("MainPage refresh Token : " + (userRefreshToken ?? "Unknown"));
-
-    // url에 "userId" + "access Token" 넣기
-    final url =
-        Uri.parse('http://43.203.61.149/servey/enroll/$userId'); // API 엔드포인트
-    final response = await http.put(
-      url,
-      // 헤더에 Authorization 추가해서 access Token값 넣기
-      headers: {
-        'Authorization': 'Bearer $userAccessToken',
-      },
-    );
-
-    // 요청이 성공적으로 완료됨
-    if (response.statusCode == 200) {
-      // 각 변수에 값 넣기
-    } else {
-      // 서버로부터 오류 응답을 받음
-      final snackBar =
-          SnackBar(content: Text("알 수 없는 오류가 발생하였습니다. 다시 시도해주세요."));
-    }
-    // 상태 업데이트
-    setState(() {});
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -302,22 +378,32 @@ class _SurveyPageState extends State<SurveyPage> {
             // "제출" 버튼
             SizedBox(height: 50),
             ElevatedButton(
-              onPressed: () {
-                // 선택된 점수 출력 및 다른 로직 구현...
+              onPressed: () async {
+                print("API 실행 전");
+                // 조건 : 모두 설정했을 때
+                if (selectedGender != '') {
+                  fetchSurvey(
+                      selectedGender,
+                      selectedAge,
+                      selectedNature,
+                      selectedSleep,
+                      selectedNew,
+                      selectedExpensive,
+                      selectedRest,
+                      selectedPopular,
+                      selectedJ,
+                      selectedWith);
 
-                // 사용자별 설문조사 데이터 입력 API 사용...
-                final snackBar = SnackBar(content: Text("성공적으로 제출했습니다."));
-                ScaffoldMessenger.of(context).showSnackBar(snackBar);
-
-                // 챗봇 페이지 또는 메인 페이지로 이동/
-                // (post)servey/enroll 사용
-                //
-                // 메인 페이지로 이동하는게 더 맞을듯?
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ChatBotPage()), // 다음 화면으로 이동
-                );
+                  // 비동기식 이동
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => MainPage()), // 다음 화면으로 이동
+                  );
+                } else {
+                  print("API 호출 실패");
+                  final snackBar = SnackBar(content: Text("정보를 모두 입력해주세요."));
+                }
               },
               child: Text(
                 '제출',

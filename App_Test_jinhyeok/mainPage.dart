@@ -20,7 +20,7 @@ import 'package:go_test_ver/myPage.dart';
 // 2.2 제출을 눌렀을 때에, mainPage로 이동하게끔
 
 String userName = "";
-String? userSurvey = "";
+dynamic userSurvey = "";
 
 // 메인 페이지
 // 이후에 mainpage.dart 파일 만들어서 옮기기.
@@ -117,8 +117,8 @@ class _MainPageState extends State<MainPage> {
       });
 
       // 값 확인 : null 값일 때 -> Unknown 값 나옴
-      print("MainPage - fetch userName : " + userName);
-      print("MainPage - fetch userSurvey : " + (userSurvey ?? "null"));
+      // print("MainPage - fetch userName : " + userName);
+      // print("MainPage - fetch userSurvey : " + (userSurvey ?? "null"));
 
       // print("MainPage 'userName' : " + (userName ?? "Unknown"));
       // print("MainPage 'servey' : " + (userSurvey ?? "null"));

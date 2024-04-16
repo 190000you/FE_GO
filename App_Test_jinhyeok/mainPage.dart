@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
+import 'package:http/http.dart' as http; // API 사용
+import 'dart:convert'; // API 호출 : 디코딩
 
 // import package 파일
 import 'package:go_test_ver/homeScreen.dart';
@@ -12,14 +14,20 @@ import 'package:go_test_ver/chatBot.dart';
 import 'package:go_test_ver/survey.dart';
 import 'package:go_test_ver/myPage.dart';
 
+String? userId = "";
+String? userName = "";
+String? userAccessToken = "";
+String? userRefreshToken = "";
+String? userSurvey = "";
+
+// 1. 메인 페이지에서 userName을 마이 페이지에게 넘겨주는 방식은?
+// 2. userSurvey를 검사해서 null이면은 설문조사 안 한 것.
+// 2.1 null일 때, (post) /survey/enroll 사용해서 입력..?
+// 2.2 제출을 눌렀을 때에, mainPage로 이동하게끔
+
 // 메인 페이지
 // 이후에 mainpage.dart 파일 만들어서 옮기기.
 class MainPage extends StatefulWidget {
-  final String access; // access 데이터를 저장하는 변수 추가
-  final String refresh; // refresh 데이터를 저장하는 변수 추가
-
-  MainPage(this.access, this.refresh); // 생성자 업데이트
-
   @override
   _MainPageState createState() => _MainPageState();
 }
@@ -28,8 +36,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   //데이터를 이전 페이지에서 전달 받은 정보를 저장하기 위한 변수
   static final storage = FlutterSecureStorage();
-  late String access;
-  late String refresh;
 
   int _selectedIndex = 0;
 
@@ -46,7 +52,6 @@ class _MainPageState extends State<MainPage> {
       icon: Icon(Icons.search),
     ),
     // 3. 챗봇 페이지 : 라벨, 페이지
-    // 교체 -> 설무조사 페이지 완성
     BottomNavigationBarItem(
       label: '챗봇',
       icon: Icon(Icons.question_answer),
@@ -61,32 +66,65 @@ class _MainPageState extends State<MainPage> {
 
   List<Widget> pages = [];
 
-  @override
-  void initState() {
-    super.initState();
-    access = widget.access; // 이전 페이지에서 Access Token 받아서 저장
-    refresh = widget.refresh; // 이전 페이지에서 Refresh Token 받아서 저장
-    // print("access 2 : " + widget.access);
-    // print("refresh 2 : " + widget.refresh);
+  // USER 정보 얻는 API
+  Future<void> fetchUserInfo() async {
+    // storage 생성
+    final storage = new FlutterSecureStorage();
 
-    // 1. 사용자 토큰을 저장한 storage
-    // 2. 토큰을 이용해서 사용자의 정보를 알아와야함
-    // 3. User model - servey == null이면, SurveyScreen으로
-    pages = [
-      HomeScreen(access, refresh), // 저장한 Token 전달
-      SearchPage(access, refresh), // 저장한 Token 전달
-      // if(storage.read(key: "login") == null)
-      SurveyPage(access, refresh),
-      // else
-      // ChatBotPage(widget.access, widget.refresh)
-      // if문 + storage 사용해서, API 연결 - user 데이터에 is_survey : 0 OR 1 보고
-      MyPage(widget.access, widget.refresh), // 저장한 Token 전달
-    ];
+    // storage 값 읽어오기
+    String? userId = await storage.read(key: "login_id");
+    String? userAccessToken = await storage.read(key: "login_access_token");
+    String? userRefreshToken = await storage.read(key: "login_refresh_token");
+
+    print("MainPage userId : " + (userId ?? "Unknown"));
+    print("MainPage access Token : " + (userAccessToken ?? "Unknown"));
+    print("MainPage refresh Token : " + (userRefreshToken ?? "Unknown"));
+
+    // url에 "userId" + "access Token" 넣기
+    final url =
+        Uri.parse('http://43.203.61.149/user/list/$userId'); // API 엔드포인트
+    final response = await http.get(
+      url,
+      // 헤더에 Authorization 추가해서 access Token값 넣기
+      headers: {
+        'Authorization': 'Bearer $userAccessToken',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // 요청이 성공적으로 완료됨
+      // response body 전체 응답 받기
+      print("MyPage User 정보 받음: ${response.body}");
+      var responseData = json.decode(response.body);
+      userName = responseData['userName'];
+      userSurvey = responseData['servey']; // 오타 수정해야함
+      // null 값일 때 -> Unknown 값 나옴
+      print("MainPage 'userName' : " + (userName ?? "Unknown"));
+      print("MainPage 'servey' : " + (userSurvey ?? "null"));
+    } else {
+      // 서버로부터 오류 응답을 받음
+      print("Failed to load user details");
+    }
+    // 상태 업데이트
+    setState(() {});
   }
 
-  // Token 읽어오는법
-  //  String userInfo = await storage.read(key: "login");
-  //
+  // 유저 정보 가져오는 API 사용 - <Future> fetchUserInfo
+  void initState() {
+    super.initState();
+    fetchUserInfo(); // 사용
+
+    print("Page 이동 전 'servey' : " + (userSurvey ?? "Unknown"));
+    pages = [
+      HomeScreen(), // 저장한 Token 전달
+      SearchPage(), // 저장한 Token 전달
+      userSurvey == null || userSurvey == "null"
+          ? SurveyPage(userSurvey)
+          : ChatBotPage(),
+      // ChatBotPage()
+      MyPage(userName), // 저장한 Token 전달
+    ];
+  }
 
   Widget build(BuildContext context) {
     return Scaffold(

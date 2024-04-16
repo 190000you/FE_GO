@@ -68,13 +68,17 @@ Future<void> fetchloginAPI(id, password, context) async {
 
   // Token 데이터 저장소 생성 및 초기화
   final storage = new FlutterSecureStorage();
-  dynamic userInfo = ''; // storage에 있는 유저 정보를 저장
+  dynamic storage_user_id = ""; // storage에 userid 저장
+  dynamic storage_user_access_token = ''; // storage에 access_token 저장
+  dynamic storage_user_refresh_token = ''; // storage에 refresh_token 저장
 
   // _asyncMethod 함수 생성 : 데이터 있는지 확인하는 함수
   _asyncMethod() async {
     // read 함수로 key값에 맞는 정보를 불러오고 데이터타입은 String 타입
     // 데이터가 없을때는 null을 반환
-    userInfo = await storage.read(key: 'login');
+    storage_user_id = await storage.read(key: 'login_id');
+    storage_user_access_token = await storage.read(key: 'login_access_token');
+    storage_user_refresh_token = await storage.read(key: 'login_refresh_token');
   }
 
   //flutter_secure_storage 사용을 위한 초기화 작업
@@ -90,34 +94,52 @@ Future<void> fetchloginAPI(id, password, context) async {
     Map<String, dynamic> jsonResponse =
         jsonDecode(response.body); // JSON 데이터 피싱
     // 응답 메시지 디코드
-    // 문제 : 디코드 전 Token 데이터 값을 쿠키에 저장
     String message = jsonResponse['message']; // 응답 메시지 확인
+    // 응답 메시지 == "login success"
     if (message == "login success") {
       // Toekn을 디코드 후 저장
       String access = jsonResponse['token']['access'];
       String refresh = jsonResponse['token']['refresh'];
-      // 문제 : ID 추출
-      print(access);
-      print(refresh);
 
-      // 저장소에 토큰 저장
+      //print(access);
+      //print(refresh);
+
+      // storage에 저장 (1) - userID
       await storage.write(
-        key: 'login',
-        value: access,
+        key: 'login_id',
+        value: id, // userId
       );
 
-      // 문제 : 사용자 ID별 데이터 불러오기
+      // storage에 저장 (2) - user_access_token
+      await storage.write(
+        key: 'login_access_token',
+        value: access, // access Token
+      );
+
+      // storage에 저장 (3) - user_refresh_token
+      await storage.write(
+        key: 'login_refresh_token',
+        value: refresh, // refresh Token
+      );
 
       // 로그인 성공
       // userInfo == (access) Token
-      if (userInfo != null) {
-        print("access Token : " + access);
+      if (storage_user_access_token != null ||
+          storage_user_refresh_token != null ||
+          storage_user_id != null) {
+        String? val1 = await storage.read(key: "login_id");
+        String? val2 = await storage.read(key: "login_access_token");
+        String? val3 = await storage.read(key: "login_refresh_token");
+
+        print("userId : " + (val1 ?? "Unknown"));
+        print("access Token : " + (val2 ?? "Unknown"));
+        print("refresh Token : " + (val3 ?? "Unknown"));
+
         // 메인 페이지로 이동
         final snackBar = SnackBar(content: Text("로그인 성공"));
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) => MainPage(access, refresh)), // 다음 화면으로 이동
+          MaterialPageRoute(builder: (context) => MainPage()), // 다음 화면으로 이동
         );
       } // 로그인 실패
       else {

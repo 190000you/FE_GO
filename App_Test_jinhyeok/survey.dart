@@ -3,6 +3,8 @@ import 'package:go_test_ver/chatBot.dart';
 
 import 'package:introduction_screen/introduction_screen.dart'; // 사용자별 한 번 설무조사 UI
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
+import 'package:http/http.dart' as http; // API 사용
+import 'dart:convert'; // API 호출 : 디코딩
 
 // 점수 매핑
 Map<int, int> createScoreMap() {
@@ -17,29 +19,37 @@ Map<int, int> createScoreMap() {
   };
 }
 
-class SurveyScreen extends StatefulWidget {
-  final String access;
-  final String refresh;
-
-  SurveyScreen(this.access, this.refresh);
+class SurveyPage extends StatefulWidget {
+  final String? userSurvey; // userSurvey를 위젯 내부에서 사용하기 위한 변수 선언
+  SurveyPage(this.userSurvey); // 생성자를 통해 userSurvey 값을 받습니다.
 
   @override
-  _SurveyScreenState createState() => _SurveyScreenState();
+  _SurveyPageState createState() => _SurveyPageState();
 }
 
-class _SurveyScreenState extends State<SurveyScreen> {
+class _SurveyPageState extends State<SurveyPage> {
+  @override
+  void initState() {
+    super.initState();
+    // 1. 설문조사 했을 때 : int값 들어감
+    // 2. 설문조사 안 했을 때 : Unknown값
+    // 설문조사 상태를 체크하고, 필요한 경우 페이지를 이동합니다.
+
+    // 여기 부분 오류 !!
+    if (widget.userSurvey != "Unknown" && widget.userSurvey != null) {
+      // userSurvey 값이 null 또는 Unknown이 아니라면, ChatBotPage로 바로 이동합니다.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ChatBotPage()),
+        );
+      });
+    }
+  }
+
   static final storage = FlutterSecureStorage();
   late String access;
   late String refresh;
-
-  void initState() {
-    super.initState();
-    access = widget.access; // 이전 페이지에서 Access Token 받아서 저장
-    refresh = widget.refresh; // 이전 페이지에서 Refresh Token 받아서 저장
-
-    print("homeScreen access : " + access);
-    print("homeScreen refresh : " + refresh);
-  }
 
   String selectedGender = ""; // 성별(String형) : M / W
   int selectedAge = 10; // 나이(int형) : 10, 20, 30...
@@ -63,6 +73,43 @@ class _SurveyScreenState extends State<SurveyScreen> {
   var scoreJ = createScoreMap(); // 7. 계힉적인 <-> 즉흥적인 선택
   var scorePhoto = createScoreMap(); // 8. 사진으로 남기기 <-> 기억으로 남기기
   var scoreWith = createScoreMap(); // 9. 동반자 적음 <-> 동반자 많음
+
+  // 설문조사 제출 API
+  Future<void> fetchRegistSurvey() async {
+    // storage 생성
+    final storage = new FlutterSecureStorage();
+
+    // storage 값 읽어오기
+    String? userId = await storage.read(key: "login_id");
+    String? userAccessToken = await storage.read(key: "login_access_token");
+    String? userRefreshToken = await storage.read(key: "login_refresh_token");
+
+    print("MainPage userId : " + (userId ?? "Unknown"));
+    print("MainPage access Token : " + (userAccessToken ?? "Unknown"));
+    print("MainPage refresh Token : " + (userRefreshToken ?? "Unknown"));
+
+    // url에 "userId" + "access Token" 넣기
+    final url =
+        Uri.parse('http://43.203.61.149/servey/enroll/$userId'); // API 엔드포인트
+    final response = await http.put(
+      url,
+      // 헤더에 Authorization 추가해서 access Token값 넣기
+      headers: {
+        'Authorization': 'Bearer $userAccessToken',
+      },
+    );
+
+    // 요청이 성공적으로 완료됨
+    if (response.statusCode == 200) {
+      // 각 변수에 값 넣기
+    } else {
+      // 서버로부터 오류 응답을 받음
+      final snackBar =
+          SnackBar(content: Text("알 수 없는 오류가 발생하였습니다. 다시 시도해주세요."));
+    }
+    // 상태 업데이트
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -262,13 +309,14 @@ class _SurveyScreenState extends State<SurveyScreen> {
                 final snackBar = SnackBar(content: Text("성공적으로 제출했습니다."));
                 ScaffoldMessenger.of(context).showSnackBar(snackBar);
 
-                // 챗봇 페이지 또는 메인 페이지로 이동
+                // 챗봇 페이지 또는 메인 페이지로 이동/
+                // (post)servey/enroll 사용
+                //
                 // 메인 페이지로 이동하는게 더 맞을듯?
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) =>
-                          ChatBotPage(access, refresh)), // 다음 화면으로 이동
+                      builder: (context) => ChatBotPage()), // 다음 화면으로 이동
                 );
               },
               child: Text(

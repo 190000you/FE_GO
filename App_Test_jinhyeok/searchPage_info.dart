@@ -1,48 +1,77 @@
 import 'package:flutter/material.dart';
-
-import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
-import 'package:http/http.dart' as http; // API 사용
-import 'dart:convert'; // API 호출 : 디코딩
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class PlaceDetailPage extends StatelessWidget {
   final Map<String, dynamic> placeDetails;
 
-  String placeName = "";
   PlaceDetailPage({Key? key, required this.placeDetails}) : super(key: key);
+  final storage = FlutterSecureStorage();
 
   // 찜하기 API
   Future<void> fetchLikePlace(String placeName) async {
-    // storage 생성
-    final storage = new FlutterSecureStorage();
-
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
-    String? userRefreshToken = await storage.read(key: "login_refresh_token");
 
-    print("MainPage userId : " + (userId ?? "Unknown"));
-    print("MainPage access Token : " + (userAccessToken ?? "Unknown"));
-    print("MainPage refresh Token : " + (userRefreshToken ?? "Unknown"));
-
-    // url에 "userId" + "access Token" 넣기
     final response = await http.post(
-      Uri.parse('http://43.203.61.149/user/likeplace'), // API 엔드포인트
-      // 헤더에 Authorization 추가해서 access Token값 넣기
+      Uri.parse('http://43.203.61.149/user/likeplace'),
       headers: {
         'Authorization': 'Bearer $userAccessToken',
       },
-      body: placeName,
+      body: jsonEncode({'placeName': placeName}),
     );
 
-    // !! 오류 !!
-    // 인증 성공
     if (response.statusCode == 201) {
-      print("인증 성공");
       final snackBar = SnackBar(content: Text("찜하기 성공"));
     } else {
-      print("Failed to load user details");
+      print("찜하기 실패: ${response.statusCode}");
     }
-    // 상태 업데이트 써야하나?
+  }
+
+  // 사용자의 플랜 목록을 가져오는 함수
+  Future<List<Map<String, dynamic>>> fetchPlansForUser() async {
+    String? userId = await storage.read(key: "login_id");
+
+    final response = await http.get(
+      Uri.parse('http://43.203.61.149/plan/plan/'),
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+      List<dynamic> plans = responseData['results'];
+      List<Map<String, dynamic>> userPlans = [];
+      for (var plan in plans) {
+        if (plan['user'].toString() == userId) {
+          userPlans.add(plan);
+        }
+      }
+      return userPlans;
+    } else {
+      throw Exception('Failed to load plans');
+    }
+  }
+
+  // 플랜에 장소 추가 함수
+  Future<void> addToPlan(String planId, String placeId) async {
+    final response = await http.post(
+      Uri.parse('http://43.203.61.149/plan/schedule/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'start_date': null,
+        'end_date': null,
+        'place': placeId,
+        'plan': planId,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      print("Plan updated successfully");
+    } else {
+      print("Failed to update plan");
+    }
   }
 
   @override
@@ -60,9 +89,6 @@ class PlaceDetailPage extends StatelessWidget {
             ))
         .toList();
 
-    placeName = placeDetails["name"];
-    print("placeName = " + placeName);
-
     return Scaffold(
       appBar: AppBar(
         title: Text(placeDetails['name']),
@@ -72,16 +98,14 @@ class PlaceDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Placeholder(
-              fallbackHeight: 200,
-            ),
+            Placeholder(fallbackHeight: 200),
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: <Widget>[
                 GestureDetector(
                   onTap: () {
-                    fetchLikePlace(placeName); // 찜하기 API 실행
+                    fetchLikePlace(placeDetails['name']); // 찜하기 API 실행
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -94,9 +118,19 @@ class PlaceDetailPage extends StatelessWidget {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () {
-                    print('플랜에 추가 버튼 클릭');
-                    // 플랜에 추가 기능 수행
+                  onTap: () async {
+                    try {
+                      List<Map<String, dynamic>> plans =
+                          await fetchPlansForUser();
+                      String selectedPlanId = await _showPlanSelector(
+                          context, plans); // 사용자가 플랜을 선택하게 하는 UI
+                      if (selectedPlanId.isNotEmpty) {
+                        String placeId = placeDetails['id'].toString();
+                        await addToPlan(selectedPlanId, placeId);
+                      }
+                    } catch (e) {
+                      print(e.toString());
+                    }
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -185,5 +219,44 @@ class PlaceDetailPage extends StatelessWidget {
         SizedBox(height: 10),
       ],
     );
+  }
+
+  Future<String> _showPlanSelector(
+      BuildContext context, List<Map<String, dynamic>> plans) async {
+    if (plans.isEmpty) {
+      // 계획이 없을 경우 사용자에게 알림
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("알림"),
+          content: Text("사용 가능한 플랜이 없습니다."),
+          actions: <Widget>[
+            TextButton(
+              child: Text("닫기"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        ),
+      );
+      return '';
+    } else {
+      final selectedPlanId = await showDialog<String>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+            title: const Text('플랜을 선택하세요'),
+            children: plans.map((Map<String, dynamic> plan) {
+              return SimpleDialogOption(
+                onPressed: () => Navigator.pop(context, plan['id'].toString()),
+                child: Text(plan['name']),
+              );
+            }).toList(),
+          );
+        },
+      );
+      return selectedPlanId ?? ''; // Null일 경우 빈 문자열 반환
+    }
   }
 }

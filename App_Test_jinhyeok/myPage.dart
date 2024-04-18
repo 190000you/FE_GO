@@ -48,30 +48,45 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: widget.schedule.length,
-              itemBuilder: (context, index) {
-                DateTime startDate =
-                    DateTime.parse(widget.schedule[index]['start_date']);
-                String formattedDate =
-                    DateFormat('yyyy-MM-dd, HH:mm').format(startDate);
+            child: ReorderableListView.builder(
+                itemCount: widget.schedule.length,
+                itemBuilder: (context, index) {
+                  DateTime startDate =
+                      DateTime.parse(widget.schedule[index]['start_date']);
+                  String formattedDate =
+                      DateFormat('yyyy-MM-dd, HH:mm').format(startDate);
 
-                return Card(
-                  margin: EdgeInsets.all(8.0),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      child: Text('${index + 1}',
-                          style: TextStyle(color: Colors.white)),
+                  return Card(
+                    key: ValueKey(
+                        widget.schedule[index]['id']), // 각 요소의 고유 key를 설정합니다.
+                    margin: EdgeInsets.all(8.0),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        child: Text('${index + 1}',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                      title: Text(widget.schedule[index]['place'],
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                      subtitle: Text("$formattedDate"),
+                      trailing: ReorderableDragStartListener(
+                        index: index,
+                        child: Icon(Icons.drag_handle), // 사용자 지정 드래그 핸들 아이콘
+                      ),
                     ),
-                    title: Text(widget.schedule[index]['place'],
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text("$formattedDate"),
-                    trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                );
-              },
-            ),
+                  );
+                },
+                onReorder: (int oldIndex, int newIndex) {
+                  setState(() {
+                    if (newIndex > oldIndex) {
+                      newIndex -= 1; // 새 인덱스 보정
+                    }
+                    final item = widget.schedule.removeAt(oldIndex);
+                    widget.schedule.insert(newIndex, item);
+                  });
+                },
+                buildDefaultDragHandles: false // 기본 드래그 핸들 비활성화
+                ),
           ),
         ],
       ),
@@ -262,42 +277,108 @@ class MyPageState extends State<MyPage> {
     }
   }
 
+// _buildPlanList 메서드에 ListView 아래에 버튼을 추가합니다.
   Widget _buildPlanList() {
-    return ListView.builder(
-      itemCount: userPlans.length,
-      itemBuilder: (context, index) {
-        // 날짜를 파싱하고 원하는 형식으로 변환합니다.
-        DateTime startDate =
-            DateTime.parse(userPlans[index]['schedule'][0]['start_date']);
-        String formattedDate = DateFormat('yy.MM.dd')
-            .format(startDate); // 'yyyy-MM-dd' -> 'yy.MM.dd'
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: userPlans.length,
+            itemBuilder: (context, index) {
+              // 일정 시작일을 표시하기 위한 로직
+              String formattedDate = "미정"; // 기본값 설정
+              if (userPlans[index]['schedule'].isNotEmpty) {
+                DateTime startDate = DateTime.parse(
+                    userPlans[index]['schedule'][0]['start_date']);
+                formattedDate = DateFormat('yy.MM.dd').format(startDate);
+              }
 
-        return Card(
-          elevation: 4.0, // 카드에 그림자 효과를 줍니다.
-          margin: EdgeInsets.symmetric(
-              horizontal: 10, vertical: 6), // 카드 간의 여백을 설정합니다.
-          child: ListTile(
-            leading: Icon(Icons.map,
-                color: Theme.of(context).primaryColor), // 리스트 타일 앞에 아이콘을 추가합니다.
-            title: Text(
-              userPlans[index]['name'],
-              style: TextStyle(
-                fontWeight: FontWeight.bold, // 제목의 폰트 두께를 굵게 설정합니다.
-              ),
-            ),
-            subtitle: Text("여행 시작일 : $formattedDate"), // 변환된 날짜를 부제목에 추가합니다.
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      PlanDetailsPage(schedule: userPlans[index]['schedule']),
+              return Card(
+                elevation: 4.0,
+                margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: ListTile(
+                  leading:
+                      Icon(Icons.map, color: Theme.of(context).primaryColor),
+                  title: Text(userPlans[index]['name'],
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text("여행 시작일 : $formattedDate"),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PlanDetailsPage(
+                            schedule: userPlans[index]['schedule']),
+                      ),
+                    );
+                  },
                 ),
               );
             },
           ),
+        ),
+        Padding(
+          padding: EdgeInsets.all(10),
+          child: ElevatedButton(
+            onPressed: _showAddPlanDialog,
+            child: Text('새 플랜 작성'),
+          ),
+        ),
+      ],
+    );
+  }
+
+// 다이얼로그 표시 및 새 플랜 이름 입력 처리
+  void _showAddPlanDialog() {
+    TextEditingController _planNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("새 플랜 이름 입력"),
+          content: TextField(
+            controller: _planNameController,
+            decoration: InputDecoration(hintText: "플랜 이름을 입력하세요"),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('취소'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text('저장'),
+              onPressed: () {
+                _createPlan(_planNameController.text);
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
         );
       },
     );
+  }
+
+// API 호출하여 서버에 새 플랜 데이터 전송
+  void _createPlan(String planName) async {
+    final response = await http.post(
+      Uri.parse('http://43.203.61.149/plan/plan/'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        "name": planName,
+        "user": userId,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 성공적으로 데이터가 생성되면 UI 업데이트 또는 알림
+      print('Plan created successfully.');
+    } else {
+      // 실패 처리
+      print('Failed to create plan. Error: ${response.body}');
+    }
   }
 }

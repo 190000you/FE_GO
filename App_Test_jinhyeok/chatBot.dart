@@ -10,11 +10,6 @@ final Uri url = Uri.parse(
 // https://langchaindaegutour-9mqtnttwtajpztax689bw4.streamlit.app/
 
 class ChatBotPage extends StatefulWidget {
-  final String access; // 토큰
-  final String refresh; // 토큰 재확인
-
-  ChatBotPage(this.access, this.refresh);
-
   @override
   ChatBotPageState createState() => ChatBotPageState();
 }

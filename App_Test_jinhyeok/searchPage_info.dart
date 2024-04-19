@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -9,27 +11,38 @@ class PlaceDetailPage extends StatelessWidget {
   PlaceDetailPage({Key? key, required this.placeDetails}) : super(key: key);
   final storage = FlutterSecureStorage();
 
-  // 찜하기 API
-  Future<void> fetchLikePlace(String placeName) async {
+  // 사용자의 찜하기 API
+  Future<void> fetchLikePlace(int placeid) async {
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
+    // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
+    print("장소 상세 정보 : " + placeDetails['id'].toString());
+    print("userId : " + (userId ?? "Unknown"));
+    print("Token : " + (userAccessToken ?? "Unknown"));
 
     final response = await http.post(
       Uri.parse('http://43.203.61.149/user/likeplace'),
       headers: {
         'Authorization': 'Bearer $userAccessToken',
+        'Content-Type': 'application/json',
       },
-      body: jsonEncode({'placeName': placeName}),
+      body: jsonEncode({'name': placeid}), // 여기서 오류 : name == int형임.
     );
+    // placename을 통해 장소 번호 id를 얻는다.
+    // !! 오류 파악 !!
+    // 찜하기 name != 장소 name 다름.
+    // int와 string으로 다른 것을 확인함
 
+    // !! 오류 500 !! 찜하기
     if (response.statusCode == 201) {
+      print("좋아요 버튼 누르기 성공");
       final snackBar = SnackBar(content: Text("찜하기 성공"));
     } else {
       print("찜하기 실패: ${response.statusCode}");
     }
   }
 
-  // 사용자의 플랜 목록을 가져오는 함수
+  // API (1) : 사용자의 플랜 목록을 가져오는 API 함수
   Future<List<Map<String, dynamic>>> fetchPlansForUser() async {
     String? userId = await storage.read(key: "login_id");
 
@@ -52,7 +65,7 @@ class PlaceDetailPage extends StatelessWidget {
     }
   }
 
-  // 플랜에 장소 추가 함수
+  // API (2) : 플랜에 장소 추가 API 함수
   Future<void> addToPlan(String planId, String placeId) async {
     final response = await http.post(
       Uri.parse('http://43.203.61.149/plan/schedule/'),
@@ -74,8 +87,14 @@ class PlaceDetailPage extends StatelessWidget {
     }
   }
 
+  // API(3) : 리뷰 작성
+
+  // API(4) : 링크 공유
+
   @override
   Widget build(BuildContext context) {
+    print("전체 장소 상세 정보 : " + placeDetails.toString());
+
     List<Widget> tagWidgets = placeDetails['tag']
         .map<Widget>((tag) => Chip(
               label: Text(
@@ -105,7 +124,7 @@ class PlaceDetailPage extends StatelessWidget {
               children: <Widget>[
                 GestureDetector(
                   onTap: () {
-                    fetchLikePlace(placeDetails['name']); // 찜하기 API 실행
+                    fetchLikePlace(placeDetails['id']); // 찜하기 API 실행
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -145,6 +164,7 @@ class PlaceDetailPage extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     print('리뷰 작성 버튼 클릭');
+                    // API 추가 (1) : place/review
                     // 리뷰 작성 기능 수행
                   },
                   child: Column(
@@ -160,6 +180,7 @@ class PlaceDetailPage extends StatelessWidget {
                 GestureDetector(
                   onTap: () {
                     print('공유 버튼 클릭');
+                    // API 추가 (2) :  ??? / ???
                     // 공유하기 기능 수행
                   },
                   child: Column(

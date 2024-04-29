@@ -66,17 +66,17 @@ class SurveyAPI {
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['gender'] = this.gender;
-    data['ageGrp'] = this.ageGrp;
-    data['travelStyl1'] = this.travelStyl1;
-    data['travelStyl2'] = this.travelStyl2;
-    data['travelStyl3'] = this.travelStyl3;
-    data['travelStyl4'] = this.travelStyl4;
-    data['travelStyl5'] = this.travelStyl5;
-    data['travelStyl6'] = this.travelStyl6;
-    data['travelStyl7'] = this.travelStyl7;
-    data['travelStyl8'] = this.travelStyl8;
-    data['userId'] = this.userId;
+    data['gender'] = this.gender ?? "";
+    data['ageGrp'] = this.ageGrp?.toString() ?? "";
+    data['travelStyl1'] = this.travelStyl1?.toString() ?? "";
+    data['travelStyl2'] = this.travelStyl2?.toString() ?? "";
+    data['travelStyl3'] = this.travelStyl3?.toString() ?? "";
+    data['travelStyl4'] = this.travelStyl4?.toString() ?? "";
+    data['travelStyl5'] = this.travelStyl5?.toString() ?? "";
+    data['travelStyl6'] = this.travelStyl6?.toString() ?? "";
+    data['travelStyl7'] = this.travelStyl7?.toString() ?? "";
+    data['travelStyl8'] = this.travelStyl8?.toString() ?? "";
+    data['userId'] = this.userId ?? "";
     return data;
   }
 }
@@ -113,7 +113,7 @@ Future<void> fetchSurvey(String Gender, int Age, int Nature, int Sleep, int New,
     userId: userId,
   );
 
-  print("Survey API 실행 중");
+  print("API 연결 전");
   // API 연결
   final response = await http.post(
     Uri.parse('http://43.203.61.149/survey/enroll/'),
@@ -121,6 +121,7 @@ Future<void> fetchSurvey(String Gender, int Age, int Nature, int Sleep, int New,
     body: surveyData.toJson(),
   );
 
+  print("API 연결 후");
   // 요청이 성공적으로 완료됨
   if (response.statusCode == 201) {
     print("요청 성공");
@@ -142,24 +143,6 @@ class SurveyPage extends StatefulWidget {
 }
 
 class _SurveyPageState extends State<SurveyPage> {
-  @override
-  void initState() {
-    super.initState();
-
-    /*
-    // 여기서 사용자 구분
-    if (widget.userSurvey != "Unknown" && widget.userSurvey != null) {
-      // userSurvey 값이 null 또는 Unknown이 아니라면, ChatBotPage로 바로 이동합니다.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ChatBotPage()),
-        );
-      });
-    }
-    */
-  }
-
   static final storage = FlutterSecureStorage();
   late String access;
   late String refresh;
@@ -187,6 +170,17 @@ class _SurveyPageState extends State<SurveyPage> {
   var scorePhoto = createScoreMap(); // 8. 사진으로 남기기 <-> 기억으로 남기기
   var scoreWith = createScoreMap(); // 9. 동반자 적음 <-> 동반자 많음
 
+  // 여기에 색상 배열을 정의합니다.
+  List<Color> rainbowColors = [
+    Color(0xFFB6E0FE), // 파스텔 파란색
+    Color(0xFFB2CEFE), // 파스텔 하늘색
+    Color(0xFFC2B8FE), // 파스텔 보라색
+    Color(0xFFE2B0FE), // 파스텔 연보라색
+    Color(0xFFFAB0FE), // 파스텔 핑크
+    Color(0xFFFEB0F0), // 파스텔 핑크-보라
+    Color(0xFFFEA4C0), // 파스텔 레드-핑크
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -197,68 +191,108 @@ class _SurveyPageState extends State<SurveyPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // 성별 설문조사
-            SizedBox(height: 20),
-            Card(
-              elevation: 4,
-              child: Column(
-                children: [
-                  ListTile(
-                    title: Text(
-                      '성별:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  RadioListTile<String>(
-                    title: Text('남자'),
-                    value: 'M',
-                    groupValue: selectedGender,
-                    onChanged: (String? value) {
-                      setState(() {
-                        selectedGender = value!;
-                      });
-                    },
-                  ),
-                  RadioListTile<String>(
-                    title: Text('여자'),
-                    value: 'W',
-                    groupValue: selectedGender,
-                    onChanged: (String? value) {
-                      setState(() {
-                        selectedGender = value!;
-                      });
-                    },
-                  ),
-                ],
+            SizedBox(height: 30),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20), // 좌우 패딩 설정
+              child: Text(
+                '성별 선택',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 10),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20), // 좌우 20의 패딩 추가
+              child: Container(
+                color: Colors.white,
+                child: Card(
+                    elevation: 4,
+                    color: Color(0xFFFFFFFF),
+                    child: Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceAround, // 버튼을 화면 가로로 분산 배치
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            Icons.male, // 남성 아이콘
+                            size: selectedGender == 'M'
+                                ? 48
+                                : 24, // 선택되면 아이콘 크기 증가
+                            color: selectedGender == 'M'
+                                ? Colors.blue
+                                : Colors.grey, // 선택된 아이콘은 파란색, 그 외는 회색
+                          ),
+                          highlightColor: Colors.transparent,
+                          splashColor: Colors.transparent,
+                          onPressed: () {
+                            setState(() {
+                              selectedGender = 'M';
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.female, // 여성 아이콘
+                            size: selectedGender == 'W'
+                                ? 48
+                                : 24, // 선택되면 아이콘 크기 증가
+                            color: selectedGender == 'W'
+                                ? Colors.pink
+                                : Colors.grey, // 선택된 아이콘은 분홍색, 그 외는 회색
+                          ),
+                          highlightColor: Colors.transparent,
+                          splashColor: Colors.transparent,
+                          onPressed: () {
+                            setState(() {
+                              selectedGender = 'W';
+                            });
+                          },
+                        ),
+                      ],
+                    )),
+              ),
+            ),
             // 나이 설문조사
-            Card(
-              elevation: 4,
-              child: Column(
-                children: [
-                  ListTile(
-                    title: Text(
-                      '나이:',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Slider(
-                    min: 10,
-                    max: 100,
-                    divisions: 9,
-                    value: selectedAge.toDouble(),
-                    label: selectedAge.toString(),
-                    onChanged: (double newValue) {
-                      setState(() {
-                        selectedAge = newValue.round();
-                      });
-                    },
-                  ),
-                ],
+            SizedBox(height: 30),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20), // 좌우 패딩 설정
+              child: Text(
+                '나이대 선택',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 10),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20), // 좌우 20의 패딩 추가
+              child: Card(
+                elevation: 4,
+                color: Color(0xFFFFFFFF),
+                child: Column(
+                  children: [
+                    Slider(
+                      min: 10,
+                      max: 100,
+                      divisions: 9,
+                      value: selectedAge.toDouble(),
+                      label: selectedAge.toString(),
+                      onChanged: (double newValue) {
+                        setState(() {
+                          selectedAge = newValue.round();
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 60),
             // 1. 자연<->도시 (장소)
             buildOptionSection(
               '자연',
@@ -375,59 +409,64 @@ class _SurveyPageState extends State<SurveyPage> {
                 });
               },
             ),
-            // "제출" 버튼
-            SizedBox(height: 50),
-            ElevatedButton(
-              onPressed: () async {
-                print("API 실행 전");
-                // 조건 : 모두 설정했을 때
-                if (selectedGender != '') {
-                  fetchSurvey(
-                      selectedGender,
-                      selectedAge,
-                      selectedNature,
-                      selectedSleep,
-                      selectedNew,
-                      selectedExpensive,
-                      selectedRest,
-                      selectedPopular,
-                      selectedJ,
-                      selectedWith);
+            SizedBox(height: 70),
+            // 10. "제출" 버튼
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20), // 좌우 20의 패딩 추가
+              child: SizedBox(
+                width: double.infinity,
+                height: 60,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    // 조건 : 모두 설정했을 때
+                    if (selectedGender != '') {
+                      fetchSurvey(
+                          selectedGender,
+                          selectedAge,
+                          selectedNature,
+                          selectedSleep,
+                          selectedNew,
+                          selectedExpensive,
+                          selectedRest,
+                          selectedPopular,
+                          selectedJ,
+                          selectedWith);
 
-                  // 비동기식 이동
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => MainPage()), // 다음 화면으로 이동
-                  );
-                } else {
-                  print("API 호출 실패");
-                  final snackBar = SnackBar(content: Text("정보를 모두 입력해주세요."));
-                }
-              },
-              child: Text(
-                '제출',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.blue, // 버튼의 텍스트 색상
-                shape: RoundedRectangleBorder(
-                  // 버튼의 모양을 정의
-                  borderRadius: BorderRadius.zero, // 네모난 모양으로 만들기
+                      // 비동기식 이동
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MainPage()), // 다음 화면으로 이동
+                      );
+                    } else {
+                      print("API 호출 실패");
+                      final snackBar =
+                          SnackBar(content: Text("정보를 모두 입력해주세요."));
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8), // 테두리를 둥글게 설정
+                    ),
+                    elevation: 4, // 그림자 추가
+                    backgroundColor: Color(0xFFFFFFFF), // 배경색을 흰색으로 설정
+                  ),
+                  child: Text(
+                    '제출',
+                    style: TextStyle(fontSize: 18),
+                  ),
                 ),
-                padding: EdgeInsets.symmetric(
-                    horizontal: 50, vertical: 20), // 버튼 내부 패딩
-                elevation: 5, // 버튼의 그림자 깊이
               ),
             ),
-            SizedBox(height: 50),
+            SizedBox(height: 20),
           ],
         ),
       ),
     ));
   }
 
+  // 동그라미 선택하는거 크기 및 모양
   Widget buildOptionSection(String leftText, String rightText,
       int selectedOption, int optionsCount, void Function(int) onTap) {
     // 원의 크기 설정을 위한 배열
@@ -466,7 +505,7 @@ class _SurveyPageState extends State<SurveyPage> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: selectedOption == index
-                      ? Colors.blue
+                      ? rainbowColors[index] // 선택된 옵션에 따라 색상 배열에서 색상 할당
                       : Colors.grey.withOpacity(0.8),
                 ),
               ),

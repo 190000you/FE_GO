@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dots_indicator/dots_indicator.dart';
 
 import 'advertisement.dart'; // 광고 창
+import 'package:geolocator/geolocator.dart'; // 실시간 위치 정보
 
 class PostCard extends StatefulWidget {
   int number;
@@ -20,9 +21,12 @@ class _PostCardState extends State<PostCard> {
   Timer? _timer;
   double _currentPage = 0;
 
+  // 페이지 이동 시간
   @override
   void initState() {
     super.initState();
+    getLocation(); // 1. 사용자 위치 확인
+    // 2.
     _timer = Timer.periodic(Duration(seconds: 5), (timer) {
       if (_pageController.page == _pageController.initialPage + 2) {
         _pageController.animateToPage(
@@ -50,7 +54,7 @@ class _PostCardState extends State<PostCard> {
     super.dispose();
   }
 
-  // 서비스 클릭 이벤트를 처리하기 위한 함수
+  // 제공하는 서비스 - 클릭 이벤트 코드
   void onServiceTap(int index) {
     // List[Navigator]
     // 여기서 index별로 다른 이벤트를 실행할 수 있습니다.
@@ -58,13 +62,22 @@ class _PostCardState extends State<PostCard> {
     print('Service $index clicked');
   }
 
-  // 서비스 텍스트를 위한 리스트
+  // 제공하는 서비스 - Text 수정
   final List<String> serviceTitles = [
     '여행 정보',
     '챗봇 추천',
     '플랜 작성',
     '링크 공유',
   ];
+
+  // 현재 위치 정보 얻기
+  Future<void> getLocation() async {
+    LocationPermission permission = await Geolocator.requestPermission();
+    Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    print("위치 : 위도 + 경도");
+    print(position);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -296,7 +309,7 @@ class _PostCardState extends State<PostCard> {
             width: MediaQuery.of(context).size.width,
             color: Colors.white,
           ),
-          // 4. 제공하는 서비스
+          // 3. 제공하는 서비스
           Container(
             child: Padding(
               padding: EdgeInsets.all(8.0),
@@ -336,9 +349,83 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
           ),
+          Container(
+            height: 100,
+            width: MediaQuery.of(context).size.width,
+            color: Colors.white,
+          ),
+          // 3.5 : Text 문구
+          Container(
+            color: Colors.white, // 배경색을 하얀색으로 설정
+            child: SizedBox(
+              width: double.infinity, // 가로로 꽉 차게
+              child: Center(
+                // 가운데 정렬
+                child: Column(
+                  children: [
+                    Text(
+                      '현재 위치로 여행 장소 찾기', // 한글 제목
+                      style: TextStyle(
+                        fontSize: 16, // 글씨 크기 조절
+                        fontWeight: FontWeight.bold, // 글씨 두껍게
+                        color: Colors.black, // 글씨 색상은 검은색
+                      ),
+                    ),
+                    SizedBox(height: 10), // 한글과 영문 제목 사이의 간격을 조정
+                    Text(
+                      '가볼까?', // 영문 제목
+                      style: TextStyle(
+                        fontSize: 24, // 글씨 크기 조절
+                        fontWeight: FontWeight.bold, // 글씨 두껍게
+                        color: Colors.black, // 글씨 색상은 검은색
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Container(
+            height: 20,
+            width: MediaQuery.of(context).size.width,
+            color: Colors.white,
+          ),
+          // 4. 현재 위치 표시
+          Container(
+            margin: EdgeInsets.all(8.0),
+            width: double.infinity, // 필요에 따라 너비 조정
+            height: 200, // 필요에 따라 높이 조정
+            decoration: BoxDecoration(
+              color: Colors.blue[300], // 박스의 배경색 설정
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned(
+                  bottom: 20, // 위치 필요에 따라 조정
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      "대구광역시 신당동", // 사용 가능하다면 동적 위치 데이터로 교체
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           SizedBox(height: 10),
           Container(
-            height: 10,
+            height: 100,
             width: MediaQuery.of(context).size.width,
             color: Colors.white,
           ),

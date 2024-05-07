@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:dots_indicator/dots_indicator.dart';
+import 'package:http/http.dart';
 
 import 'advertisement.dart'; // 광고 창
 import 'package:geolocator/geolocator.dart'; // 실시간 위치 정보
+import 'package:http/http.dart' as http; // API 사용
+import 'dart:convert'; // API 호출 : 디코딩
 
 class PostCard extends StatefulWidget {
   int number;
@@ -70,13 +73,56 @@ class _PostCardState extends State<PostCard> {
     '링크 공유',
   ];
 
-  // 현재 위치 정보 얻기
+  // 네이버 지도 Mapping
+  Map<String, String> headerss = {
+    "X-NCP-APIGW-API-KEY-ID": "yo5tmuo7vz", // 개인 클라이언트 아이디
+    "X-NCP-APIGW-API-KEY":
+        "oGcKmx1VAWZPChzVZGiaFec1jmmkrlVElCofTB5i" // 개인 시크릿 키
+  };
+
+  String weather = ""; // 1. 날씨
+  String temperature = ""; // 2. 온도
+  String humidity = ""; // 3. 습도
+
+  // 현재 위치 + 행정 구역명 + 날씨 정보
   Future<void> getLocation() async {
+    // 1. 현재 위치 받기 (위도 + 경도)
     LocationPermission permission = await Geolocator.requestPermission();
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-    print("위치 : 위도 + 경도");
-    print(position);
+    String lat = position.latitude.toString(); // 위도
+    String lon = position.longitude.toString(); // 경도
+    print("위도 : " + lat);
+    print("경도 : " + lon);
+    // print(position);
+
+    // 2. 위도 경도 -> 행정 구역으로 바꿈 // 오류 발생
+
+    // 3. 날씨 정보 얻기
+    String openweatherkey = "0e047ef5cce50504edc52d08b01c1933";
+    var str =
+        'http://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$openweatherkey&units=metric';
+    print("날씨 정보 : " + str);
+
+    final response = await http.get(
+      Uri.parse(str),
+    );
+
+    if (response.statusCode == 200) {
+      var data = response.body;
+      var dataJson = jsonDecode(data); // string to json
+      print('data = $data');
+      /*
+      print(dataJson['weather'][0]['main'] +
+          ' ' +
+          dataJson['main']['temp'].toString());
+      */
+      weather = dataJson['weather'][0]['main'];
+      temperature = dataJson['main']['temp'].toString();
+      humidity = dataJson['main']['humidity'].toString();
+    } else {
+      print('response status code = ${response.statusCode}');
+    }
   }
 
   @override
@@ -372,8 +418,12 @@ class _PostCardState extends State<PostCard> {
                       ),
                     ),
                     SizedBox(height: 10), // 한글과 영문 제목 사이의 간격을 조정
+                    // 오류!! 데이터 전달 보다 앱 UI 빌드가 더 빠름
+                    // -> 로그인할 때, 미리 날씨 API를 설정
+                    // -> 데이터를 전달
+                    // -> 그걸 받아내면 될듯한데
                     Text(
-                      '가볼까?', // 영문 제목
+                      '$weather   $temperature°C   $humidity%',
                       style: TextStyle(
                         fontSize: 24, // 글씨 크기 조절
                         fontWeight: FontWeight.bold, // 글씨 두껍게

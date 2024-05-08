@@ -2,6 +2,7 @@ import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -11,38 +12,50 @@ class PlaceDetailPage extends StatelessWidget {
   PlaceDetailPage({Key? key, required this.placeDetails}) : super(key: key);
   final storage = FlutterSecureStorage();
 
-  // 사용자의 찜하기 API
-  Future<void> fetchLikePlace(int placeid) async {
+  // API 1. 사용자의 찜하기 API
+  Future<void> fetchLikePlace(context, int placeId) async {
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
     // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
-    print("장소 상세 정보 : " + placeDetails['id'].toString());
+    /*
+    print("장소 상세 정보 - id : " + placeDetails['id'].toString());
     print("userId : " + (userId ?? "Unknown"));
     print("Token : " + (userAccessToken ?? "Unknown"));
+    */
 
+    final url = Uri.parse('http://43.203.61.149/user/likeplace/'); // API 엔드포인트
     final response = await http.post(
-      Uri.parse('http://43.203.61.149/user/likeplace'),
+      url,
+      // 헤더에 Authorization 추가해서 access Token값 넣기
       headers: {
         'Authorization': 'Bearer $userAccessToken',
-        'Content-Type': 'application/json',
+        "content-type": "application/json"
       },
-      body: jsonEncode({'name': placeid}), // 여기서 오류 : name == int형임.
+      body: jsonEncode({'id': placeId}),
     );
-    // placename을 통해 장소 번호 id를 얻는다.
-    // !! 오류 파악 !!
-    // 찜하기 name != 장소 name 다름.
-    // int와 string으로 다른 것을 확인함
 
-    // !! 오류 500 !! 찜하기
-    if (response.statusCode == 201) {
+    if (response.statusCode == 202) {
       print("좋아요 버튼 누르기 성공");
-      final snackBar = SnackBar(content: Text("찜하기 성공"));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("찜하기 성공", style: GoogleFonts.oleoScript()),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
+      );
     } else {
       print("찜하기 실패: ${response.statusCode}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("찜하기 실패", style: GoogleFonts.oleoScript()),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
-  // API (1) : 사용자의 플랜 목록을 가져오는 API 함수
+  // API 2. 사용자의 플랜 목록을 가져오는 API 함수
   Future<List<Map<String, dynamic>>> fetchPlansForUser() async {
     String? userId = await storage.read(key: "login_id");
 
@@ -65,7 +78,7 @@ class PlaceDetailPage extends StatelessWidget {
     }
   }
 
-  // API (2) : 플랜에 장소 추가 API 함수
+  // API 3. 플랜에 장소 추가 API 함수
   Future<void> addToPlan(String planId, String placeId) async {
     final response = await http.post(
       Uri.parse('http://43.203.61.149/plan/schedule/'),
@@ -87,9 +100,9 @@ class PlaceDetailPage extends StatelessWidget {
     }
   }
 
-  // API(3) : 리뷰 작성
+  // API 4. 리뷰 작성
 
-  // API(4) : 링크 공유
+  // API 5. 링크 공유
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +112,7 @@ class PlaceDetailPage extends StatelessWidget {
         .map<Widget>((tag) => Chip(
               label: Text(
                 tag['name'],
-                style: TextStyle(color: Colors.white),
+                style: GoogleFonts.oleoScript(color: Colors.white),
               ),
               backgroundColor: Colors.blue,
               shape: RoundedRectangleBorder(
@@ -110,7 +123,7 @@ class PlaceDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(placeDetails['name']),
+        title: Text(placeDetails['name'], style: GoogleFonts.oleoScript()),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -124,15 +137,23 @@ class PlaceDetailPage extends StatelessWidget {
               children: <Widget>[
                 GestureDetector(
                   onTap: () {
-                    fetchLikePlace(placeDetails['id']); // 찜하기 API 실행
+                    fetchLikePlace(context, placeDetails['id']); // 찜하기 API 실행
                   },
+                  // if) placeDetails['id'] == likeplace id 목록에 존재
+                  // -> isFavorited = true
+                  // else if) isFavorited = false
+                  // fetchLikePlace
+                  //  if (response.statusCode == 202) {
+                  //    setState(() {
+                  //      isFavorited = !isFavorited;
+                  //  })};
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
                       Icon(Icons.favorite_border, size: 24),
                       SizedBox(height: 4),
-                      Text('찜하기', style: TextStyle(fontSize: 12))
+                      Text('찜하기', style: GoogleFonts.oleoScript(fontSize: 12))
                     ],
                   ),
                 ),
@@ -157,7 +178,7 @@ class PlaceDetailPage extends StatelessWidget {
                     children: <Widget>[
                       Icon(Icons.add_circle_outline, size: 24),
                       SizedBox(height: 4),
-                      Text('플랜 추가', style: TextStyle(fontSize: 12))
+                      Text('플랜 추가', style: GoogleFonts.oleoScript(fontSize: 12))
                     ],
                   ),
                 ),
@@ -173,7 +194,7 @@ class PlaceDetailPage extends StatelessWidget {
                     children: <Widget>[
                       Icon(Icons.edit, size: 24),
                       SizedBox(height: 4),
-                      Text('리뷰 작성', style: TextStyle(fontSize: 12))
+                      Text('리뷰 작성', style: GoogleFonts.oleoScript(fontSize: 12))
                     ],
                   ),
                 ),
@@ -189,7 +210,7 @@ class PlaceDetailPage extends StatelessWidget {
                     children: <Widget>[
                       Icon(Icons.share, size: 24),
                       SizedBox(height: 4),
-                      Text('공유', style: TextStyle(fontSize: 12))
+                      Text('공유', style: GoogleFonts.oleoScript(fontSize: 12))
                     ],
                   ),
                 ),
@@ -208,7 +229,8 @@ class PlaceDetailPage extends StatelessWidget {
             SizedBox(height: 20),
             Text(
               '태그',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: GoogleFonts.oleoScript(
+                  fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
             Wrap(
@@ -230,12 +252,13 @@ class PlaceDetailPage extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style:
+              GoogleFonts.oleoScript(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         SizedBox(height: 5),
         Text(
           content,
-          style: TextStyle(fontSize: 16),
+          style: GoogleFonts.oleoScript(fontSize: 16),
         ),
         SizedBox(height: 10),
       ],
@@ -249,11 +272,11 @@ class PlaceDetailPage extends StatelessWidget {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: Text("알림"),
-          content: Text("사용 가능한 플랜이 없습니다."),
+          title: Text("알림", style: GoogleFonts.oleoScript()),
+          content: Text("사용 가능한 플랜이 없습니다.", style: GoogleFonts.oleoScript()),
           actions: <Widget>[
             TextButton(
-              child: Text("닫기"),
+              child: Text("닫기", style: GoogleFonts.oleoScript()),
               onPressed: () {
                 Navigator.of(context).pop();
               },
@@ -267,11 +290,11 @@ class PlaceDetailPage extends StatelessWidget {
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
-            title: const Text('플랜을 선택하세요'),
+            title: Text('플랜을 선택하세요', style: GoogleFonts.oleoScript()),
             children: plans.map((Map<String, dynamic> plan) {
               return SimpleDialogOption(
                 onPressed: () => Navigator.pop(context, plan['id'].toString()),
-                child: Text(plan['name']),
+                child: Text(plan['name'], style: GoogleFonts.oleoScript()),
               );
             }).toList(),
           );

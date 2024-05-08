@@ -1,5 +1,6 @@
 // 메인 페이지
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
@@ -115,13 +116,6 @@ class _MainPageState extends State<MainPage> {
           MyPage(userName), // 여기에 필요한 Token 전달
         ];
       });
-
-      // 값 확인 : null 값일 때 -> Unknown 값 나옴
-      // print("MainPage - fetch userName : " + userName);
-      // print("MainPage - fetch userSurvey : " + (userSurvey ?? "null"));
-
-      // print("MainPage 'userName' : " + (userName ?? "Unknown"));
-      // print("MainPage 'servey' : " + (userSurvey ?? "null"));
     } else {
       print("Failed to load user details");
     }
@@ -135,48 +129,53 @@ class _MainPageState extends State<MainPage> {
     fetchUserInfo(); // 사용
   }
 
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        titleSpacing: 0.0, // 제목과 아이콘 사이의 공간을 제거합니다.
-        title: Padding(
-            // 제목에 패딩을 추가합니다.
-            padding:
-                EdgeInsets.only(top: 5.0, right: 0.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
-            child: Center(
-              // 제목 글자 : 가볼까?
-              child: Text(
-                'Let\'s go?',
-                style: GoogleFonts.oleoScript(fontSize: 36),
-                // 글꼴을 'Oleo Script regular font'로 설정하고, 글자 크기를 36으로 설정합니다.
-              ),
-            )),
-      ),
-      // 하단 네비게이션 바 UI
-      // 색상 및 크기
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey.withOpacity(.60),
-        selectedFontSize: 14,
-        unselectedFontSize: 10,
-        currentIndex: _selectedIndex,
-
-        showSelectedLabels: false, //아이콘 밑 글씨 삭제
-        showUnselectedLabels: false,
-        onTap: (int index) {
-          setState(() {
-            _selectedIndex = index;
-          });
+    return WillPopScope(
+        onWillPop: () async {
+          return false;
         },
-        items: bottomItems,
-      ),
-      // 하단에서 선택된 페이지 보여줌
-      body: pages.isEmpty
-          ? CircularProgressIndicator() // fetch에서 pages가 만들어질 때까지, 대기중(데이터 로딩 중) 표시
-          : pages[_selectedIndex], // 선택된 인덱스의 페이지 표시
-    );
+        child: Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            titleSpacing: 0.0, // 제목과 아이콘 사이의 공간을 제거합니다.
+            title: Padding(
+                // 제목에 패딩을 추가합니다.
+                padding:
+                    EdgeInsets.only(top: 5.0, right: 0.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
+                child: Center(
+                  // 제목 글자 : 가볼까?
+                  child: Text(
+                    'Let\'s go?',
+                    style: GoogleFonts.oleoScript(fontSize: 36),
+                    // 글꼴을 'Oleo Script regular font'로 설정하고, 글자 크기를 36으로 설정합니다.
+                  ),
+                )),
+          ),
+          // 하단 네비게이션 바 UI
+          // 색상 및 크기
+          bottomNavigationBar: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
+            backgroundColor: Colors.white,
+            selectedItemColor: Colors.black,
+            unselectedItemColor: Colors.grey.withOpacity(.60),
+            selectedFontSize: 14,
+            unselectedFontSize: 10,
+            currentIndex: _selectedIndex,
+
+            showSelectedLabels: false, //아이콘 밑 글씨 삭제
+            showUnselectedLabels: false,
+            onTap: (int index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            items: bottomItems,
+          ),
+          // 하단에서 선택된 페이지 보여줌
+          body: pages.isEmpty
+              ? CircularProgressIndicator() // fetch에서 pages가 만들어질 때까지, 대기중(데이터 로딩 중) 표시
+              : pages[_selectedIndex], // 선택된 인덱스의 페이지 표시
+        ));
   }
 }

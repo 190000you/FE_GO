@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:http/http.dart';
+import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
 
 import 'advertisement.dart'; // 광고 창
 import 'package:geolocator/geolocator.dart'; // 실시간 위치 정보
@@ -9,9 +10,14 @@ import 'package:http/http.dart' as http; // API 사용
 import 'dart:convert'; // API 호출 : 디코딩
 
 class PostCard extends StatefulWidget {
-  int number;
+  final Map<String, dynamic> weatherData;
+  final int number;
 
-  PostCard({required this.number});
+  PostCard({
+    Key? key,
+    required this.weatherData,
+    required this.number,
+  }) : super(key: key);
 
   @override
   _PostCardState createState() => _PostCardState();
@@ -28,7 +34,7 @@ class _PostCardState extends State<PostCard> {
   @override
   void initState() {
     super.initState();
-    getLocation(); // 1. 사용자 위치 확인
+    // getLocation(); // 1. 사용자 위치 확인
     // 2.
     _timer = Timer.periodic(Duration(seconds: 5), (timer) {
       if (_pageController.page == _pageController.initialPage + 2) {
@@ -84,6 +90,7 @@ class _PostCardState extends State<PostCard> {
   String temperature = ""; // 2. 온도
   String humidity = ""; // 3. 습도
 
+  /*
   // 현재 위치 + 행정 구역명 + 날씨 정보
   Future<void> getLocation() async {
     // 1. 현재 위치 받기 (위도 + 경도)
@@ -124,9 +131,37 @@ class _PostCardState extends State<PostCard> {
       print('response status code = ${response.statusCode}');
     }
   }
+  */
+  String getWeatherIcon(int condition) {
+    if (condition < 300) {
+      return '🌩';
+    } else if (condition < 400) {
+      return '🌧';
+    } else if (condition < 600) {
+      return '☔️';
+    } else if (condition < 700) {
+      return '☃️';
+    } else if (condition < 800) {
+      return '🌫';
+    } else if (condition == 800) {
+      return '☀️';
+    } else if (condition <= 804) {
+      return '☁️';
+    } else {
+      return '🤷‍';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    int conditionId = widget.weatherData['conditionId'] ?? 0;
+    String temperature =
+        widget.weatherData['temperature']?.toString() ?? 'unknown';
+    String temperature_min =
+        widget.weatherData['temperature_min']?.toString() ?? 'unknown';
+    String temperature_max =
+        widget.weatherData['temperature_max']?.toString() ?? 'unknown';
+    String humidity = widget.weatherData['humidity']?.toString() ?? 'unknown';
     return Container(
       child: Column(
         children: [
@@ -220,7 +255,7 @@ class _PostCardState extends State<PostCard> {
                   children: [
                     Text(
                       '가볼까가 추천하는 여행지', // 한글 제목
-                      style: TextStyle(
+                      style: GoogleFonts.oleoScript(
                         fontSize: 16, // 글씨 크기 조절
                         fontWeight: FontWeight.bold, // 글씨 두껍게
                         color: Colors.black, // 글씨 색상은 검은색
@@ -229,7 +264,8 @@ class _PostCardState extends State<PostCard> {
                     SizedBox(height: 10), // 한글과 영문 제목 사이의 간격을 조정
                     Text(
                       'Go to Trip?', // 영문 제목
-                      style: TextStyle(
+                      // style: GoogleFonts.oleoScript(fontSize: 36),
+                      style: GoogleFonts.oleoScript(
                         fontSize: 24, // 글씨 크기 조절
                         fontWeight: FontWeight.bold, // 글씨 두껍게
                         color: Colors.black, // 글씨 색상은 검은색
@@ -280,7 +316,7 @@ class _PostCardState extends State<PostCard> {
                             SizedBox(height: 10),
                             Text(
                               '검색',
-                              style: TextStyle(
+                              style: GoogleFonts.oleoScript(
                                 color: Colors.white, // 텍스트 색상
                                 fontSize: 15,
                               ),
@@ -330,7 +366,7 @@ class _PostCardState extends State<PostCard> {
                   children: [
                     Text(
                       '제공하는 서비스', // 한글 제목
-                      style: TextStyle(
+                      style: GoogleFonts.oleoScript(
                         fontSize: 16, // 글씨 크기 조절
                         fontWeight: FontWeight.bold, // 글씨 두껍게
                         color: Colors.black, // 글씨 색상은 검은색
@@ -339,7 +375,7 @@ class _PostCardState extends State<PostCard> {
                     SizedBox(height: 10), // 한글과 영문 제목 사이의 간격을 조정
                     Text(
                       '가볼까?', // 영문 제목
-                      style: TextStyle(
+                      style: GoogleFonts.oleoScript(
                         fontSize: 24, // 글씨 크기 조절
                         fontWeight: FontWeight.bold, // 글씨 두껍게
                         color: Colors.black, // 글씨 색상은 검은색
@@ -382,7 +418,7 @@ class _PostCardState extends State<PostCard> {
                       child: Center(
                         child: Text(
                           serviceTitles[index], // 서비스별 고유한 텍스트
-                          style: TextStyle(
+                          style: GoogleFonts.oleoScript(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
@@ -402,32 +438,29 @@ class _PostCardState extends State<PostCard> {
           ),
           // 3.5 : Text 문구
           Container(
-            color: Colors.white, // 배경색을 하얀색으로 설정
+            color: Colors.white,
             child: SizedBox(
-              width: double.infinity, // 가로로 꽉 차게
+              width: double.infinity,
               child: Center(
-                // 가운데 정렬
                 child: Column(
                   children: [
                     Text(
-                      '현재 위치로 여행 장소 찾기', // 한글 제목
-                      style: TextStyle(
-                        fontSize: 16, // 글씨 크기 조절
-                        fontWeight: FontWeight.bold, // 글씨 두껍게
-                        color: Colors.black, // 글씨 색상은 검은색
+                      '현재 위치로 여행 장소 찾기', // 제목
+                      style: GoogleFonts.oleoScript(
+                        fontSize: 16, // 글자 크기
+                        fontWeight: FontWeight.bold, // 글자 두께
+                        color: Colors.black, // 글자 색상
                       ),
                     ),
-                    SizedBox(height: 10), // 한글과 영문 제목 사이의 간격을 조정
-                    // 오류!! 데이터 전달 보다 앱 UI 빌드가 더 빠름
-                    // -> 로그인할 때, 미리 날씨 API를 설정
-                    // -> 데이터를 전달
-                    // -> 그걸 받아내면 될듯한데
+                    SizedBox(height: 10), // 제목과 아이콘 사이의 간격
+                    SizedBox(height: 10), // 아이콘과 날씨 정보 사이의 간격
                     Text(
-                      '$weather   $temperature°C   $humidity%',
-                      style: TextStyle(
-                        fontSize: 24, // 글씨 크기 조절
-                        fontWeight: FontWeight.bold, // 글씨 두껍게
-                        color: Colors.black, // 글씨 색상은 검은색
+                      // '${getWeatherIcon(conditionId)}   ${widget.weatherData['temperature_min']}~${widget.weatherData['temperature_max']}°C   ${widget.weatherData['humidity']}%', // 날씨 정보
+                      '${getWeatherIcon(conditionId)}   ${widget.weatherData['temperature']}°C   ${widget.weatherData['humidity']}%', // 날씨 정보
+                      style: GoogleFonts.oleoScript(
+                        fontSize: 24, // 글자 크기
+                        fontWeight: FontWeight.bold, // 글자 두께
+                        color: Colors.black, // 글자 색상
                       ),
                     ),
                   ],
@@ -462,7 +495,7 @@ class _PostCardState extends State<PostCard> {
                     ),
                     child: Text(
                       "대구광역시 신당동", // 사용 가능하다면 동적 위치 데이터로 교체
-                      style: TextStyle(
+                      style: GoogleFonts.oleoScript(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,

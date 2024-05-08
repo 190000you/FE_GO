@@ -5,16 +5,11 @@ import 'package:go_test_ver/searchPage_info.dart'; // 경로 설정.
 
 // 외부 import
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-
 class SearchPage extends StatefulWidget {
-  final String access;
-  final String refresh;
-
-  SearchPage(this.access, this.refresh);
-
   @override
   _SearchPageState createState() => _SearchPageState();
 }
@@ -32,6 +27,7 @@ class _SearchPageState extends State<SearchPage> {
   int _totalResultsCount = 0; // 검색 결과의 전체 개수를 저장할 변수
   bool _showMoreButton = true; // "더보기" 버튼을 표시할지 여부를 결정하는 변수
 
+  // API 1. 검색
   Future<void> fetchSearchResult(String query, {bool fetchAll = false}) async {
     if (query.isEmpty) {
       setState(() {
@@ -51,6 +47,7 @@ class _SearchPageState extends State<SearchPage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(utf8.decode(response.bodyBytes));
+      // print("Data 정보 받음: ${response.body}");
       List placesByName = data['places_by_name']; // name으로 검색
       List placesByTag = data['places_by_tag']; // tag로 검색
 
@@ -170,7 +167,7 @@ class _SearchPageState extends State<SearchPage> {
                               children: [
                                 Text(
                                   item['name'],
-                                  style: TextStyle(
+                                  style: GoogleFonts.oleoScript(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -180,7 +177,7 @@ class _SearchPageState extends State<SearchPage> {
                                   visible: tags.isNotEmpty,
                                   child: Text(
                                     tags,
-                                    style: TextStyle(
+                                    style: GoogleFonts.oleoScript(
                                       fontSize: 14,
                                     ),
                                   ),
@@ -218,7 +215,7 @@ class _SearchPageState extends State<SearchPage> {
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Center(
         child: OutlinedButton(
-          child: Text('더보기'),
+          child: Text('더보기', style: GoogleFonts.oleoScript()),
           onPressed: () => fetchSearchResult(query, fetchAll: true),
         ),
       ),

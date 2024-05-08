@@ -14,21 +14,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:http/http.dart' as http; // API 호출 2
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
+import 'package:geolocator/geolocator.dart'; // 실시간 위치 정보
 
 void main() {
   runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Login Page',
-      home: LoginPage(),
-    );
-  }
 }
 
 // Login API(1): 데이터 저장
@@ -101,9 +90,6 @@ Future<void> fetchloginAPI(id, password, context) async {
       String access = jsonResponse['token']['access'];
       String refresh = jsonResponse['token']['refresh'];
 
-      //print(access);
-      //print(refresh);
-
       // storage에 저장 (1) - userID
       await storage.write(
         key: 'login_id',
@@ -131,32 +117,62 @@ Future<void> fetchloginAPI(id, password, context) async {
         String? val2 = await storage.read(key: "login_access_token");
         String? val3 = await storage.read(key: "login_refresh_token");
 
-        print("userId : " + (val1 ?? "Unknown"));
-        print("access Token : " + (val2 ?? "Unknown"));
-        print("refresh Token : " + (val3 ?? "Unknown"));
-
         // 메인 페이지로 이동
-        final snackBar = SnackBar(content: Text("로그인 성공"));
+        //print("로그인 성공: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("로그인 성공", style: GoogleFonts.oleoScript()),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.green,
+          ),
+        );
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => MainPage()), // 다음 화면으로 이동
         );
       } // 로그인 실패
       else {
-        final snackBar = SnackBar(content: Text("로그인 또는 Token 인증에 실패했습니다."));
+        //print("로그인 또는 Token 인증에 실패했습니다.: ${response.statusCode}");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("로그인 또는 Token 인증에 실패했습니다.",
+                style: GoogleFonts.oleoScript()),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     } else {
-      final snackBar = SnackBar(content: Text('로그인에 실패하셨습니다.'));
+      //print("로그인에 실패하셨습니다.: ${response.statusCode}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("로그인에 실패하셨습니다.", style: GoogleFonts.oleoScript()),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   } else if (response.statusCode == 400) {
     // 로그인 실패 : 아이디, 비밀번호 일치 X
-    final snackBar = SnackBar(content: Text('회원 정보가 없습니다.'));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    print('회원 정보가 없습니다.');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("회원 정보가 없습니다.", style: GoogleFonts.oleoScript()),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.red,
+      ),
+    );
   } else {
     // 로그인 실패 : 아이디, 비밀번호 입력 X
-    final snackBar = SnackBar(content: Text('아이디와 비밀번호를 정확하게 입력해주세요.'));
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    /*
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content:
+            Text("아이디와 비밀번호를 정확하게 입력해주세요.", style: GoogleFonts.oleoScript()),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.red,
+      ),
+    );
+    */
     // throw Exception('회원가입 실패: ${response.statusCode}');
   }
 }
@@ -295,8 +311,12 @@ class LoginPageState extends State<LoginPage> {
                           await fetchloginAPI(
                               userId, userPassword, context); // loginAPI 시도
                         } else {
-                          final snackBar =
-                              SnackBar(content: Text('아이디와 비밀번호를 입력해주세요.'));
+                          final snackBar = SnackBar(
+                            content: Text('아이디와 비밀번호를 입력해주세요.',
+                                style: GoogleFonts.oleoScript()),
+                            duration: Duration(seconds: 2),
+                            backgroundColor: Colors.red,
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(snackBar);
                         }
                       },

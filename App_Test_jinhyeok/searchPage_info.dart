@@ -217,16 +217,25 @@ class PlaceDetailPage extends StatelessWidget {
               ],
             ),
             SizedBox(height: 5),
+            // 실선 표시
             Divider(thickness: 1),
             SizedBox(height: 5),
+            // 1. 분류
             _buildDetailItem('분류', placeDetails['classification']),
             SizedBox(height: 20),
+            // 2. 주차 여부
             _buildDetailItem('주차 여부', placeDetails['parking'] ? '가능' : '불가능'),
             SizedBox(height: 20),
+            // 3. 평균 체류 시간
+            _buildDetailItem('평균 체류 시간', placeDetails['time']),
+            SizedBox(height: 20),
+            // 4. 자세한 정보
             _buildDetailItem('자세한 정보', placeDetails['info']),
             SizedBox(height: 20),
+            // 5. 전화번호
             _buildDetailItem('전화번호', placeDetails['call']),
             SizedBox(height: 20),
+            // 6. 태그 정보
             Text(
               '태그',
               style: GoogleFonts.oleoScript(
@@ -239,7 +248,61 @@ class PlaceDetailPage extends StatelessWidget {
               children: tagWidgets,
             ),
             SizedBox(height: 20),
-            _buildDetailItem('체류 시간', placeDetails['time']),
+
+            // 실선 표시
+            Divider(thickness: 1),
+            SizedBox(height: 10),
+            // 리뷰 UI 추가할 곳
+            Text(
+              '전체 리뷰 개수 넣는 곳',
+              // '전체 ${reviews.length}개 리뷰',
+              style: GoogleFonts.oleoScript(
+                  fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            // 7. 리뷰 내용
+            Container(
+              height: 350, // 고정된 높이를 가진 컨테이너
+              child: ListView.builder(
+                // itemCount: reviews.length,
+                itemBuilder: (context, index) {
+                  // final review = reviews[index];
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 1. 점수 (리뷰 점수를 표시하는 로우)
+                          Text(
+                            '리뷰 점수',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                          Row(
+                              //children: List.generate(review['score'], (index) => Icon(Icons.star, color: Colors.amber, size: 20)),
+                              ),
+                          SizedBox(height: 8),
+                          // 2. 리뷰 작성자와 날짜
+                          Text(
+                            '리뷰 작성자와 날짜',
+                            // '${review['writer']} | ${review['date']}',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                          SizedBox(height: 10),
+                          // 3. 리뷰 내용
+                          Text(
+                            '리뷰 내용',
+                            // review['content'],
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 40),
           ],
         ),
       ),

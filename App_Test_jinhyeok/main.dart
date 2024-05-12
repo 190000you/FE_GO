@@ -1,9 +1,11 @@
 // 메인 페이지
 import 'package:flutter/material.dart';
+import 'package:go_test_ver/login.dart';
+import 'package:go_test_ver/mainPage.dart';
 
 // import : 로딩 애니메이션 패키지
 import 'package:flutter_spinkit/flutter_spinkit.dart'; // import : 로딩 애니메이션
-import 'dart:async'; // ?
+import 'dart:async';
 import 'package:go_test_ver/loadingText.dart';
 
 // import : 로그인 페이지로 이어짐
@@ -22,6 +24,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      // 라우트 설정
+      routes: {
+        '/login': (context) => LoginPage(),
+        '/mainPage': (context) => MainPage(),
+      },
+      // 테마 설정
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

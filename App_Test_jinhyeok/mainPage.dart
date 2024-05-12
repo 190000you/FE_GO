@@ -9,6 +9,7 @@ import 'dart:convert'; // API 호출 : 디코딩
 
 // import package 파일
 import 'package:go_test_ver/homeScreen.dart';
+import 'package:go_test_ver/login.dart';
 import 'package:go_test_ver/postCard.dart';
 import 'package:go_test_ver/searchPage.dart';
 import 'package:go_test_ver/chatBot.dart';
@@ -138,19 +139,39 @@ class _MainPageState extends State<MainPage> {
         child: Scaffold(
           appBar: AppBar(
             automaticallyImplyLeading: false,
-            titleSpacing: 0.0, // 제목과 아이콘 사이의 공간을 제거합니다.
-            title: Padding(
-                // 제목에 패딩을 추가합니다.
-                padding:
-                    EdgeInsets.only(top: 5.0, right: 0.0), // 위쪽과 왼쪽에 패딩을 추가합니다.
-                child: Center(
-                  // 제목 글자 : 가볼까?
-                  child: Text(
-                    'Let\'s go?',
-                    style: GoogleFonts.oleoScript(fontSize: 36),
-                    // 글꼴을 'Oleo Script regular font'로 설정하고, 글자 크기를 36으로 설정합니다.
+            titleSpacing: 0.0, // 제목과 아이콘 사이의 공간을 제거
+            title: Row(
+              mainAxisAlignment: MainAxisAlignment.center, // Row 내 요소들을 가운데 정렬
+              children: <Widget>[
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 50.0), // 오른쪽에서 20만큼 떨어짐
                   ),
-                )),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'Let\'s go?',
+                      style: GoogleFonts.oleoScript(fontSize: 36),
+                    ),
+                  ),
+                ),
+                // 로그아웃 버튼 : 미완성
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 10.0), // 오른쪽에서 20만큼 떨어짐
+                    child: IconButton(
+                      icon: Icon(Icons.exit_to_app), // 열려 있는 문 아이콘
+                      onPressed: () {
+                        logoutFunction(context); // 로그아웃 함수 호출
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           // 하단 네비게이션 바 UI
           // 색상 및 크기
@@ -177,5 +198,11 @@ class _MainPageState extends State<MainPage> {
               ? CircularProgressIndicator() // fetch에서 pages가 만들어질 때까지, 대기중(데이터 로딩 중) 표시
               : pages[_selectedIndex], // 선택된 인덱스의 페이지 표시
         ));
+  }
+
+  void logoutFunction(BuildContext context) {
+    Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => LoginPage()),
+        (Route<dynamic> route) => false);
   }
 }

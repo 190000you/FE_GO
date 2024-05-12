@@ -186,6 +186,7 @@ class LoginPage extends StatefulWidget {
 // 로그인 페이지
 class LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>(); // formKey 정의
+  DateTime? lastPressed; // 뒤로가기 2번 누르도록
 
   // 변수
   String userId = "";
@@ -429,6 +430,33 @@ class LoginPageState extends State<LoginPage> {
                 ]),
           ),
         ),
+      ),
+      // WillPopScope를 사용하여 뒤로 가기 이벤트를 감지
+      backgroundColor: Colors.white,
+      bottomNavigationBar: WillPopScope(
+        onWillPop: () async {
+          final now = DateTime.now();
+          final backButtonHasNotBeenPressedOrSnackBarHasBeenClosed =
+              lastPressed == null ||
+                  now.difference(lastPressed!) > Duration(seconds: 2);
+
+          if (backButtonHasNotBeenPressedOrSnackBarHasBeenClosed) {
+            lastPressed = DateTime.now();
+
+            // 사용자에게 경고를 주는 Snackbar 표시
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('한 번 더 뒤로가기 버튼을 누를 시 앱이 꺼집니다.'),
+                duration: Duration(seconds: 2),
+              ),
+            );
+
+            return false; // 뒤로 가기 이벤트를 막습니다
+          }
+
+          return true; // 뒤로 가기 이벤트를 허용하여 앱을 종료합니다
+        },
+        child: Text('Login Page Content'),
       ),
     );
   }

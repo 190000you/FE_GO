@@ -80,26 +80,28 @@ class PlaceDetailPage extends StatelessWidget {
 
   // API 3. 플랜에 장소 추가 API 함수
   Future<void> addToPlan(String planId, String placeId) async {
+    DateTime now = DateTime.now().toUtc(); // 현재 UTC 시간
+    String formattedDate = now.toIso8601String(); // 현재 시간을 ISO 8601 포맷으로 변환
+
     final response = await http.post(
       Uri.parse('http://43.203.61.149/plan/schedule/'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
       body: jsonEncode(<String, dynamic>{
-        'start_date': null,
-        'end_date': null,
+        'start_date': "2024-05-13T07:04:12.958Z", // 현재 시간을 시작 날짜로 설정
+        'end_date': "2024-05-13T07:04:12.958Z", // 현재 시간을 종료 날짜로 설정
         'place': placeId,
         'plan': planId,
       }),
     );
 
-    if (response.statusCode == 201) {
-      print("Plan updated successfully");
+    if (response.statusCode == 200) {
+      print("장소 추가 성공");
     } else {
-      print("Failed to update plan");
+      print("장소 추가 실패: ${response.body}");
     }
   }
-
   // API 4. 리뷰 작성
 
   // API 5. 링크 공유

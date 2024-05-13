@@ -6,22 +6,27 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class PlaceDetailPage extends StatelessWidget {
+class PlaceDetailPage extends StatefulWidget {
   final Map<String, dynamic> placeDetails;
-
   PlaceDetailPage({Key? key, required this.placeDetails}) : super(key: key);
+  @override
+  PlaceDetailPageState createState() => PlaceDetailPageState();
+}
+
+class PlaceDetailPageState extends State<PlaceDetailPage> {
   final storage = FlutterSecureStorage();
+  bool isFavorited = false; // 찜하기 상태를 초기화 (기본값은 false)
 
   // API 1. 사용자의 찜하기 API
   Future<void> fetchLikePlace(context, int placeId) async {
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
+
     // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
-    /*
-    print("장소 상세 정보 - id : " + placeDetails['id'].toString());
+
+    // print("장소 상세 정보 - id : " + widget.placeDetails['id'].toString());
     print("userId : " + (userId ?? "Unknown"));
     print("Token : " + (userAccessToken ?? "Unknown"));
-    */
 
     final url = Uri.parse('http://43.203.61.149/user/likeplace/'); // API 엔드포인트
     final response = await http.post(
@@ -108,9 +113,10 @@ class PlaceDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print("전체 장소 상세 정보 : " + placeDetails.toString());
+    print("전체 장소 상세 정보 : " + widget.placeDetails.toString());
+    print("장소 번호 : " + widget.placeDetails['id'].toString());
 
-    List<Widget> tagWidgets = placeDetails['tag']
+    List<Widget> tagWidgets = widget.placeDetails['tag']
         .map<Widget>((tag) => Chip(
               label: Text(
                 tag['name'],
@@ -125,7 +131,8 @@ class PlaceDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(placeDetails['name'], style: GoogleFonts.oleoScript()),
+        title:
+            Text(widget.placeDetails['name'], style: GoogleFonts.oleoScript()),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -139,8 +146,15 @@ class PlaceDetailPage extends StatelessWidget {
               children: <Widget>[
                 GestureDetector(
                   onTap: () {
-                    fetchLikePlace(context, placeDetails['id']); // 찜하기 API 실행
+                    setState(() {
+                      isFavorited = !isFavorited;
+                      fetchLikePlace(
+                          context, widget.placeDetails['id']); // 찜하기 API 실행 코드
+                    }); // 찜하기 API 실행
                   },
+                  // 1. 좋아요 누르면, 사용자 정보에도 저장되어야함.
+                  // 2. user/like - id == placeDetails['id']
+                  //
                   // if) placeDetails['id'] == likeplace id 목록에 존재
                   // -> isFavorited = true
                   // else if) isFavorited = false
@@ -153,7 +167,11 @@ class PlaceDetailPage extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: <Widget>[
-                      Icon(Icons.favorite_border, size: 24),
+                      Icon(
+                        isFavorited ? Icons.favorite : Icons.favorite_border,
+                        size: 24,
+                        color: isFavorited ? Colors.red : null,
+                      ),
                       SizedBox(height: 4),
                       Text('찜하기', style: GoogleFonts.oleoScript(fontSize: 12))
                     ],
@@ -167,7 +185,7 @@ class PlaceDetailPage extends StatelessWidget {
                       String selectedPlanId = await _showPlanSelector(
                           context, plans); // 사용자가 플랜을 선택하게 하는 UI
                       if (selectedPlanId.isNotEmpty) {
-                        String placeId = placeDetails['id'].toString();
+                        String placeId = widget.placeDetails['id'].toString();
                         await addToPlan(selectedPlanId, placeId);
                       }
                     } catch (e) {
@@ -223,19 +241,20 @@ class PlaceDetailPage extends StatelessWidget {
             Divider(thickness: 1),
             SizedBox(height: 5),
             // 1. 분류
-            _buildDetailItem('분류', placeDetails['classification']),
+            _buildDetailItem('분류', widget.placeDetails['classification']),
             SizedBox(height: 20),
             // 2. 주차 여부
-            _buildDetailItem('주차 여부', placeDetails['parking'] ? '가능' : '불가능'),
+            _buildDetailItem(
+                '주차 여부', widget.placeDetails['parking'] ? '가능' : '불가능'),
             SizedBox(height: 20),
             // 3. 평균 체류 시간
-            _buildDetailItem('평균 체류 시간', placeDetails['time']),
+            _buildDetailItem('평균 체류 시간', widget.placeDetails['time']),
             SizedBox(height: 20),
             // 4. 자세한 정보
-            _buildDetailItem('자세한 정보', placeDetails['info']),
+            _buildDetailItem('자세한 정보', widget.placeDetails['info']),
             SizedBox(height: 20),
             // 5. 전화번호
-            _buildDetailItem('전화번호', placeDetails['call']),
+            _buildDetailItem('전화번호', widget.placeDetails['call']),
             SizedBox(height: 20),
             // 6. 태그 정보
             Text(

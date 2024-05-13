@@ -23,6 +23,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // 디버그 표시를 없앤다.
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       // 라우트 설정
       routes: {

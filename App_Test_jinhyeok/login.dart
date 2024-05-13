@@ -456,7 +456,7 @@ class LoginPageState extends State<LoginPage> {
 
           return true; // 뒤로 가기 이벤트를 허용하여 앱을 종료합니다
         },
-        child: Text('Login Page Content'),
+        child: SizedBox(),
       ),
     );
   }

@@ -15,7 +15,6 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  //데이터를 이전 페이지에서 전달 받은 정보를 저장하기 위한 변수
   static final storage = FlutterSecureStorage();
   late String access;
   late String refresh;
@@ -23,58 +22,65 @@ class _SearchPageState extends State<SearchPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   String query = '';
   final List<String> _tags = ['#태그'];
+  List<String> selectedTags = [];
   List<Map<String, dynamic>> _searchResults = [];
-  int _totalResultsCount = 0; // 검색 결과의 전체 개수를 저장할 변수
-  bool _showMoreButton = true; // "더보기" 버튼을 표시할지 여부를 결정하는 변수
+  List<Map<String, dynamic>> _displayedResults = [];
+  int _totalResultsCount = 0;
+  bool _showMoreButton = false; // 버튼 보이지 않음
+  int _displayCount = 5; // 표기 수
 
-  // API 1. 검색
-  Future<void> fetchSearchResult(String query, {bool fetchAll = false}) async {
+  Future<void> fetchSearchResult(String query, {bool fetchMore = false}) async {
     if (query.isEmpty) {
       setState(() {
         _searchResults = [];
+        _displayedResults = [];
         _totalResultsCount = 0;
-        _showMoreButton = true; // 검색어가 비어있으면 "더보기" 버튼을 다시 표시합니다.
+        _showMoreButton = false; // 검색창이 비어있을 때 더보기 버튼을 보이지 않게 수정
       });
       return;
     }
 
-    var body = jsonEncode({'name': query});
-    final response = await http.post(
-      Uri.parse('http://43.203.61.149/place/find/'), // 실제 API URL로 변경해주세요.
-      headers: {"Content-Type": "application/json"},
-      body: body,
-    );
+    if (!fetchMore) {
+      var body = jsonEncode({'name': query});
+      final response = await http.post(
+        Uri.parse('http://43.203.61.149/place/find/'),
+        headers: {"Content-Type": "application/json"},
+        body: body,
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      // print("Data 정보 받음: ${response.body}");
-      List placesByName = data['places_by_name']; // name으로 검색
-      List placesByTag = data['places_by_tag']; // tag로 검색
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
+        List placesByName = data['places_by_name'];
+        List placesByTag = data['places_by_tag'];
 
-      Set<Map<String, dynamic>> matchedPlaces = {};
+        Set<Map<String, dynamic>> matchedPlaces = {};
 
-      placesByName.forEach((place) {
-        matchedPlaces.add(place);
-      });
+        placesByName.forEach((place) {
+          matchedPlaces.add(place);
+        });
 
-      placesByTag.forEach((place) {
-        matchedPlaces.add(place);
-      });
+        placesByTag.forEach((place) {
+          matchedPlaces.add(place);
+        });
 
-      _totalResultsCount = matchedPlaces.length;
-      setState(() {
-        _searchResults =
-            fetchAll ? matchedPlaces.toList() : matchedPlaces.take(5).toList();
-        _showMoreButton = !fetchAll; // "더보기"를 클릭하면 버튼을 숨깁니다.
-      });
-    } else {
-      print('검색 실패 오류코드: ${response.statusCode}');
-      setState(() {
+        _searchResults = matchedPlaces.toList();
+        _totalResultsCount = _searchResults.length;
+      } else {
+        print('검색 실패 오류코드: ${response.statusCode}');
         _searchResults = [];
         _totalResultsCount = 0;
-        _showMoreButton = true;
-      });
+      }
+      _displayCount = 5; // 초기 표시 아이템 수를 리셋
+    } else {
+      _displayCount += 5; // "더보기" 클릭 시 추가로 5개의 아이템을 표시
     }
+
+    setState(() {
+      _displayedResults = _searchResults.take(_displayCount).toList();
+      _showMoreButton = _displayCount < _totalResultsCount &&
+          _displayedResults.isNotEmpty &&
+          query.isNotEmpty;
+    });
   }
 
   @override
@@ -111,26 +117,24 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Wrap(
-              spacing: 8.0,
-              children: _tags.map((tag) => _buildChip(tag)).toList(),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: _tags.map((tag) => _buildChip(tag)).toList(),
+              ),
             ),
           ),
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(8.0),
-              itemCount: _searchResults.length +
-                  (_showMoreButton && _totalResultsCount > 5 ? 1 : 0),
+              itemCount: _displayedResults.length + (_showMoreButton ? 1 : 0),
               separatorBuilder: (BuildContext context, int index) => Divider(),
               itemBuilder: (BuildContext context, int index) {
-                if (index == _searchResults.length &&
-                    _showMoreButton &&
-                    _totalResultsCount > 5) {
-                  return _buildMoreButton(); // "더보기" button as the last item
+                if (index == _displayedResults.length && _showMoreButton) {
+                  return _buildMoreButton();
                 }
 
-                // Item widget code
-                var item = _searchResults[index];
+                var item = _displayedResults[index];
                 var tags = item['tag'] != null && item['tag'].isNotEmpty
                     ? item['tag'].map((tag) => tag['name']).join(' ')
                     : ' ';
@@ -155,7 +159,7 @@ class _SearchPageState extends State<SearchPage> {
                         Image.network(
                           imageUrl,
                           width: 60,
-                          height: 60, // Correct height value
+                          height: 60,
                           fit: BoxFit.cover,
                         ),
                         Expanded(
@@ -200,7 +204,7 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _buildChip(String tag) {
     return InkWell(
-      onTap: () => _scaffoldKey.currentState?.openDrawer(),
+      onTap: () => _showTagSelectionDialog(),
       child: Chip(
         label: Text(tag),
         shape: RoundedRectangleBorder(
@@ -210,13 +214,60 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
+  void _showTagSelectionDialog() {
+    final allTags = ['#진달래', '#서원', '#역사적인', '#역사', '#공원', '#박물관'];
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('태그 선택'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: allTags.map((tag) {
+                final isSelected = selectedTags.contains(tag);
+                return CheckboxListTile(
+                  title: Text(tag),
+                  value: isSelected,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      if (value == true && !selectedTags.contains(tag)) {
+                        selectedTags.add(tag);
+                      } else if (value == false && selectedTags.contains(tag)) {
+                        selectedTags.remove(tag);
+                      }
+                    });
+                    Navigator.of(context).pop();
+                    _showTagSelectionDialog(); // 다이얼로그를 다시 열어 업데이트된 상태를 표시
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: Text('확인'),
+              onPressed: () {
+                setState(() {
+                  _tags
+                    ..clear()
+                    ..addAll(['#태그'] + selectedTags);
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _buildMoreButton() {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Center(
         child: OutlinedButton(
           child: Text('더보기', style: GoogleFonts.oleoScript()),
-          onPressed: () => fetchSearchResult(query, fetchAll: true),
+          onPressed: () => fetchSearchResult(query, fetchMore: true),
         ),
       ),
     );

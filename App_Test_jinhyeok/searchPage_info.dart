@@ -1,10 +1,61 @@
 import 'dart:ffi';
 
+// 외부 import
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+
+void main() {
+  KakaoSdk.init(
+    nativeAppKey: '21ec99e3bdf6dcb0e2d4e1eaba24cd9d',
+    javaScriptAppKey: 'd33777b631cfbe4c9534dc2340196a1b',
+  );
+}
+
+class KakaoShareManager {
+// 5-1. 카카오톡 설치 여부 확인
+  Future<bool> isKakaotalkInstalled() async {
+    bool isKakaoTalkSharingAvatilable =
+        await ShareClient.instance.isKakaoTalkSharingAvailable();
+    return isKakaoTalkSharingAvatilable;
+  }
+
+  // 5-2. 카카오톡 링크 공유
+  void shareMyCode() async {
+    // 카카오톡 실행 가능 여부 확인
+    bool isKakaoTalkSharingAvailable =
+        await ShareClient.instance.isKakaoTalkSharingAvailable();
+
+    // Map<String, dynamic> jsonMap = json.decode(inputJson);
+    // String url = jsonMap['url'];
+
+    // 카카오톡 공유하기 탬플릿 생성
+    var template = TextTemplate(
+      text:
+          '카카오톡 공유는 카카오 플랫폼 서비스의 대표 기능으로써 사용자의 모바일 기기에 설치된 카카오 플랫폼과 연동하여 다양한 기능을 실행할 수 있습니다.\n현재 이용할 수 있는 카카오톡 공유는 다음과 같습니다.\n카카오톡링크\n카카오톡을 실행하여 사용자가 선택한 채팅방으로 메시지를 전송합니다.',
+      link: Link(
+        webUrl: Uri.parse('https: //developers.kakao.com'),
+        mobileWebUrl: Uri.parse('https: //developers.kakao.com'),
+      ),
+    );
+
+    // 설치 여부에 따른 로직 분기
+    if (isKakaoTalkSharingAvailable) {
+      // 카카오톡 O
+      Uri uri = await ShareClient.instance.shareDefault(template: template);
+      await ShareClient.instance.launchKakaoTalk(uri);
+      print('카카오톡 공유 완료');
+    } else {
+      // 카카오톡 X
+      Uri shareUrl =
+          await WebSharerClient.instance.makeDefaultUrl(template: template);
+      await launchBrowserTab(shareUrl, popupOpen: true);
+    }
+  }
+}
 
 class PlaceDetailPage extends StatefulWidget {
   final Map<String, dynamic> placeDetails;
@@ -14,11 +65,24 @@ class PlaceDetailPage extends StatefulWidget {
 }
 
 class PlaceDetailPageState extends State<PlaceDetailPage> {
+  KakaoShareManager kakaoShareManager = KakaoShareManager();
   final storage = FlutterSecureStorage();
   bool isFavorited = false; // 찜하기 상태를 초기화 (기본값은 false)
 
+  // 처음 한 번
+  void initState() {
+    super.initState();
+    // 좋아요 상태 업데이트
+    updateFavoriteStatus();
+  }
+
+  void updateFavoriteStatus() async {
+    isFavorited = await fetchUserLikePlace(widget.placeDetails['name']);
+    setState(() {});
+  }
+
   // API 1. 사용자의 찜하기 API
-  Future<void> fetchLikePlace(context, int placeId) async {
+  Future<void> fetchLikePlace(context, String placeName) async {
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
 
@@ -36,10 +100,11 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
         'Authorization': 'Bearer $userAccessToken',
         "content-type": "application/json"
       },
-      body: jsonEncode({'id': placeId}),
+      body: jsonEncode({'like': userId, 'name': placeName}),
     );
 
     if (response.statusCode == 202) {
+      isFavorited = true;
       print("좋아요 버튼 누르기 성공");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -52,12 +117,94 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       print("찜하기 실패: ${response.statusCode}");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("찜하기 실패", style: GoogleFonts.oleoScript()),
+          content:
+              Text("서버가 불안정합니다. 다시 시도해주세요.", style: GoogleFonts.oleoScript()),
           duration: Duration(seconds: 2),
           backgroundColor: Colors.red,
         ),
       );
     }
+  }
+
+  // API 1.2 사용자의 찜하기 해제 API
+  Future<void> fetchDislikePlace(context, int placeId) async {
+    String? userId = await storage.read(key: "login_id");
+    String? userAccessToken = await storage.read(key: "login_access_token");
+    // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
+
+    // print("장소 상세 정보 - id : " + widget.placeDetails['id'].toString());
+    print("userId : " + (userId ?? "Unknown"));
+    print("Token : " + (userAccessToken ?? "Unknown"));
+
+    final url = Uri.parse(
+        'http://43.203.61.149/user/${userId}/delLike/${placeId}'); // API 엔드포인트
+    final response = await http.delete(
+      url,
+      // 헤더에 Authorization 추가해서 access Token값 넣기
+      headers: {
+        'Authorization': 'Bearer $userAccessToken',
+        "content-type": "application/json"
+      },
+      body: jsonEncode({'userId': userId, 'placeId': placeId}),
+    );
+
+    if (response.statusCode == 204) {
+      print("찜목록 삭제");
+      isFavorited = false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("찜하기 취소", style: GoogleFonts.oleoScript()),
+          duration: Duration(seconds: 2),
+          backgroundColor: const Color.fromARGB(255, 76, 83, 175),
+        ),
+      );
+    } else {
+      print("찜하기 취소 실패: ${response.statusCode}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text("서버가 불안정합니다. 다시 시도해주세요.", style: GoogleFonts.oleoScript()),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  // API 1.3 사용자 찜목록 보기
+  Future<bool> fetchUserLikePlace(String placeName) async {
+    String? userId = await storage.read(key: "login_id");
+    String? userAccessToken = await storage.read(key: "login_access_token");
+
+    // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
+    // print("장소 상세 정보 - id : " + widget.placeDetails['id'].toString());
+    // print("userId : " + (userId ?? "Unknown"));
+    // print("Token : " + (userAccessToken ?? "Unknown"));
+
+    final url =
+        Uri.parse('http://43.203.61.149/user/like/${userId}'); // API 엔드포인트
+    final response = await http.get(
+      url,
+      // 헤더에 Authorization 추가해서 access Token값 넣기
+      headers: {
+        'Authorization': 'Bearer $userAccessToken',
+        "content-type": "application/json"
+      },
+    );
+
+    var decodedData = utf8.decode(response.bodyBytes);
+    var data = json.decode(decodedData);
+
+    if (response.statusCode == 200 && data['results'].isNotEmpty) {
+      for (var result in data['results']) {
+        if (result['name'] == placeName) {
+          print("Match found: ${result['name']}");
+          return true; // placeName과 일치하는 경우
+        }
+      }
+    }
+    print("No match found or results are empty");
+    return false; // 일치하는 항목이 없거나 배열이 비어있으면
   }
 
   // API 2. 사용자의 플랜 목록을 가져오는 API 함수
@@ -110,11 +257,12 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
   // API 4. 리뷰 작성
 
   // API 5. 링크 공유
+  // -> class KakaoShareManager 사용
 
   @override
   Widget build(BuildContext context) {
-    print("전체 장소 상세 정보 : " + widget.placeDetails.toString());
-    print("장소 번호 : " + widget.placeDetails['id'].toString());
+    // print("전체 장소 상세 정보 : " + widget.placeDetails.toString());
+    // print("장소 번호 : " + widget.placeDetails['id'].toString());
 
     List<Widget> tagWidgets = widget.placeDetails['tag']
         .map<Widget>((tag) => Chip(
@@ -148,8 +296,15 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                   onTap: () {
                     setState(() {
                       isFavorited = !isFavorited;
-                      fetchLikePlace(
-                          context, widget.placeDetails['id']); // 찜하기 API 실행 코드
+                      // 찜하기
+                      if (isFavorited) {
+                        fetchLikePlace(context,
+                            widget.placeDetails['name']); // 찜하기 API 실행 코드
+                      }
+                      // 찜하기 해제
+                      else {
+                        fetchDislikePlace(context, widget.placeDetails['id']);
+                      }
                     }); // 찜하기 API 실행
                   },
                   // 1. 좋아요 누르면, 사용자 정보에도 저장되어야함.
@@ -221,6 +376,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                 GestureDetector(
                   onTap: () {
                     print('공유 버튼 클릭');
+                    kakaoShareManager.shareMyCode();
                     // API 추가 (2) :  ??? / ???
                     // 공유하기 기능 수행
                   },

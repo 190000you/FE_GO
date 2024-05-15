@@ -13,14 +13,7 @@ import 'package:intl/intl.dart'; // yyyy.mm.dd형식을 yy.mm.dd형식으로
 String? userAccessToken = "";
 String? userRefreshToken = "";
 
-class MyPage extends StatefulWidget {
-  String userName; // 이전 페이지에서 userName 받아와서 업로드
-  MyPage(this.userName);
-
-  @override
-  MyPageState createState() => MyPageState();
-}
-
+// 플랜 불러오기 1
 class PlanDetailsPage extends StatefulWidget {
   final List<dynamic> schedule; // 스케줄 데이터 리스트를 받는다
 
@@ -30,6 +23,7 @@ class PlanDetailsPage extends StatefulWidget {
   _PlanDetailsPageState createState() => _PlanDetailsPageState();
 }
 
+// 플랜 불러오기 2
 class _PlanDetailsPageState extends State<PlanDetailsPage> {
   @override
   Widget build(BuildContext context) {
@@ -94,14 +88,24 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
   }
 }
 
+// 마이 페이지 1
+class MyPage extends StatefulWidget {
+  String userName; // 이전 페이지에서 userName 받아와서 업로드
+  MyPage(this.userName);
+
+  @override
+  MyPageState createState() => MyPageState();
+}
+
+// 마이 페이지 2
 class MyPageState extends State<MyPage> {
   bool isFavoriteSelected = false;
   bool isPlanSelected = false;
   bool isReviewSelected = false;
-  List<Map<String, dynamic>> userPlans = [];
-  String userId = "";
-  String userName = "";
-  final storage = FlutterSecureStorage();
+  List<Map<String, dynamic>> userPlans = []; // 플랜 정보
+  String userId = ""; // 사용자 ID 데이터
+  String userName = ""; // 사용자 이름 정보
+  final storage = FlutterSecureStorage(); // Local 내부 저장소 사용
 
   @override
   void initState() {
@@ -112,13 +116,14 @@ class MyPageState extends State<MyPage> {
     _loadUserId();
   }
 
+  // API 1. User 모델 데이터 가져오기 API
   void _loadUserId() async {
-    // 여기 문제
     String? storedUserId = await storage.read(key: 'login_id');
     if (storedUserId != null) {
       setState(() {
         userId = storedUserId;
       });
+      fetchLikeForUser();
       fetchPlansForUser().then((plans) {
         setState(() {
           userPlans = plans;
@@ -129,6 +134,26 @@ class MyPageState extends State<MyPage> {
     }
   }
 
+  // API 2. 찜목록 리스트 정보 가져오는 API
+  Future<void> fetchLikeForUser() async {
+    print("fetchLike");
+    /*
+    final response =
+        await http.get(Uri.parse('http://43.203.61.149/user/like/'));
+    print(response.statusCode);
+
+    // 200 : 호출 성공 시
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
+      List<dynamic> data = jsonDecode(response.body);
+      print(data);
+    } else {
+      throw Exception('Failed to load plans');
+    }
+    */
+  }
+
+  // API 3. 플랜 정보 가져오기 API
   Future<List<Map<String, dynamic>>> fetchPlansForUser() async {
     final response =
         await http.get(Uri.parse('http://43.203.61.149/plan/plan/'));
@@ -162,6 +187,7 @@ class MyPageState extends State<MyPage> {
     });
   }
 
+  // 버튼
   ButtonStyle _buttonStyle(bool isSelected) {
     return ElevatedButton.styleFrom(
       backgroundColor: isSelected ? Colors.blue : null,
@@ -172,6 +198,7 @@ class MyPageState extends State<MyPage> {
     );
   }
 
+  // 버튼
   Widget _buttonChild(String text, bool isSelected) {
     return Container(
       height: 50,
@@ -265,9 +292,10 @@ class MyPageState extends State<MyPage> {
     );
   }
 
+  // 데이터 정보 불러오기
   Widget _buildSelectedInfo() {
     if (isFavoriteSelected) {
-      return Text("찜목록 데이터"); // 이 부분은 원하시는 데이터로 채우세요.
+      return _buildFavoriteList();
     } else if (isPlanSelected) {
       return _buildPlanList();
     } else if (isReviewSelected) {
@@ -277,7 +305,57 @@ class MyPageState extends State<MyPage> {
     }
   }
 
-// _buildPlanList 메서드에 ListView 아래에 버튼을 추가합니다.
+  // 리스트 1 : 찜목록
+  Widget _buildFavoriteList() {
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            itemCount: userPlans.length,
+            itemBuilder: (context, index) {
+              // 일정 시작일을 표시하기 위한 로직
+              String formattedDate = "미정"; // 기본값 설정
+              if (userPlans[index]['schedule'].isNotEmpty) {
+                DateTime startDate = DateTime.parse(
+                    userPlans[index]['schedule'][0]['start_date']);
+                formattedDate = DateFormat('yy.MM.dd').format(startDate);
+              }
+
+              return Card(
+                elevation: 4.0,
+                margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                child: ListTile(
+                  leading:
+                      Icon(Icons.map, color: Theme.of(context).primaryColor),
+                  title: Text(userPlans[index]['name'],
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text("여행 시작일 : $formattedDate"),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PlanDetailsPage(
+                            schedule: userPlans[index]['schedule']),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.all(10),
+          child: ElevatedButton(
+            onPressed: _showAddPlanDialog, // 이후에 UI 수정
+            child: Text('새 플랜 작성'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // 리스트 2 : 플랜
   Widget _buildPlanList() {
     return Column(
       children: [
@@ -319,7 +397,7 @@ class MyPageState extends State<MyPage> {
         Padding(
           padding: EdgeInsets.all(10),
           child: ElevatedButton(
-            onPressed: _showAddPlanDialog,
+            onPressed: _showAddPlanDialog, // 이후에 UI 수정
             child: Text('새 플랜 작성'),
           ),
         ),
@@ -331,6 +409,7 @@ class MyPageState extends State<MyPage> {
   void _showAddPlanDialog() {
     TextEditingController _planNameController = TextEditingController();
 
+    // 이후에 UI 수정
     showDialog(
       context: context,
       builder: (BuildContext context) {

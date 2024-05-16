@@ -30,7 +30,7 @@ class _SearchPageState extends State<SearchPage> {
   int _displayCount = 5; // 표기 수
 
   Future<void> fetchSearchResult(String query, {bool fetchMore = false}) async {
-    if (query.isEmpty) {
+    if (query.isEmpty && selectedTags.isEmpty) {
       setState(() {
         _searchResults = [];
         _displayedResults = [];
@@ -41,7 +41,10 @@ class _SearchPageState extends State<SearchPage> {
     }
 
     if (!fetchMore) {
-      var body = jsonEncode({'name': query});
+      var body = jsonEncode({
+        'name': query,
+        'tags': selectedTags.map((tag) => tag.replaceFirst('#', '')).toList()
+      });
       final response = await http.post(
         Uri.parse('http://43.203.61.149/place/find/'),
         headers: {"Content-Type": "application/json"},
@@ -64,6 +67,8 @@ class _SearchPageState extends State<SearchPage> {
         });
 
         _searchResults = matchedPlaces.toList();
+        _searchResults =
+            _filterResultsByTags(_searchResults, selectedTags); // 태그로 필터링
         _totalResultsCount = _searchResults.length;
       } else {
         print('검색 실패 오류코드: ${response.statusCode}');
@@ -79,8 +84,25 @@ class _SearchPageState extends State<SearchPage> {
       _displayedResults = _searchResults.take(_displayCount).toList();
       _showMoreButton = _displayCount < _totalResultsCount &&
           _displayedResults.isNotEmpty &&
-          query.isNotEmpty;
+          (query.isNotEmpty || selectedTags.isNotEmpty);
     });
+  }
+
+  List<Map<String, dynamic>> _filterResultsByTags(
+      List<Map<String, dynamic>> results, List<String> tags) {
+    if (tags.isEmpty || tags.contains('#태그')) {
+      return results;
+    }
+    List<String> cleanTags =
+        tags.map((tag) => tag.replaceFirst('#', '')).toList();
+    return results.where((place) {
+      if (place['tag'] != null && place['tag'].isNotEmpty) {
+        List<String> placeTags =
+            place['tag'].map<String>((tag) => tag['name'] as String).toList();
+        return cleanTags.any((tag) => placeTags.contains(tag));
+      }
+      return false;
+    }).toList();
   }
 
   @override
@@ -117,11 +139,9 @@ class _SearchPageState extends State<SearchPage> {
         children: [
           Padding(
             padding: const EdgeInsets.all(8.0),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: _tags.map((tag) => _buildChip(tag)).toList(),
-              ),
+            child: Wrap(
+              spacing: 8.0,
+              children: _tags.map((tag) => _buildChip(tag)).toList(),
             ),
           ),
           Expanded(
@@ -215,7 +235,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   void _showTagSelectionDialog() {
-    final allTags = ['#진달래', '#서원', '#역사적인', '#역사', '#공원', '#박물관'];
+    final allTags = ['#진달래', '#서원', '#역사적인', '#역사', '#공원', '#박물관', '#나들이'];
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -253,6 +273,7 @@ class _SearchPageState extends State<SearchPage> {
                     ..addAll(['#태그'] + selectedTags);
                 });
                 Navigator.of(context).pop();
+                fetchSearchResult(query); // 태그 선택 후 검색 결과 업데이트
               },
             ),
           ],

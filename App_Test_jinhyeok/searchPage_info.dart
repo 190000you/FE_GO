@@ -6,7 +6,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart'; // 카카오 SDK
+import 'package:flutter_rating_bar/flutter_rating_bar.dart'; // 별점 선택
+import 'package:intl/intl.dart'; // YY/MM/DD
 
 void main() {
   KakaoSdk.init(
@@ -68,12 +70,14 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
   KakaoShareManager kakaoShareManager = KakaoShareManager();
   final storage = FlutterSecureStorage();
   bool isFavorited = false; // 찜하기 상태를 초기화 (기본값은 false)
+  Future<Map<String, dynamic>>? reviewData; // nullable 타입으로 선언
 
   // 처음 한 번
   void initState() {
     super.initState();
     // 좋아요 상태 업데이트
     updateFavoriteStatus();
+    reviewData = fetchReviewData(widget.placeDetails['id']); // 리뷰 데이터 불러오기
   }
 
   void updateFavoriteStatus() async {
@@ -254,10 +258,86 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       print("장소 추가 실패: ${response.body}");
     }
   }
+
   // API 4. 리뷰 작성
+  Future<void> fetchReview(
+      context, String content, int score, int place) async {
+    String? userId = await storage.read(key: "login_id");
+
+    final response = await http.post(
+      Uri.parse('http://43.203.61.149/place/review/'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, dynamic>{
+        'content': content, // 리뷰 내용
+        'score': score, // 리뷰 점수
+        'place': place, // 장소
+        'writer': userId,
+      }),
+    );
+
+    if (response.statusCode == 201) {
+      print("리뷰 작성 성공");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("리뷰 작성 성공", style: GoogleFonts.oleoScript()),
+          duration: Duration(seconds: 2),
+          backgroundColor: const Color.fromARGB(255, 76, 83, 175),
+        ),
+      );
+      print("리뷰 작성 이후 성공");
+    } else {
+      print("리뷰 작성 실패: ${response.statusCode}");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text("서버가 불안정합니다. 다시 시도해주세요.", style: GoogleFonts.oleoScript()),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   // API 5. 링크 공유
   // -> class KakaoShareManager 사용
+
+  // API 6. 리뷰 데이터 가져오기
+  Future<Map<String, dynamic>> fetchReviewData(int placeId) async {
+    String? userAccessToken = await storage.read(key: "login_access_token");
+
+    final url = Uri.parse('http://43.203.61.149/place/review/');
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $userAccessToken',
+        "content-type": "application/json"
+      },
+    );
+
+    if (response.statusCode == 200) {
+      var decodedResponse = utf8.decode(response.bodyBytes);
+      Map<String, dynamic> data = json.decode(decodedResponse);
+
+      // placeId의 리뷰만을 찾기
+      List<dynamic> relevantReviews = data['results']
+          .where((review) => review['place'] == placeId)
+          .toList();
+      print("리뷰 데이터 불러오기 성공");
+      return {
+        'count': relevantReviews.length,
+        'reviews': relevantReviews,
+      };
+    } else {
+      throw Exception("리뷰 데이터 불러오기 실패: ${response.statusCode}");
+    }
+  }
+
+  String formatDateTime(String dateString) {
+    DateTime parsedDate = DateTime.parse(dateString);
+    return DateFormat('yyyy/MM/dd').format(parsedDate); // "연도/월/일" 형식
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -284,203 +364,231 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Placeholder(fallbackHeight: 200),
-            SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      isFavorited = !isFavorited;
-                      // 찜하기
-                      if (isFavorited) {
-                        fetchLikePlace(context,
-                            widget.placeDetails['name']); // 찜하기 API 실행 코드
-                      }
-                      // 찜하기 해제
-                      else {
-                        fetchDislikePlace(context, widget.placeDetails['id']);
-                      }
-                    }); // 찜하기 API 실행
-                  },
-                  // 1. 좋아요 누르면, 사용자 정보에도 저장되어야함.
-                  // 2. user/like - id == placeDetails['id']
-                  //
-                  // if) placeDetails['id'] == likeplace id 목록에 존재
-                  // -> isFavorited = true
-                  // else if) isFavorited = false
-                  // fetchLikePlace
-                  //  if (response.statusCode == 202) {
-                  //    setState(() {
-                  //      isFavorited = !isFavorited;
-                  //  })};
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(
-                        isFavorited ? Icons.favorite : Icons.favorite_border,
-                        size: 24,
-                        color: isFavorited ? Colors.red : null,
-                      ),
-                      SizedBox(height: 4),
-                      Text('찜하기', style: GoogleFonts.oleoScript(fontSize: 12))
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    try {
-                      List<Map<String, dynamic>> plans =
-                          await fetchPlansForUser();
-                      String selectedPlanId = await _showPlanSelector(
-                          context, plans); // 사용자가 플랜을 선택하게 하는 UI
-                      if (selectedPlanId.isNotEmpty) {
-                        String placeId = widget.placeDetails['id'].toString();
-                        await addToPlan(selectedPlanId, placeId);
-                      }
-                    } catch (e) {
-                      print(e.toString());
-                    }
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.add_circle_outline, size: 24),
-                      SizedBox(height: 4),
-                      Text('플랜 추가', style: GoogleFonts.oleoScript(fontSize: 12))
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    print('리뷰 작성 버튼 클릭');
-                    // API 추가 (1) : place/review
-                    // 리뷰 작성 기능 수행
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.edit, size: 24),
-                      SizedBox(height: 4),
-                      Text('리뷰 작성', style: GoogleFonts.oleoScript(fontSize: 12))
-                    ],
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    print('공유 버튼 클릭');
-                    kakaoShareManager.shareMyCode();
-                    // API 추가 (2) :  ??? / ???
-                    // 공유하기 기능 수행
-                  },
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(Icons.share, size: 24),
-                      SizedBox(height: 4),
-                      Text('공유', style: GoogleFonts.oleoScript(fontSize: 12))
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 5),
-            // 실선 표시
-            Divider(thickness: 1),
-            SizedBox(height: 5),
-            // 1. 분류
-            _buildDetailItem('분류', widget.placeDetails['classification']),
-            SizedBox(height: 20),
-            // 2. 주차 여부
-            _buildDetailItem(
-                '주차 여부', widget.placeDetails['parking'] ? '가능' : '불가능'),
-            SizedBox(height: 20),
-            // 3. 평균 체류 시간
-            _buildDetailItem('평균 체류 시간', widget.placeDetails['time']),
-            SizedBox(height: 20),
-            // 4. 자세한 정보
-            _buildDetailItem('자세한 정보', widget.placeDetails['info']),
-            SizedBox(height: 20),
-            // 5. 전화번호
-            _buildDetailItem('전화번호', widget.placeDetails['call']),
-            SizedBox(height: 20),
-            // 6. 태그 정보
-            Text(
-              '태그',
-              style: GoogleFonts.oleoScript(
-                  fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: tagWidgets,
-            ),
-            SizedBox(height: 20),
+        child: FutureBuilder<Map<String, dynamic>>(
+          future: reviewData,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (snapshot.hasError) {
+                return Text("Error: ${snapshot.error}");
+              }
+              var reviews = snapshot.data!['reviews'];
 
-            // 실선 표시
-            Divider(thickness: 1),
-            SizedBox(height: 10),
-            // 리뷰 UI 추가할 곳
-            Text(
-              '전체 리뷰 개수 넣는 곳',
-              // '전체 ${reviews.length}개 리뷰',
-              style: GoogleFonts.oleoScript(
-                  fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            // 7. 리뷰 내용
-            Container(
-              height: 350, // 고정된 높이를 가진 컨테이너
-              child: ListView.builder(
-                // itemCount: reviews.length,
-                itemBuilder: (context, index) {
-                  // final review = reviews[index];
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 1. 점수 (리뷰 점수를 표시하는 로우)
-                          Text(
-                            '리뷰 점수',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                          Row(
-                              //children: List.generate(review['score'], (index) => Icon(Icons.star, color: Colors.amber, size: 20)),
-                              ),
-                          SizedBox(height: 8),
-                          // 2. 리뷰 작성자와 날짜
-                          Text(
-                            '리뷰 작성자와 날짜',
-                            // '${review['writer']} | ${review['date']}',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                          ),
-                          SizedBox(height: 10),
-                          // 3. 리뷰 내용
-                          Text(
-                            '리뷰 내용',
-                            // review['content'],
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ],
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Placeholder(fallbackHeight: 200),
+                  SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: <Widget>[
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isFavorited = !isFavorited;
+                            // 찜하기
+                            if (isFavorited) {
+                              fetchLikePlace(context,
+                                  widget.placeDetails['name']); // 찜하기 API 실행 코드
+                            }
+                            // 찜하기 해제
+                            else {
+                              fetchDislikePlace(
+                                  context, widget.placeDetails['id']);
+                            }
+                          });
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Icon(
+                              isFavorited
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              size: 24,
+                              color: isFavorited ? Colors.red : null,
+                            ),
+                            SizedBox(height: 4),
+                            Text('찜하기',
+                                style: GoogleFonts.oleoScript(fontSize: 12))
+                          ],
+                        ),
                       ),
+                      GestureDetector(
+                        onTap: () async {
+                          try {
+                            List<Map<String, dynamic>> plans =
+                                await fetchPlansForUser();
+                            String selectedPlanId = await _showPlanSelector(
+                                context, plans); // 사용자가 플랜을 선택하게 하는 UI
+                            if (selectedPlanId.isNotEmpty) {
+                              String placeId =
+                                  widget.placeDetails['id'].toString();
+                              await addToPlan(selectedPlanId, placeId);
+                            }
+                          } catch (e) {
+                            print(e.toString());
+                          }
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Icon(Icons.add_circle_outline, size: 24),
+                            SizedBox(height: 4),
+                            Text('플랜 추가',
+                                style: GoogleFonts.oleoScript(fontSize: 12))
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          print('리뷰 작성 버튼 클릭');
+                          try {
+                            await showReviewDialog(
+                                context,
+                                widget
+                                    .placeDetails['id']); // 사용자가 플랜을 선택하게 하는 UI
+                            // 리뷰 데이터 전송
+                          } catch (e) {
+                            print(e.toString());
+                          }
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Icon(Icons.edit, size: 24),
+                            SizedBox(height: 4),
+                            Text('리뷰 작성',
+                                style: GoogleFonts.oleoScript(fontSize: 12))
+                          ],
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          print('공유 버튼 클릭');
+                          kakaoShareManager.shareMyCode();
+                          // API 추가 (2) :  ??? / ???
+                          // 공유하기 기능 수행
+                        },
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Icon(Icons.share, size: 24),
+                            SizedBox(height: 4),
+                            Text('공유',
+                                style: GoogleFonts.oleoScript(fontSize: 12))
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 5),
+                  // 실선 표시
+                  Divider(thickness: 1),
+                  SizedBox(height: 5),
+                  // 1. 분류
+                  _buildDetailItem('분류', widget.placeDetails['classification']),
+                  SizedBox(height: 20),
+                  // 2. 주차 여부
+                  _buildDetailItem(
+                      '주차 여부', widget.placeDetails['parking'] ? '가능' : '불가능'),
+                  SizedBox(height: 20),
+                  // 3. 평균 체류 시간
+                  _buildDetailItem('평균 체류 시간', widget.placeDetails['time']),
+                  SizedBox(height: 20),
+                  // 4. 자세한 정보
+                  _buildDetailItem('자세한 정보', widget.placeDetails['info']),
+                  SizedBox(height: 20),
+                  // 5. 전화번호
+                  _buildDetailItem('전화번호', widget.placeDetails['call']),
+                  SizedBox(height: 20),
+                  // 6. 태그 정보
+                  Text(
+                    '태그',
+                    style: GoogleFonts.oleoScript(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8.0,
+                    runSpacing: 8.0,
+                    children: tagWidgets,
+                  ),
+                  SizedBox(height: 20),
+
+                  // 실선 표시
+                  Divider(thickness: 1),
+                  SizedBox(height: 10),
+                  // 리뷰 UI 추가할 곳
+                  Text(
+                    // '전체 리뷰 개수 넣는 곳',
+                    '전체 ${reviews.length} 리뷰',
+                    style: GoogleFonts.oleoScript(
+                        fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 10),
+                  // 7. 리뷰 내용
+                  Container(
+                    height: 350, // 고정된 높이를 가진 컨테이너
+                    child: ListView.builder(
+                      itemCount: reviews.length,
+                      itemBuilder: (context, index) {
+                        var review = reviews[index];
+                        return Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // 1. 점수 (리뷰 점수를 표시하는 로우)
+                                Row(
+                                  children: List.generate(5, (index) {
+                                    return Icon(
+                                      Icons.star,
+                                      color: index < review['score']
+                                          ? Colors.yellow
+                                          : Colors.grey,
+                                      size: 20,
+                                    );
+                                  }),
+                                ),
+                                Row(
+                                    //children: List.generate(review['score'], (index) => Icon(Icons.star, color: Colors.amber, size: 20)),
+                                    ),
+                                SizedBox(height: 8),
+                                // 2. 리뷰 작성자와 날짜
+                                Text(
+                                  '${review['writer']} | ${formatDateTime(review['created_at'])}',
+                                  style: TextStyle(
+                                      color: Colors.grey, fontSize: 12),
+                                ),
+                                SizedBox(height: 10),
+                                // 3. 리뷰 내용
+                                Text(
+                                  review['content'],
+                                  style: TextStyle(
+                                      fontSize: 16, fontFamily: 'Roboto'),
+                                  overflow:
+                                      TextOverflow.ellipsis, // 너무 긴 텍스트 처리
+                                  maxLines: 3, // 최대 줄 수 제한
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-            ),
-            SizedBox(height: 40),
-          ],
+                  ),
+                  SizedBox(height: 40),
+                ],
+              );
+            } else {
+              return CircularProgressIndicator();
+            }
+          },
         ),
       ),
     );
@@ -505,6 +613,131 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     );
   }
 
+  // 리뷰 팝업 UI
+  Future<Map<String, dynamic>?> showReviewDialog(
+      BuildContext context, int placeId) async {
+    final TextEditingController _contentController = TextEditingController();
+    double _currentRating = 0;
+    bool _ratingSelected = false; // 별점이 한 번이라도 선택되었는지 추적
+
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.all(10),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.5,
+            padding: EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text('리뷰 작성', style: GoogleFonts.oleoScript(fontSize: 24)),
+                SizedBox(height: 20),
+                RatingBar.builder(
+                  initialRating: 0,
+                  minRating: 1,
+                  direction: Axis.horizontal,
+                  allowHalfRating: false,
+                  itemCount: 5,
+                  itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                  itemBuilder: (context, _) =>
+                      Icon(Icons.star, color: Colors.amber),
+                  onRatingUpdate: (rating) {
+                    _currentRating = rating;
+                    _ratingSelected = true; // 별점이 한 번이라도 선택되면 true로 설정
+                  },
+                ),
+                SizedBox(height: 30),
+                TextField(
+                  controller: _contentController,
+                  decoration: InputDecoration(
+                    labelText: '리뷰 내용',
+                    hintText: '리뷰 내용을 작성하세요',
+                  ),
+                  maxLines: 3,
+                ),
+                SizedBox(height: 20),
+                Spacer(),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    TextButton(
+                      child: Text('취소', style: GoogleFonts.oleoScript()),
+                      onPressed: () {
+                        _contentController.dispose();
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      child: Text('작성 완료', style: GoogleFonts.oleoScript()),
+                      onPressed: () async {
+                        if (!_ratingSelected) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("별점을 선택해주세요."),
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          return;
+                        }
+                        if (_contentController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("리뷰 내용을 입력해주세요."),
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          return;
+                        }
+                        // fetchReview
+                        try {
+                          await fetchReview(
+                            context,
+                            _contentController.text,
+                            _currentRating.toInt(),
+                            placeId,
+                          );
+                          print("리뷰 작성 나오기 성공");
+                        } catch (e) {
+                          // 리뷰 오류
+                          print("리뷰 작성 중 오류 발생: ${e.toString()}");
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("리뷰 작성 중 오류가 발생했습니다."),
+                              backgroundColor: Colors.red,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                          return; // 에러 발생시 더 이상 진행하지 않음
+                        }
+                        print("Navigator 실행 전");
+                        // 리뷰 작성 성공 후에 데이터를 반환하고 UI를 닫음
+                        Navigator.of(context).pop({
+                          'score': _currentRating.toInt(),
+                          'content': _contentController.text,
+                        });
+                        print("Navigator 실행 후");
+
+                        print("dispose 실행 전");
+                        // _contentController.dispose();
+                        print("dispose 실행 후");
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // 플랜 선택 UI
   Future<String> _showPlanSelector(
       BuildContext context, List<Map<String, dynamic>> plans) async {
     if (plans.isEmpty) {

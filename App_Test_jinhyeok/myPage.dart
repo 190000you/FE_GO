@@ -405,7 +405,7 @@ class MyPageState extends State<MyPage> {
     );
   }
 
-// 다이얼로그 표시 및 새 플랜 이름 입력 처리
+  // 다이얼로그 표시 및 새 플랜 이름 입력 처리
   void _showAddPlanDialog() {
     TextEditingController _planNameController = TextEditingController();
 
@@ -429,8 +429,17 @@ class MyPageState extends State<MyPage> {
             TextButton(
               child: Text('저장'),
               onPressed: () {
-                _createPlan(_planNameController.text);
-                Navigator.of(context).pop();
+                _createPlan(_planNameController.text).then((_) {
+                  Navigator.of(context).pop();
+                  // 플랜 목록 갱신
+                  fetchPlansForUser().then((plans) {
+                    setState(() {
+                      userPlans = plans;
+                    });
+                  }).catchError((error) {
+                    print(error);
+                  });
+                });
               },
             ),
           ],
@@ -439,8 +448,8 @@ class MyPageState extends State<MyPage> {
     );
   }
 
-// API 호출하여 서버에 새 플랜 데이터 전송
-  void _createPlan(String planName) async {
+  // API 호출하여 서버에 새 플랜 데이터 전송
+  Future<void> _createPlan(String planName) async {
     final response = await http.post(
       Uri.parse('http://43.203.61.149/plan/plan/'),
       headers: {

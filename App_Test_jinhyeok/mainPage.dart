@@ -113,7 +113,7 @@ class _MainPageState extends State<MainPage> {
           SearchPage(), // 여기에 필요한 Token 전달
           userSurvey == null || userSurvey == "null"
               ? SurveyPage(userSurvey)
-              : ChatBotPage(),
+              : ChatBotApp(),
           MyPage(userName), // 여기에 필요한 Token 전달
         ];
       });

@@ -549,7 +549,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                                     return Icon(
                                       Icons.star,
                                       color: index < review['score']
-                                          ? Colors.yellow
+                                          ? Colors.amber
                                           : Colors.grey,
                                       size: 20,
                                     );

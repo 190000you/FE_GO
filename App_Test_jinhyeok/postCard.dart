@@ -1,13 +1,15 @@
+// 내부 import
+import 'package:go_test_ver/advertisement_2.dart';
+import 'package:go_test_ver/advertisement_3.dart';
+
+import 'advertisement_1.dart'; // 광고 창
+
+// 외부 import
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:http/http.dart';
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
-
-import 'advertisement.dart'; // 광고 창
-import 'package:geolocator/geolocator.dart'; // 실시간 위치 정보
-import 'package:http/http.dart' as http; // API 사용
-import 'dart:convert'; // API 호출 : 디코딩
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> weatherData;
@@ -86,52 +88,6 @@ class _PostCardState extends State<PostCard> {
         "oGcKmx1VAWZPChzVZGiaFec1jmmkrlVElCofTB5i" // 개인 시크릿 키
   };
 
-  String weather = ""; // 1. 날씨
-  String temperature = ""; // 2. 온도
-  String humidity = ""; // 3. 습도
-
-  /*
-  // 현재 위치 + 행정 구역명 + 날씨 정보
-  Future<void> getLocation() async {
-    // 1. 현재 위치 받기 (위도 + 경도)
-    LocationPermission permission = await Geolocator.requestPermission();
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    String lat = position.latitude.toString(); // 위도
-    String lon = position.longitude.toString(); // 경도
-    print("위도 : " + lat);
-    print("경도 : " + lon);
-    // print(position);
-
-    // 2. 위도 경도 -> 행정 구역으로 바꿈 // 오류 발생
-
-    // 3. 날씨 정보 얻기
-    String openweatherkey = "0e047ef5cce50504edc52d08b01c1933";
-    var str =
-        'http://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$openweatherkey&units=metric';
-    print("날씨 정보 : " + str);
-
-    final response = await http.get(
-      Uri.parse(str),
-    );
-
-    if (response.statusCode == 200) {
-      var data = response.body;
-      var dataJson = jsonDecode(data); // string to json
-      print('data = $data');
-      /*
-      print(dataJson['weather'][0]['main'] +
-          ' ' +
-          dataJson['main']['temp'].toString());
-      */
-      weather = dataJson['weather'][0]['main'];
-      temperature = dataJson['main']['temp'].toString();
-      humidity = dataJson['main']['humidity'].toString();
-    } else {
-      print('response status code = ${response.statusCode}');
-    }
-  }
-  */
   String getWeatherIcon(int condition) {
     if (condition < 300) {
       return '🌩';
@@ -182,15 +138,15 @@ class _PostCardState extends State<PostCard> {
                       },
                       itemCount: 3,
                       itemBuilder: (context, position) {
+                        // 1. 여름철 시원하게 보내기 광고
                         if (position == 0) {
-                          // 첫 번째 페이지일 때 광고 페이지 동작하는 코드
                           return GestureDetector(
                             onTap: () {
-                              // 광고창 오픈
+                              // 첫 번째 광고 이동
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => AdvertisementPage(),
+                                  builder: (context) => AdvertisementPage_1(),
                                 ),
                               );
                             },
@@ -200,6 +156,7 @@ class _PostCardState extends State<PostCard> {
                               margin: EdgeInsets.symmetric(horizontal: 5),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(15),
+                                // 랜덤 이미지 -> 이미지 바꾸기
                                 image: DecorationImage(
                                   image: NetworkImage(
                                       'https://source.unsplash.com/random/${position + 1}'),
@@ -208,18 +165,59 @@ class _PostCardState extends State<PostCard> {
                               ),
                             ),
                           );
-                        } else {
-                          // 두 번째 페이지 이후에는 일반적인 Container 반환 2~ 3번쨰 페이지 또한 위와 같은 방법으로 추가가
-                          return Container(
-                            width: MediaQuery.of(context).size.width *
-                                2.0, // 페이지 너비 딱맞게
-                            margin: EdgeInsets.symmetric(horizontal: 5),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(15),
-                              image: DecorationImage(
-                                image: NetworkImage(
-                                    'https://source.unsplash.com/random/${position + 1}'),
-                                fit: BoxFit.cover,
+                        }
+                        // 2. 인기 휴양지
+                        else if (position == 1) {
+                          return GestureDetector(
+                            onTap: () {
+                              // 두 번째 광고 이동
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AdvertisementPage_2(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: MediaQuery.of(context).size.width *
+                                  2.0, // 페이지 너비 딱맞게
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                // 랜덤 이미지
+                                image: DecorationImage(
+                                  image: NetworkImage(
+                                      'https://source.unsplash.com/random/${position + 1}'),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                        // 3. 최근 떠오르는 장소
+                        else if (position == 2) {
+                          return GestureDetector(
+                            onTap: () {
+                              // 두 번째 광고 이동
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AdvertisementPage_3(),
+                                ),
+                              );
+                            },
+                            child: Container(
+                              width: MediaQuery.of(context).size.width *
+                                  2.0, // 페이지 너비 딱맞게
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(15),
+                                // 랜덤 이미지
+                                image: DecorationImage(
+                                  image: NetworkImage(
+                                      'https://source.unsplash.com/random/${position + 1}'),
+                                  fit: BoxFit.cover,
+                                ),
                               ),
                             ),
                           );

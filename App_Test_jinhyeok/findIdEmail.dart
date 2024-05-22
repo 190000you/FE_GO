@@ -30,14 +30,45 @@ class FindIdEmailPageState extends State<FindIdEmailPage> {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            title: Text("인증 성공"),
-            content: Text("해당 이메일로 계정 정보를 보냈습니다."),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text("확인"),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20.0), // 외곽을 더 둥글게 만들기
+            ),
+            backgroundColor: Colors.white, // 팝업창 배경색을 흰색으로 설정
+            contentPadding:
+                EdgeInsets.fromLTRB(20.0, 30.0, 20.0, 30.0), // 컨텐트 패딩 조정
+            content: Text(
+              '해당 이메일로 메일을 보냈습니다!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.oleoScript(
+                // Google Fonts 폰트 스타일 사용
+                color: Colors.black,
+                fontSize: 16.0, // 폰트 크기를 20.0으로 설정
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.center, // 버튼을 중간에 위치시킴
+            buttonPadding: EdgeInsets.fromLTRB(5, 5, 5, 2.0), // 버튼 패딩 조정
+            actions: <Widget>[
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 1.0), // 양옆 간격 조정
+                width: double.infinity, // 버튼의 너비를 확장
+                child: TextButton(
+                  child: Text(
+                    '확인',
+                    style: GoogleFonts.oleoScript(
+                      color: Colors.white, // 폰트 색상을 흰색으로 설정
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    backgroundColor:
+                        Colors.deepPurple, // 버튼 배경 색상을 deepPurple로 설정
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0), // 버튼 모서리 둥글게
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
               ),
             ],
           );
@@ -48,24 +79,24 @@ class FindIdEmailPageState extends State<FindIdEmailPage> {
       });
     } else {
       showDialog(
-  context: context,
-  builder: (BuildContext context) {
-    return AlertDialog(
-      title: Center(child: Text("인증 실패")),
-      content: Text("인증 코드가 올바르지 않습니다."),
-      actions: [
-        Center(
-          child: TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text("확인"),
-          ),
-        ),
-      ],
-    );
-  },
-);
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Center(child: Text("인증 실패")),
+            content: Text("인증 코드가 올바르지 않습니다."),
+            actions: [
+              Center(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("확인"),
+                ),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -111,8 +142,8 @@ class FindIdEmailPageState extends State<FindIdEmailPage> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      _verifyCode(
-                          _verificationCodeController.text, _emailVerificationCode);
+                      _verifyCode(_verificationCodeController.text,
+                          _emailVerificationCode);
                     },
                     child: Text("인증하기"),
                   ),

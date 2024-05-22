@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // 이후 import로 더 추가할 예정
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // API 사용
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:intl/intl.dart'; // yyyy.mm.dd형식을 yy.mm.dd형식으로
@@ -861,20 +862,71 @@ class MyPageState extends State<MyPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("새 플랜 이름 입력"),
-          content: TextField(
-            controller: _planNameController,
-            decoration: InputDecoration(hintText: "플랜 이름을 입력하세요"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
           ),
+          backgroundColor: Colors.white,
+          contentPadding: EdgeInsets.fromLTRB(20.0, 30.0, 20.0, 30.0),
+          title: Text(
+            "새 플랜 이름 입력",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.oleoScript(
+              // Google Fonts 폰트 스타일 사용
+              color: Colors.black,
+              fontSize: 20.0, // 폰트 크기를 20.0으로 설정
+            ),
+          ),
+          // TextField 꾸미기
+          content: TextField(
+            textAlign: TextAlign.center,
+            style: GoogleFonts.oleoScript(
+              // Google Fonts 폰트 스타일 사용
+              color: Colors.black,
+              fontSize: 16.0, // 폰트 크기를 20.0으로 설정
+            ),
+            controller: _planNameController,
+            decoration: InputDecoration(
+              hintText: "플랜 이름을 입력하세요",
+            ),
+          ),
+          // 취소 / 확인 버튼 UI
+          actionsAlignment: MainAxisAlignment.spaceBetween, // 버튼을 양 끝으로 정렬
+          // buttonPadding: EdgeInsets.fromLTRB(10.0, 0, 10.0, 0),
           actions: <Widget>[
+            // 1. 취소 버튼
             TextButton(
-              child: Text('취소'),
+              child: Text(
+                '취소',
+                style: GoogleFonts.oleoScript(
+                  color: Color.fromARGB(255, 124, 119, 119), // 폰트 색상을 흰색으로 설정
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Color.fromARGB(255, 219, 217, 217),
+                padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 32.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
               onPressed: () {
                 Navigator.of(context).pop();
               },
             ),
+            // 2. 저장 버튼
             TextButton(
-              child: Text('저장'),
+              child: Text(
+                '저장',
+                style: GoogleFonts.oleoScript(
+                  color: Colors.white, // 폰트 색상을 흰색으로 설정
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 32.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
               onPressed: () {
                 _createPlan(_planNameController.text).then((_) {
                   Navigator.of(context).pop();
@@ -883,6 +935,7 @@ class MyPageState extends State<MyPage> {
                     setState(() {
                       userPlans = plans;
                     });
+                    print("플랜 생성 성공");
                   }).catchError((error) {
                     print(error);
                   });

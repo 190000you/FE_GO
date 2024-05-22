@@ -317,18 +317,55 @@ class _SignUpPageState extends State<SignUpPage> {
                           isOk == true) {
                         await fetchsignUpAPI(userEmail, userName, userId,
                             userPassword, userPasswordCheck);
+                        // 팝업창 띄우기
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
-                              title: Text('회원가입 성공'),
-                              content: Text('회원가입에 성공했습니다.'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(); // 팝업창 닫기
-                                  },
-                                  child: Text('로그인으로 이동'),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    20.0), // 외곽을 더 둥글게 만들기
+                              ),
+                              backgroundColor: Colors.white, // 팝업창 배경색을 흰색으로 설정
+                              contentPadding: EdgeInsets.fromLTRB(
+                                  20.0, 30.0, 20.0, 30.0), // 컨텐트 패딩 조정
+                              content: Text(
+                                '회원가입에 성공하였습니다!',
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.oleoScript(
+                                  // Google Fonts 폰트 스타일 사용
+                                  color: Colors.black,
+                                  fontSize: 16.0, // 폰트 크기를 20.0으로 설정
+                                ),
+                              ),
+                              actionsAlignment:
+                                  MainAxisAlignment.center, // 버튼을 중간에 위치시킴
+                              buttonPadding:
+                                  EdgeInsets.fromLTRB(5, 5, 5, 2.0), // 버튼 패딩 조정
+                              actions: <Widget>[
+                                Container(
+                                  margin: EdgeInsets.symmetric(
+                                      horizontal: 1.0), // 양옆 간격 조정
+                                  width: double.infinity, // 버튼의 너비를 확장
+                                  child: TextButton(
+                                    child: Text(
+                                      '확인',
+                                      style: GoogleFonts.oleoScript(
+                                        color: Colors.white, // 폰트 색상을 흰색으로 설정
+                                      ),
+                                    ),
+                                    style: TextButton.styleFrom(
+                                      backgroundColor: Colors
+                                          .deepPurple, // 버튼 배경 색상을 deepPurple로 설정
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            10.0), // 버튼 모서리 둥글게
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
                                 ),
                               ],
                             );

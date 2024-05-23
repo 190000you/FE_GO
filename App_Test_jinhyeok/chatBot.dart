@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -104,7 +103,8 @@ class _ChatScreenState extends State<ChatScreen> {
             });
 
             for (var placeName in botResponse) {
-              await _fetchPlaceDetails(placeName);
+              final place = placeName.split(':')[0].trim();
+              await _fetchPlaceDetails(place);
             }
           }
         } else if (responseData is Map<String, dynamic>) {
@@ -122,7 +122,8 @@ class _ChatScreenState extends State<ChatScreen> {
           });
 
           for (var placeName in botResponse) {
-            await _fetchPlaceDetails(placeName);
+            final place = placeName.split(':')[0].trim();
+            await _fetchPlaceDetails(place);
           }
         }
       } catch (e) {
@@ -476,73 +477,24 @@ class PlanCreationDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
-      ),
-      backgroundColor: Colors.white,
-      contentPadding: EdgeInsets.fromLTRB(20.0, 30.0, 20.0, 30.0),
-      title: Text(
-        "새 플랜 이름 입력",
-        textAlign: TextAlign.center,
-        style: GoogleFonts.oleoScript(
-          // Google Fonts 폰트 스타일 사용
-          color: Colors.black,
-          fontSize: 20.0, // 폰트 크기를 20.0으로 설정
-        ),
-      ),
-      // TextField 꾸미기
+      title: Text('플랜 작성하기'),
       content: TextField(
-        textAlign: TextAlign.center,
-        style: GoogleFonts.oleoScript(
-          // Google Fonts 폰트 스타일 사용
-          color: Colors.black,
-          fontSize: 16.0, // 폰트 크기를 20.0으로 설정
-        ),
         controller: planController,
-        decoration: InputDecoration(
-          hintText: "플랜 이름을 입력하세요",
-        ),
+        decoration: InputDecoration(labelText: '플랜을 입력해주세요'),
       ),
-      // 취소 / 확인 버튼 UI
-      actionsAlignment: MainAxisAlignment.spaceBetween, // 버튼을 양 끝으로 정렬
-
       actions: [
         TextButton(
-          child: Text(
-            '취소',
-            style: GoogleFonts.oleoScript(
-              color: Color.fromARGB(255, 124, 119, 119), // 폰트 색상을 흰색으로 설정
-            ),
-          ),
-          style: TextButton.styleFrom(
-            backgroundColor: Color.fromARGB(255, 219, 217, 217),
-            padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 32.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        TextButton(
-          child: Text(
-            '저장',
-            style: GoogleFonts.oleoScript(
-              color: Colors.white, // 폰트 색상을 흰색으로 설정
-            ),
-          ),
-          style: TextButton.styleFrom(
-            backgroundColor: Colors.blue,
-            padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 32.0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-          ),
           onPressed: () {
             onSave(planController.text);
             Navigator.of(context).pop();
           },
+          child: Text('저장하기'),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: Text('취소'),
         ),
       ],
     );

@@ -39,34 +39,60 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadMessages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? messagesJson = prefs.getString('chat_messages');
-    if (messagesJson != null) {
+    String? storedUserId = await storage.read(key: 'login_id');
+
+    if (messagesJson != null && storedUserId != null) {
+      final allMessages =
+          List<Map<String, dynamic>>.from(jsonDecode(messagesJson));
       setState(() {
         messages
-            .addAll(List<Map<String, dynamic>>.from(jsonDecode(messagesJson)));
+            .addAll(allMessages.where((msg) => msg['user_id'] == storedUserId));
       });
     }
   }
 
   Future<void> _saveMessages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('chat_messages', jsonEncode(messages));
+    String? storedUserId = await storage.read(key: 'login_id');
+
+    if (storedUserId != null) {
+      final allMessages = await _loadAllMessages();
+      allMessages.removeWhere((msg) => msg['user_id'] == storedUserId);
+      allMessages.addAll(messages.map((msg) {
+        msg['user_id'] = storedUserId;
+        return msg;
+      }).toList());
+      prefs.setString('chat_messages', jsonEncode(allMessages));
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _loadAllMessages() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? messagesJson = prefs.getString('chat_messages');
+
+    if (messagesJson != null) {
+      return List<Map<String, dynamic>>.from(jsonDecode(messagesJson));
+    } else {
+      return [];
+    }
   }
 
   Future<void> sendMessage(String message) async {
     String? token = await storage.read(key: 'login_access_token');
     String? storedUserId = await storage.read(key: 'login_id');
 
-    if (token == null) {
+    if (token == null || storedUserId == null) {
       setState(() {
-        messages.add({'type': 'bot', 'text': '토큰을 가져오지 못했습니다'});
+        messages.add(
+            {'type': 'bot', 'text': '토큰을 가져오지 못했습니다', 'user_id': storedUserId});
       });
       await _saveMessages();
       return;
     }
 
     setState(() {
-      messages.add({'type': 'user', 'text': message});
-      messages.add({'type': 'loading'});
+      messages.add({'type': 'user', 'text': message, 'user_id': storedUserId});
+      messages.add({'type': 'loading', 'user_id': storedUserId});
     });
     await _saveMessages();
     _scrollToBottom();
@@ -84,7 +110,8 @@ class _ChatScreenState extends State<ChatScreen> {
       try {
         final responseData = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
-          messages.removeWhere((msg) => msg['type'] == 'loading');
+          messages.removeWhere((msg) =>
+              msg['type'] == 'loading' && msg['user_id'] == storedUserId);
         });
 
         if (responseData is List) {
@@ -99,6 +126,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 'type': 'bot',
                 'text': chatResponse,
                 'response': botResponse,
+                'user_id': storedUserId,
               });
             });
 
@@ -118,6 +146,7 @@ class _ChatScreenState extends State<ChatScreen> {
               'type': 'bot',
               'text': chatResponse,
               'response': botResponse,
+              'user_id': storedUserId,
             });
           });
 
@@ -128,14 +157,21 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       } catch (e) {
         setState(() {
-          messages.removeWhere((msg) => msg['type'] == 'loading');
-          messages.add({'type': 'bot', 'text': '응답을 파싱하는 데 실패했습니다: $e'});
+          messages.removeWhere((msg) =>
+              msg['type'] == 'loading' && msg['user_id'] == storedUserId);
+          messages.add({
+            'type': 'bot',
+            'text': '응답을 파싱하는 데 실패했습니다: $e',
+            'user_id': storedUserId
+          });
         });
       }
     } else {
       setState(() {
-        messages.removeWhere((msg) => msg['type'] == 'loading');
-        messages.add({'type': 'bot', 'text': '응답을 가져오지 못했습니다'});
+        messages.removeWhere((msg) =>
+            msg['type'] == 'loading' && msg['user_id'] == storedUserId);
+        messages.add(
+            {'type': 'bot', 'text': '응답을 가져오지 못했습니다', 'user_id': storedUserId});
       });
     }
     await _saveMessages();
@@ -143,6 +179,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _fetchPlaceDetails(String placeName) async {
+    String? storedUserId = await storage.read(key: 'login_id');
+
     print('추천: ' + placeName);
     final body = jsonEncode({'name': placeName});
 
@@ -166,17 +204,26 @@ class _ChatScreenState extends State<ChatScreen> {
             savedPlaces.add({
               'name': placeName,
               'id': placeId,
+              'user_id': storedUserId,
             });
           });
         }
       } catch (e) {
         setState(() {
-          messages.add({'type': 'bot', 'text': '장소 세부 정보를 파싱하는 데 실패했습니다: $e'});
+          messages.add({
+            'type': 'bot',
+            'text': '장소 세부 정보를 파싱하는 데 실패했습니다: $e',
+            'user_id': storedUserId
+          });
         });
       }
     } else {
       setState(() {
-        messages.add({'type': 'bot', 'text': '장소 세부 정보를 가져오지 못했습니다'});
+        messages.add({
+          'type': 'bot',
+          'text': '장소 세부 정보를 가져오지 못했습니다',
+          'user_id': storedUserId
+        });
       });
     }
     await _saveMessages();
@@ -211,7 +258,11 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (storedUserId == null) {
       setState(() {
-        messages.add({'type': 'bot', 'text': '사용자 ID를 가져오지 못했습니다'});
+        messages.add({
+          'type': 'bot',
+          'text': '사용자 ID를 가져오지 못했습니다',
+          'user_id': storedUserId
+        });
       });
       await _saveMessages();
       return;
@@ -243,16 +294,31 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     } else {
       setState(() {
-        messages.add({'type': 'bot', 'text': '플랜을 생성하지 못했습니다'});
+        messages.add(
+            {'type': 'bot', 'text': '플랜을 생성하지 못했습니다', 'user_id': storedUserId});
       });
     }
     await _saveMessages();
     _scrollToBottom();
   }
 
-  void _handleSaveComplete() {
+  Future<void> _handleSaveComplete() async {
+    String? storedUserId = await storage.read(key: 'login_id');
+
+    if (storedUserId == null) {
+      setState(() {
+        messages.add({
+          'type': 'bot',
+          'text': '사용자 ID를 가져오지 못했습니다',
+          'user_id': storedUserId
+        });
+      });
+      await _saveMessages();
+      return;
+    }
     setState(() {
-      messages.add({'type': 'bot', 'text': '플랜을 저장했어요!'});
+      messages
+          .add({'type': 'bot', 'text': '플랜을 저장했어요!', 'user_id': storedUserId});
     });
     _saveMessages();
     _scrollToBottom();
@@ -279,190 +345,207 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              itemCount: messages.length,
-              itemBuilder: (context, index) {
-                final message = messages[index];
-                if (message['type'] == 'user') {
-                  return Align(
-                    alignment: Alignment.centerRight,
-                    child: Container(
-                      margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                      padding: EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Colors.blue[100],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.7,
-                      ),
-                      child: Text(
-                        message['text'],
-                        style: TextStyle(color: Colors.black87),
-                      ),
-                    ),
-                  );
-                } else if (message['type'] == 'loading') {
-                  return Align(
-                    alignment: Alignment.centerLeft,
-                    child: Container(
-                      margin: EdgeInsets.symmetric(vertical: 2, horizontal: 5),
-                      padding: EdgeInsets.all(3),
-                      decoration: BoxDecoration(
-                        color: Colors.green[100],
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.3,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircularProgressIndicator(),
-                          SizedBox(width: 6),
-                          Text(''),
-                        ],
-                      ),
-                    ),
-                  );
-                } else if (message['type'] == 'place') {
-                  return Align(
-                    alignment: Alignment.centerLeft,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              margin:
-                                  EdgeInsets.only(right: 5, left: 10, top: 5),
-                              child: CircleAvatar(
-                                backgroundColor: Colors.transparent,
-                                child: Text(
-                                  '?',
-                                  style: TextStyle(color: Colors.black87),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.symmetric(vertical: 5),
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.green[100],
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              constraints: BoxConstraints(
-                                maxWidth:
-                                    MediaQuery.of(context).size.width * 0.7,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'ID: ${message['id']}',
-                                    style: TextStyle(color: Colors.black87),
-                                  ),
-                                  Text(
-                                    message['name'],
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  return Align(
-                    alignment: Alignment.centerLeft,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Container(
-                              margin:
-                                  EdgeInsets.only(right: 5, left: 10, top: 5),
-                              child: CircleAvatar(
-                                backgroundColor: Colors.transparent,
-                                child: Text(
-                                  '?',
-                                  style: TextStyle(color: Colors.black87),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.symmetric(vertical: 5),
-                              padding: EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                color: Colors.green[100],
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              constraints: BoxConstraints(
-                                maxWidth:
-                                    MediaQuery.of(context).size.width * 0.7,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    message['text'],
-                                    style: TextStyle(color: Colors.black87),
-                                  ),
-                                  if (message['response'] != null)
-                                    ...message['response']
-                                        .map<Widget>((item) => Text('• $item'))
-                                        .toList(),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (message['response'] != null &&
-                            message['response'].isNotEmpty)
-                          Center(
-                            child: ElevatedButton(
-                              onPressed: _handleCreatePlan,
-                              child: Text('플랜 작성하기'),
-                            ),
+      body: FutureBuilder<String?>(
+        future: storage.read(key: 'login_id'),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          final userId = snapshot.data;
+          final userMessages =
+              messages.where((msg) => msg['user_id'] == userId).toList();
+
+          return Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  controller: _scrollController,
+                  itemCount: userMessages.length,
+                  itemBuilder: (context, index) {
+                    final message = userMessages[index];
+                    if (message['type'] == 'user') {
+                      return Align(
+                        alignment: Alignment.centerRight,
+                        child: Container(
+                          margin:
+                              EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.blue[100],
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                      ],
-                    ),
-                  );
-                }
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: '대화를 입력해주세요',
-                border: OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    if (_controller.text.isNotEmpty) {
-                      sendMessage(_controller.text);
-                      _controller.clear();
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.7,
+                          ),
+                          child: Text(
+                            message['text'],
+                            style: TextStyle(color: Colors.black87),
+                          ),
+                        ),
+                      );
+                    } else if (message['type'] == 'loading') {
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          margin:
+                              EdgeInsets.symmetric(vertical: 2, horizontal: 5),
+                          padding: EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: Colors.green[100],
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          constraints: BoxConstraints(
+                            maxWidth: MediaQuery.of(context).size.width * 0.3,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(width: 6),
+                              Text(''),
+                            ],
+                          ),
+                        ),
+                      );
+                    } else if (message['type'] == 'place') {
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  margin: EdgeInsets.only(
+                                      right: 5, left: 10, top: 5),
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.transparent,
+                                    child: Text(
+                                      '?',
+                                      style: TextStyle(color: Colors.black87),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.symmetric(vertical: 5),
+                                  padding: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[100],
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  constraints: BoxConstraints(
+                                    maxWidth:
+                                        MediaQuery.of(context).size.width * 0.7,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'ID: ${message['id']}',
+                                        style: TextStyle(color: Colors.black87),
+                                      ),
+                                      Text(
+                                        message['name'],
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black87),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    } else {
+                      return Align(
+                        alignment: Alignment.centerLeft,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  margin: EdgeInsets.only(
+                                      right: 5, left: 10, top: 5),
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.transparent,
+                                    child: Text(
+                                      '?',
+                                      style: TextStyle(color: Colors.black87),
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  margin: EdgeInsets.symmetric(vertical: 5),
+                                  padding: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[100],
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  constraints: BoxConstraints(
+                                    maxWidth:
+                                        MediaQuery.of(context).size.width * 0.7,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        message['text'],
+                                        style: TextStyle(color: Colors.black87),
+                                      ),
+                                      if (message['response'] != null)
+                                        ...message['response']
+                                            .map<Widget>(
+                                                (item) => Text('• $item'))
+                                            .toList(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (message['response'] != null &&
+                                message['response'].isNotEmpty)
+                              Center(
+                                child: ElevatedButton(
+                                  onPressed: _handleCreatePlan,
+                                  child: Text('플랜 작성하기'),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
                     }
                   },
                 ),
               ),
-            ),
-          ),
-        ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    labelText: '대화를 입력해주세요',
+                    border: OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(Icons.send),
+                      onPressed: () {
+                        if (_controller.text.isNotEmpty) {
+                          sendMessage(_controller.text);
+                          _controller.clear();
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

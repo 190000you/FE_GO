@@ -270,13 +270,15 @@ class MyPageState extends State<MyPage> {
     final response =
         await http.get(Uri.parse('http://43.203.61.149/plan/plan/'));
 
+    print("fetch");
     // 호출 성공 시
     if (response.statusCode == 200) {
       final responseData = jsonDecode(utf8.decode(response.bodyBytes));
-      if (responseData is Map<String, dynamic>) {
-        List<dynamic> plans = responseData['results'];
+      print("Response Data: $responseData");
+
+      if (responseData is List<dynamic>) {
         List<Map<String, dynamic>> tempUserPlans = [];
-        for (var plan in plans) {
+        for (var plan in responseData) {
           if (plan['user'].toString() == userId) {
             tempUserPlans.add(plan);
           }

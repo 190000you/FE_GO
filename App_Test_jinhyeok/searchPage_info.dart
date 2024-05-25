@@ -340,10 +340,8 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
-    // print("전체 장소 상세 정보 : " + widget.placeDetails.toString());
-    // print("장소 번호 : " + widget.placeDetails['id'].toString());
-
     List<Widget> tagWidgets = widget.placeDetails['tag']
         .map<Widget>((tag) => Chip(
               label: Text(
@@ -356,6 +354,10 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
               ),
             ))
         .toList();
+
+    var imageUrl = widget.placeDetails['image'] != null
+        ? 'http://43.203.61.149${widget.placeDetails['image']}' // 사진 주소
+        : 'https://via.placeholder.com/80';
 
     return Scaffold(
       appBar: AppBar(
@@ -376,7 +378,29 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Placeholder(fallbackHeight: 200),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.black, width: 2),
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0),
+                          spreadRadius: 5,
+                          blurRadius: 7,
+                          offset: Offset(0, 3), // changes position of shadow
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        imageUrl,
+                        width: double.infinity,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
                   SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -555,9 +579,6 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                                     );
                                   }),
                                 ),
-                                Row(
-                                    //children: List.generate(review['score'], (index) => Icon(Icons.star, color: Colors.amber, size: 20)),
-                                    ),
                                 SizedBox(height: 8),
                                 // 2. 리뷰 작성자와 날짜
                                 Text(

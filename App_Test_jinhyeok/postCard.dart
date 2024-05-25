@@ -1,6 +1,7 @@
 // 내부 import
 import 'package:go_test_ver/advertisement_2.dart';
 import 'package:go_test_ver/advertisement_3.dart';
+import 'package:go_test_ver/searchPage.dart';
 
 import 'advertisement_1.dart'; // 광고 창
 
@@ -150,19 +151,41 @@ class _PostCardState extends State<PostCard> {
                                 ),
                               );
                             },
-                            child: Container(
-                              width: MediaQuery.of(context).size.width *
-                                  2.0, // 페이지 너비 딱맞게
-                              margin: EdgeInsets.symmetric(horizontal: 5),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                // 랜덤 이미지 -> 이미지 바꾸기
-                                image: DecorationImage(
-                                  image: NetworkImage(
-                                      'https://source.unsplash.com/random/${position + 1}'),
-                                  fit: BoxFit.cover,
+                            child: Stack(
+                              alignment: Alignment.center, // 텍스트를 중앙에 위치시킵니다.
+                              children: <Widget>[
+                                Container(
+                                  width: MediaQuery.of(context).size.width *
+                                      2.0, // 페이지 너비 딱맞게
+                                  margin: EdgeInsets.symmetric(horizontal: 5),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(15),
+                                    image: DecorationImage(
+                                      image: AssetImage(
+                                          'assets/images/advertisement_1.png'),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Container(
+                                  alignment:
+                                      Alignment.center, // 텍스트의 정렬을 중앙으로 설정
+                                  margin: EdgeInsets.symmetric(horizontal: 5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(
+                                        0.4), // 텍스트의 가독성을 위해 어두운 반투명 오버레이 추가
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Text(
+                                    '여름철 시원하게 보내기',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }
@@ -178,19 +201,41 @@ class _PostCardState extends State<PostCard> {
                                 ),
                               );
                             },
-                            child: Container(
-                              width: MediaQuery.of(context).size.width *
-                                  2.0, // 페이지 너비 딱맞게
-                              margin: EdgeInsets.symmetric(horizontal: 5),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                // 랜덤 이미지
-                                image: DecorationImage(
-                                  image: NetworkImage(
-                                      'https://source.unsplash.com/random/${position + 1}'),
-                                  fit: BoxFit.cover,
+                            child: Stack(
+                              alignment: Alignment.center, // 텍스트를 중앙에 위치시킵니다.
+                              children: <Widget>[
+                                Container(
+                                  width: MediaQuery.of(context).size.width *
+                                      2.0, // 페이지 너비 딱맞게
+                                  margin: EdgeInsets.symmetric(horizontal: 5),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(15),
+                                    image: DecorationImage(
+                                      image: AssetImage(
+                                          'assets/images/advertisement_2.png'),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Container(
+                                  alignment:
+                                      Alignment.center, // 텍스트의 정렬을 중앙으로 설정
+                                  margin: EdgeInsets.symmetric(horizontal: 5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(
+                                        0.4), // 텍스트의 가독성을 위해 어두운 반투명 오버레이 추가
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Text(
+                                    '인기 관광지',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }
@@ -206,19 +251,41 @@ class _PostCardState extends State<PostCard> {
                                 ),
                               );
                             },
-                            child: Container(
-                              width: MediaQuery.of(context).size.width *
-                                  2.0, // 페이지 너비 딱맞게
-                              margin: EdgeInsets.symmetric(horizontal: 5),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15),
-                                // 랜덤 이미지
-                                image: DecorationImage(
-                                  image: NetworkImage(
-                                      'https://source.unsplash.com/random/${position + 1}'),
-                                  fit: BoxFit.cover,
+                            child: Stack(
+                              alignment: Alignment.center, // 텍스트를 중앙에 위치시킵니다.
+                              children: <Widget>[
+                                Container(
+                                  width: MediaQuery.of(context).size.width *
+                                      2.0, // 페이지 너비 딱맞게
+                                  margin: EdgeInsets.symmetric(horizontal: 5),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(15),
+                                    image: DecorationImage(
+                                      image: AssetImage(
+                                          'assets/images/advertisement_3.png'),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Container(
+                                  alignment:
+                                      Alignment.center, // 텍스트의 정렬을 중앙으로 설정
+                                  margin: EdgeInsets.symmetric(horizontal: 5),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(
+                                        0.4), // 텍스트의 가독성을 위해 어두운 반투명 오버레이 추가
+                                    borderRadius: BorderRadius.circular(15),
+                                  ),
+                                  child: Text(
+                                    '최근 떠오르는 장소',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           );
                         }
@@ -290,10 +357,15 @@ class _PostCardState extends State<PostCard> {
                 itemCount: 5, // 원이 5개 있음
                 itemBuilder: (context, index) {
                   if (index == 0) {
-                    // 첫 번째 원
+                    // 1) 검색 페이지 이동
                     return GestureDetector(
                       onTap: () {
-                        // 0번 원을 눌렀을때 할 행동(검색)
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SearchPage(),
+                          ),
+                        );
                       },
                       child: Container(
                         // 첫번째 원
@@ -323,8 +395,83 @@ class _PostCardState extends State<PostCard> {
                         ),
                       ),
                     );
+                  } else if (index == 1) {
+                    return GestureDetector(
+                      onTap: () {
+                        // 각 원을 탭했을 때의 동작 추가 이후
+                      },
+                      child: Container(
+                        width: 130, // 각 원의 너비
+                        margin: EdgeInsets.symmetric(
+                            horizontal: 5), // 각 원 사이의 간격 조정
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage(
+                                'https://source.unsplash.com/random'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    );
+                  } else if (index == 2) {
+                    return GestureDetector(
+                      onTap: () {
+                        // 각 원을 탭했을 때의 동작 추가 이후
+                      },
+                      child: Container(
+                        width: 130, // 각 원의 너비
+                        margin: EdgeInsets.symmetric(
+                            horizontal: 5), // 각 원 사이의 간격 조정
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage(
+                                'https://source.unsplash.com/random'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    );
+                  } else if (index == 3) {
+                    return GestureDetector(
+                      onTap: () {
+                        // 각 원을 탭했을 때의 동작 추가 이후
+                      },
+                      child: Container(
+                        width: 130, // 각 원의 너비
+                        margin: EdgeInsets.symmetric(
+                            horizontal: 5), // 각 원 사이의 간격 조정
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage(
+                                'https://source.unsplash.com/random'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    );
+                  } else if (index == 4) {
+                    return GestureDetector(
+                      onTap: () {
+                        // 각 원을 탭했을 때의 동작 추가 이후
+                      },
+                      child: Container(
+                        width: 130, // 각 원의 너비
+                        margin: EdgeInsets.symmetric(
+                            horizontal: 5), // 각 원 사이의 간격 조정
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          image: DecorationImage(
+                            image: NetworkImage(
+                                'https://source.unsplash.com/random'),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      ),
+                    );
                   } else {
-                    // 나머지 원들 이후 원들은 아래 코드를 넣어주면 됨
                     return GestureDetector(
                       onTap: () {
                         // 각 원을 탭했을 때의 동작 추가 이후

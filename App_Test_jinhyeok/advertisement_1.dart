@@ -1,4 +1,66 @@
 import 'package:flutter/material.dart';
+import 'package:go_test_ver/searchPage_info.dart';
+
+// 1. 동산계곡 정보
+Map<String, dynamic> place1 = {
+  "id": 131, // 사용
+  "name": "동산계곡", // 사용
+  "image": "/media/%EB%8F%99%EC%82%B0%EA%B3%84%EA%B3%A1.jpg", // 사용 X?
+  "classification": "폭포/계곡", // 사용
+  "parking": true, // 사용
+  "info": "폭포/계곡", // 사용
+  "call": "054-380-6544", // 사용
+  "tag": [
+    // 사용
+    {"name": "#나들이"},
+    {"name": "#물놀이"},
+    {"name": "#차박"},
+  ],
+  "time": "체류시간 1시간", // 사용
+};
+
+// 2. 동산계곡 정보
+Map<String, dynamic> place2 = {
+  "id": 270, // 사용
+  "name": "스파밸리", // 사용
+  "image": "/media/%EC%8A%A4%ED%8C%8C%EB%B0%B8%EB%A6%AC.jpg", // 사용 X?
+  "classification": "기타유원시설업", // 사용
+  "parking": true, // 사용
+  "info": "겨울 온천수로 즐기는 워터파크 스파밸리!", // 사용
+  "call": "1688-8511", // 사용
+  "tag": [
+    // 사용
+    {"name": "#물놀이"},
+    {"name": "#아이와놀자"},
+    {"name": "#제로페이"},
+    {"name": "#카카오페이"},
+  ],
+  "time": "체류시간 2시간이상", // 사용
+};
+
+// 3. 대구 수목원 정보
+Map<String, dynamic> place3 = {
+  "id": 91, // 사용
+  "name": "대구수목원", // 사용
+  "image": "/media/%EB%8C%80%EA%B5%AC%EC%88%98%EB%AA%A9%EC%9B%90.jpg", // 사용 X?
+  "classification": "휴양림/수목원", // 사용
+  "parking": true, // 사용
+  "info": "쓰레기 매립장을 생태적 식물공간으로 복원", // 사용
+  "call": "053-803-7270", // 사용
+  "tag": [
+    // 사용
+    {"name": "#걷기좋은"},
+    {"name": "#국화꽃"},
+    {"name": "#나들이"},
+    {"name": "#단풍명소"},
+    {"name": "#맨발걷기"},
+    {"name": "#산책로"},
+    {"name": "#억새밭"},
+    {"name": "#잔디마당"},
+    {"name": "#포토존"},
+  ],
+  "time": "체류시간 2시간이상", // 사용
+};
 
 class AdvertisementPage_1 extends StatelessWidget {
   @override
@@ -16,11 +78,15 @@ class AdvertisementPage_1 extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            // 0. 대표 이미지 + 텍스트
-            Image.network(
-              'https://source.unsplash.com/random/', // 이미지 URL
-              height: 240,
-              fit: BoxFit.cover,
+            Container(
+              height: 350, // 높이
+              width: double.infinity, // 옆으로 확장
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/images/advertisement_1.png'),
+                  fit: BoxFit.cover, // 이미지가 컨테이너 영역을 꽉 채우도록 합니다.
+                ),
+              ),
             ),
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -30,9 +96,8 @@ class AdvertisementPage_1 extends StatelessWidget {
                 textAlign: TextAlign.center, // 텍스트를 중앙 정렬
               ),
             ),
-            // Divider(),
             SizedBox(height: 20),
-            // 1. 시원한 계곡
+            // 1. 시원한 계곡 : 동산계곡
             // 1.1) 소제목
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -45,15 +110,15 @@ class AdvertisementPage_1 extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(15.0),
               child: Container(
+                height: 180, // 높이 조정
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.0), // 모서리를 둥글게
                   color: Colors.white, // 배경색을 흰색으로 설정
-                ),
-                clipBehavior: Clip.antiAlias, // 모서리가 둥글 때 이미지를 잘라냄
-                child: Image.network(
-                  'https://source.unsplash.com/random/', // 세부 정보 이미지 URL
-                  height: 180,
-                  fit: BoxFit.cover,
+                  image: DecorationImage(
+                    image: AssetImage(
+                        'assets/images/advertisement_1.1.png'), // 이미지 경로
+                    fit: BoxFit.cover, // 이미지가 컨테이너 영역을 꽉 채우도록 설정
+                  ),
                 ),
               ),
             ),
@@ -61,7 +126,7 @@ class AdvertisementPage_1 extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                '미야코지마는 오리엔탈과 대만 사이에 있는 규슈 북부에 위치하여 최적 기후의 15분 이내 거리에 있습니다. 5월부터 9월까지 비교적 건조하며, 온도는 27도를 유지합니다.', // 세부 정보 설명
+                '올 여름휴가는 어디로 떠나시나요?\n\n휴가철이 다가오면서 어떻게 휴가를 보낼지 고민이시다면, 시원한 계곡은 어떠세요?\n\n가볼까의 첫 번째 추천은 계곡이에요!\n',
                 style: TextStyle(fontSize: 16),
               ),
             ),
@@ -83,14 +148,35 @@ class AdvertisementPage_1 extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                '미야코지마는 태평양에 있는 섬으로 해변 모습이 두 대륙 간의 자연 어울림을 보여줍니다. 이 지역이 외면된 것은 아니다메시테 활발한 그 이상의 인상을 남길 수 있는 최적의 배경을 제공한다.',
+                '"팔공산 동산 계곡"은 대구 군위에 위치하고 있으며, 근처에 숙소와 펜션 그리고 캠핑장이 많아요!\n\n또한, 팔공산 계곡의 대표적인 장소로 대구와 가깝다는 장점도 있어요\n\n친한 지인들 또는 가족들과 함께 무더위를 시원하게 보내버리는건 어떤까요?',
                 style: TextStyle(fontSize: 16),
+              ),
+            ),
+            // 1.6) 장소 바로가기 버튼
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  // 여기서 item은 현재 표시된 결과 목록에서 선택된 항목입니다.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          PlaceDetailPage(placeDetails: place1),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue, // 버튼의 텍스트 색상
+                ),
+                child: Text('동산 계곡 상세보기'),
               ),
             ),
             SizedBox(height: 20),
             Divider(),
             SizedBox(height: 20),
-            // 2. 실내 데이트
+            // 2. 실내 데이트 : 스파밸리
             // 2.1) 소제목
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -103,15 +189,15 @@ class AdvertisementPage_1 extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(15.0),
               child: Container(
+                height: 180, // 높이 조정
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.0), // 모서리를 둥글게
                   color: Colors.white, // 배경색을 흰색으로 설정
-                ),
-                clipBehavior: Clip.antiAlias, // 모서리가 둥글 때 이미지를 잘라냄
-                child: Image.network(
-                  'https://source.unsplash.com/random/', // 세부 정보 이미지 URL
-                  height: 180,
-                  fit: BoxFit.cover,
+                  image: DecorationImage(
+                    image: AssetImage(
+                        'assets/images/advertisement_1.2.png'), // 이미지 경로
+                    fit: BoxFit.cover, // 이미지가 컨테이너 영역을 꽉 채우도록 설정
+                  ),
                 ),
               ),
             ),
@@ -119,10 +205,11 @@ class AdvertisementPage_1 extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                '이곳에서 자연의 아름다움을 최대한으로 누리며 인생 사진도 남기지 말자.',
+                '다양한 슬라이드와 파도풀이 존재하는 워터파크는 어떤가요?\n\n어린이와 어른 모두 만족해하는 스파밸리!\n\n한 번 알아볼까요?\n',
                 style: TextStyle(fontSize: 16),
               ),
             ),
+            // 2.4) 간격
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0), // 위 아래 패딩 조정
               child: Row(
@@ -136,17 +223,39 @@ class AdvertisementPage_1 extends StatelessWidget {
                 ],
               ),
             ),
+            // 2.5) 내용 2
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                '일본정부에서 가장 아름다운 대국 \'일본무대\'로 2015년에 개도된 미야코지마는 일본 남은 연결하는 일본에서 가장 큰 다리로 그 도읍을 자랑하는 곳입니다.',
+                '"스파밸리"는 대구 달성군 가창면에 있어요!\n\n내부에는 다양한 놀이시설과 맛있는 푸드코트 그리고 물놀이 용품점이 존재하여 여름을 시원하게 보낼 수 있어요!\n\n근처에 동물원도 있으니 아이들과 함께 방문하여 좋은 추억을 만들어보아요!',
                 style: TextStyle(fontSize: 16),
+              ),
+            ),
+            // 2.6) 장소 바로가기 버튼
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  // 여기서 item은 현재 표시된 결과 목록에서 선택된 항목입니다.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          PlaceDetailPage(placeDetails: place2),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue, // 버튼의 텍스트 색상
+                ),
+                child: Text('스파밸리 상세보기'),
               ),
             ),
             SizedBox(height: 20),
             Divider(),
             SizedBox(height: 20),
-            // 3. 수목원
+            // 3. 대구 수목원
             // 3.1) 소제목
             Padding(
               padding: const EdgeInsets.all(16.0),
@@ -156,18 +265,19 @@ class AdvertisementPage_1 extends StatelessWidget {
               ),
             ),
             // 3.2) 이미지
+            // 3.2) 이미지
             Padding(
               padding: const EdgeInsets.all(15.0),
               child: Container(
+                height: 180, // 높이 조정
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8.0), // 모서리를 둥글게
                   color: Colors.white, // 배경색을 흰색으로 설정
-                ),
-                clipBehavior: Clip.antiAlias, // 모서리가 둥글 때 이미지를 잘라냄
-                child: Image.network(
-                  'https://source.unsplash.com/random/', // 세부 정보 이미지 URL
-                  height: 180,
-                  fit: BoxFit.cover,
+                  image: DecorationImage(
+                    image: AssetImage(
+                        'assets/images/advertisement_1.3.png'), // 이미지 경로
+                    fit: BoxFit.cover, // 이미지가 컨테이너 영역을 꽉 채우도록 설정
+                  ),
                 ),
               ),
             ),
@@ -175,10 +285,11 @@ class AdvertisementPage_1 extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                '이곳에서 자연의 아름다움을 최대한으로 누리며 인생 사진도 남기지 말자.',
+                '도심에서 멀리 떨어져 자연을 느껴보세요!\n\n무료 입장으로 멋진 정원을 즐길 수 있는\n"대구 수목원", 가볼까요?',
                 style: TextStyle(fontSize: 16),
               ),
             ),
+            // 3.4) 간격
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0), // 위 아래 패딩 조정
               child: Row(
@@ -192,16 +303,38 @@ class AdvertisementPage_1 extends StatelessWidget {
                 ],
               ),
             ),
+            // 3.5) 내용 2
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                '일본정부에서 가장 아름다운 대국 \'일본무대\'로 2015년에 개도된 미야코지마는 일본 남은 연결하는 일본에서 가장 큰 다리로 그 도읍을 자랑하는 곳입니다.',
+                '"대구 수목원"은 계절마다 다른 느낌을 주어 인근 주민들에게도 인기가 많답니다!\n\n특히, 여름에는 자연의 청량함과 싱그러움을 느낄 수 있어요!\n\n아이들에게 자연의 아름다움과 신비함을 알려줄 수 있는 대구 수목원으로 가보아요!',
                 style: TextStyle(fontSize: 16),
+              ),
+            ),
+            // 3.6) 장소 바로가기 버튼
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  // 여기서 item은 현재 표시된 결과 목록에서 선택된 항목입니다.
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          PlaceDetailPage(placeDetails: place3),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.blue, // 버튼의 텍스트 색상
+                ),
+                child: Text('대구 수목원 상세보기'),
               ),
             ),
             SizedBox(height: 20),
             Divider(),
-            SizedBox(height: 20),
+            //SizedBox(height: 20),
           ],
         ),
       ),

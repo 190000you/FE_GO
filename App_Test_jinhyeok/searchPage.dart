@@ -158,8 +158,9 @@ class _SearchPageState extends State<SearchPage> {
                 var tags = item['tag'] != null && item['tag'].isNotEmpty
                     ? item['tag'].map((tag) => tag['name']).join(' ')
                     : ' ';
-                var imageUrl =
-                    item['image'] ?? 'https://via.placeholder.com/80';
+                var imageUrl = item['image'] != null
+                    ? 'http://43.203.61.149${item['image']}'
+                    : 'https://via.placeholder.com/80';
 
                 return InkWell(
                   onTap: () {
@@ -176,11 +177,20 @@ class _SearchPageState extends State<SearchPage> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Image.network(
-                          imageUrl,
-                          width: 60,
-                          height: 60,
-                          fit: BoxFit.cover,
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black, width: 2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              imageUrl,
+                              width: 60,
+                              height: 60,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
                         ),
                         Expanded(
                           child: Padding(

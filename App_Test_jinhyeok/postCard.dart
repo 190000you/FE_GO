@@ -2,6 +2,7 @@
 import 'package:go_test_ver/advertisement_2.dart';
 import 'package:go_test_ver/advertisement_3.dart';
 import 'package:go_test_ver/searchPage.dart';
+import 'package:go_test_ver/searchPage_info.dart';
 
 import 'advertisement_1.dart'; // 광고 창
 
@@ -11,6 +12,102 @@ import 'dart:async';
 import 'package:dots_indicator/dots_indicator.dart';
 import 'package:http/http.dart';
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart'; // 튜토리얼 패키지
+
+// 1. 스파밸리 정보
+Map<String, dynamic> place1 = {
+  "id": 270, // 사용
+  "name": "스파밸리", // 사용
+  "image":
+      "http://43.203.61.149/media/%EC%8A%A4%ED%8C%8C%EB%B0%B8%EB%A6%AC_VGHCHBH.jpg", // 사용 X?
+  "classification": "기타유원시설업", // 사용
+  "parking": true, // 사용
+  "info": "겨울 온천수로 즐기는 워터파크 스파밸리!", // 사용
+  "call": "1688-8511", // 사용
+  "tag": [
+    // 사용
+    {"name": "#물놀이"},
+    {"name": "#아이와놀자"},
+    {"name": "#제로페이"},
+    {"name": "#카카오페이"},
+  ],
+  "time": "체류시간 2시간이상", // 사용
+};
+
+// 2. 고산골 공룡공원 정보
+Map<String, dynamic> place2 = {
+  "id": 21, // 사용
+  "name": "고산골 공룡공원", // 사용
+  "image":
+      "http://43.203.61.149/media/%EA%B3%A0%EC%82%B0%EA%B3%A8_%EA%B3%B5%EB%A3%A1%EA%B3%B5%EC%9B%90_WKwbQX0.jpg", // 사용 X?
+  "classification": "관광지", // 사용
+  "parking": true, // 사용
+  "info": "고산골 일대 1억년 전 중생대 백악기의 흔적을 볼 수 있는 곳", // 사용
+  "call": "053-664-2782", // 사용
+  "tag": [
+    // 사용
+    {"#단풍명소"},
+    {"name": "#산책로"},
+    {"name": "#아이와놀자"},
+    {"name": "#포토존"},
+  ],
+  "time": "체류시간 1시간 30분 ~ 2시간", // 사용
+};
+
+// 3. 수승대관광지 정보
+Map<String, dynamic> place3 = {
+  "id": 262, // 사용
+  "name": "수승대관광지", // 사용
+  "image":
+      "http://43.203.61.149/media/%EC%88%98%EC%8A%B9%EB%8C%80%EA%B4%80%EA%B4%91%EC%A7%80_N8cFl3O.jpg", // 사용 X?
+  "classification": "관광지", // 사용
+  "parking": true, // 사용
+  "info": "관광지", // 사용
+  "call": "055-940-8530", // 사용
+  "tag": [
+    // 사용
+    {"name": "#나들이"},
+    {"name": "#억새밭"},
+  ],
+  "time": "체류시간 1시간 30분 ~ 2시간", // 사용
+};
+
+// 4. 앞산전망대 정보
+Map<String, dynamic> place4 = {
+  "id": 295, // 사용
+  "name": "앞산전망대", // 사용
+  "image":
+      "http://43.203.61.149/media/%EC%95%9E%EC%82%B0%EC%A0%84%EB%A7%9D%EB%8C%80_Imn2Sh2.jpg", // 사용 X?
+  "classification": "관광지", // 사용
+  "parking": true, // 사용
+  "info": "한국관광 100선 선정, 대구시가지 전경을 한눈에 내려다볼 수 있는 대표 야간관광지", // 사용
+  "call": "053-803-5450", // 사용
+  "tag": [
+    // 사용
+    {"name": "#나들이"},
+    {"name": "#벚꽃명소"},
+    {"name": "#일출명소"},
+  ],
+  "time": "체류시간 1시간 30분 ~ 2시간", // 사용
+};
+
+// 5. 용문폭포 정보
+Map<String, dynamic> place5 = {
+  "id": 335, // 사용
+  "name": "용문폭포", // 사용
+  "image":
+      "http://43.203.61.149/media/%EC%9A%A9%EB%AC%B8%ED%8F%AD%ED%8F%AC_65WDJRT.jpg", // 사용 X?
+  "classification": "폭포/계곡", // 사용
+  "parking": true, // 사용
+  "info": "폭포/계곡", // 사용
+  "call": "-", // 사용
+  "tag": [
+    // 사용
+    {"name": "#물놀이"},
+    {"name": "#산책로"},
+  ],
+  "time": "체류시간 1시간", // 사용
+};
 
 class PostCard extends StatefulWidget {
   final Map<String, dynamic> weatherData;
@@ -66,11 +163,43 @@ class _PostCardState extends State<PostCard> {
     super.dispose();
   }
 
+  late TutorialCoachMark tutorialCoachMark; // 생성
+  GlobalKey keyButton1 = GlobalKey(); // 여행 정보 튜토리얼
+  GlobalKey keyButton1_1 = GlobalKey(); // 여행 정보 튜토리얼
+  GlobalKey keyButton2 = GlobalKey(); // 챗봇 추천 튜토리얼
+  GlobalKey keyButton3 = GlobalKey(); // 플랜 작성 튜토리얼
+  GlobalKey keyButton4 = GlobalKey(); // 링크 공유 튜토리얼
+
   // 제공하는 서비스 - 클릭 이벤트 코드
   void onServiceTap(int index) {
-    // List[Navigator]
-    // 여기서 index별로 다른 이벤트를 실행할 수 있습니다.
-    // 예를 들어, Navigator.push로 각 서비스의 상세 페이지로 이동하게 할 수 있습니다.
+    // index에 따라서 발동
+    List<TargetFocus> targets = _createTargets(index);
+    tutorialCoachMark = TutorialCoachMark(
+      targets: targets,
+      colorShadow: Color.fromARGB(255, 72, 22, 78),
+      textSkip: "SKIP",
+      paddingFocus: 10,
+      opacityShadow: 0.8,
+      onFinish: () {
+        print("finish");
+      },
+      onClickTarget: (target) {
+        print('onClickTarget: $target');
+      },
+      onClickTargetWithTapPosition: (target, tapDetails) {
+        print("target: $target");
+        print(
+            "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+      },
+      onClickOverlay: (target) {
+        print('onClickOverlay: $target');
+      },
+      onSkip: () {
+        print("skip");
+        return true;
+      },
+    );
+    tutorialCoachMark.show(context: context);
     print('Service $index clicked');
   }
 
@@ -79,15 +208,161 @@ class _PostCardState extends State<PostCard> {
     '여행 정보',
     '챗봇 추천',
     '플랜 작성',
-    '링크 공유',
+    '장소 저장 ',
   ];
 
-  // 네이버 지도 Mapping
-  Map<String, String> headerss = {
-    "X-NCP-APIGW-API-KEY-ID": "yo5tmuo7vz", // 개인 클라이언트 아이디
-    "X-NCP-APIGW-API-KEY":
-        "oGcKmx1VAWZPChzVZGiaFec1jmmkrlVElCofTB5i" // 개인 시크릿 키
-  };
+  List<TargetFocus> _createTargets(int index) {
+    List<TargetFocus> targets = []; // target[] 생성
+    if (index == 0) {
+      // 타겟 1
+      targets.add(
+        TargetFocus(
+          identify: "Target 1",
+          keyTarget: keyButton1,
+          // 내용
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "여행 정보",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 25.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "'가볼까'는 시즌별 추천 장소와 정보는 물론이며,\n사용자에 맞는 여행 장소를 추천해줍니다!",
+                        style: TextStyle(color: Colors.white, fontSize: 15.0),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    if (index == 1) {
+      // 타겟 2
+      targets.add(
+        TargetFocus(
+          identify: "Target 2",
+          keyTarget: keyButton2,
+          // 내용
+          contents: [
+            TargetContent(
+              align: ContentAlign.top,
+              builder: (context, controller) {
+                return const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "챗봇 추천",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 25.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "아래 네비게이션 바의 채팅 아이콘을 누르면,\n챗봇이 맞춤형 장소를 추천해줍니다!",
+                        style: TextStyle(color: Colors.white, fontSize: 15.0),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    if (index == 2) {
+      // 타겟 3
+      targets.add(
+        TargetFocus(
+          identify: "Target 3",
+          keyTarget: keyButton3,
+          // 내용
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "플랜 작성",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 25.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "챗봇을 통해 플랜을 저장할 수 있고,\n플랜을 직접 만들 수도 있어요!",
+                        style: TextStyle(color: Colors.white, fontSize: 15.0),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    if (index == 3) {
+      // 타겟 4
+      targets.add(
+        TargetFocus(
+          identify: "Target 4",
+          keyTarget: keyButton4,
+          // 내용
+          contents: [
+            TargetContent(
+              align: ContentAlign.bottom,
+              builder: (context, controller) {
+                return const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "장소 저장",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 25.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "더 많은 장소를 한 번에 보고 싶을 때에는\n추천 장소를 찜하여 한 번에 볼 수 있어요!",
+                        style: TextStyle(color: Colors.white, fontSize: 15.0),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+      );
+    }
+    return targets;
+  }
 
   String getWeatherIcon(int condition) {
     if (condition < 300) {
@@ -152,11 +427,11 @@ class _PostCardState extends State<PostCard> {
                               );
                             },
                             child: Stack(
-                              alignment: Alignment.center, // 텍스트를 중앙에 위치시킵니다.
+                              alignment: Alignment.center,
                               children: <Widget>[
                                 Container(
-                                  width: MediaQuery.of(context).size.width *
-                                      2.0, // 페이지 너비 딱맞게
+                                  width:
+                                      MediaQuery.of(context).size.width * 2.0,
                                   margin: EdgeInsets.symmetric(horizontal: 5),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(15),
@@ -168,14 +443,14 @@ class _PostCardState extends State<PostCard> {
                                   ),
                                 ),
                                 Container(
-                                  alignment:
-                                      Alignment.center, // 텍스트의 정렬을 중앙으로 설정
+                                  alignment: Alignment.center, // 텍스트 위치
                                   margin: EdgeInsets.symmetric(horizontal: 5),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(
-                                        0.4), // 텍스트의 가독성을 위해 어두운 반투명 오버레이 추가
+                                    color: Colors.black
+                                        .withOpacity(0.4), // 불투명도 조절
                                     borderRadius: BorderRadius.circular(15),
                                   ),
+                                  // 광고 1번 텍스트
                                   child: Text(
                                     '여름철 시원하게 보내기',
                                     style: TextStyle(
@@ -202,11 +477,11 @@ class _PostCardState extends State<PostCard> {
                               );
                             },
                             child: Stack(
-                              alignment: Alignment.center, // 텍스트를 중앙에 위치시킵니다.
+                              alignment: Alignment.center,
                               children: <Widget>[
                                 Container(
-                                  width: MediaQuery.of(context).size.width *
-                                      2.0, // 페이지 너비 딱맞게
+                                  width:
+                                      MediaQuery.of(context).size.width * 2.0,
                                   margin: EdgeInsets.symmetric(horizontal: 5),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(15),
@@ -218,14 +493,14 @@ class _PostCardState extends State<PostCard> {
                                   ),
                                 ),
                                 Container(
-                                  alignment:
-                                      Alignment.center, // 텍스트의 정렬을 중앙으로 설정
+                                  alignment: Alignment.center, // 텍스트 위치
                                   margin: EdgeInsets.symmetric(horizontal: 5),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(
-                                        0.4), // 텍스트의 가독성을 위해 어두운 반투명 오버레이 추가
+                                    color: Colors.black
+                                        .withOpacity(0.4), // 불투명도 조절
                                     borderRadius: BorderRadius.circular(15),
                                   ),
+                                  // 광고 2번 텍스트
                                   child: Text(
                                     '인기 관광지',
                                     style: TextStyle(
@@ -252,11 +527,11 @@ class _PostCardState extends State<PostCard> {
                               );
                             },
                             child: Stack(
-                              alignment: Alignment.center, // 텍스트를 중앙에 위치시킵니다.
+                              alignment: Alignment.center,
                               children: <Widget>[
                                 Container(
-                                  width: MediaQuery.of(context).size.width *
-                                      2.0, // 페이지 너비 딱맞게
+                                  width:
+                                      MediaQuery.of(context).size.width * 2.0,
                                   margin: EdgeInsets.symmetric(horizontal: 5),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(15),
@@ -268,12 +543,11 @@ class _PostCardState extends State<PostCard> {
                                   ),
                                 ),
                                 Container(
-                                  alignment:
-                                      Alignment.center, // 텍스트의 정렬을 중앙으로 설정
+                                  alignment: Alignment.center, // 텍스트 위치
                                   margin: EdgeInsets.symmetric(horizontal: 5),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withOpacity(
-                                        0.4), // 텍스트의 가독성을 위해 어두운 반투명 오버레이 추가
+                                    color: Colors.black
+                                        .withOpacity(0.4), // 불투명도 조절
                                     borderRadius: BorderRadius.circular(15),
                                   ),
                                   child: Text(
@@ -395,10 +669,18 @@ class _PostCardState extends State<PostCard> {
                         ),
                       ),
                     );
-                  } else if (index == 1) {
+                  }
+                  // 두 번째 원
+                  else if (index == 1) {
                     return GestureDetector(
                       onTap: () {
-                        // 각 원을 탭했을 때의 동작 추가 이후
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PlaceDetailPage(placeDetails: place1),
+                          ),
+                        );
                       },
                       child: Container(
                         width: 130, // 각 원의 너비
@@ -407,17 +689,25 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: NetworkImage(
-                                'https://source.unsplash.com/random'),
+                            image: AssetImage(
+                                place1["image"]), // place1에서 이미지 가져오기
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     );
-                  } else if (index == 2) {
+                  }
+                  // 세 번째 원
+                  else if (index == 2) {
                     return GestureDetector(
                       onTap: () {
-                        // 각 원을 탭했을 때의 동작 추가 이후
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PlaceDetailPage(placeDetails: place2),
+                          ),
+                        );
                       },
                       child: Container(
                         width: 130, // 각 원의 너비
@@ -426,17 +716,25 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: NetworkImage(
-                                'https://source.unsplash.com/random'),
+                            image: AssetImage(
+                                place2["image"]), // place1에서 이미지 가져오기
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     );
-                  } else if (index == 3) {
+                  }
+                  // 네 번째 원
+                  else if (index == 3) {
                     return GestureDetector(
                       onTap: () {
-                        // 각 원을 탭했을 때의 동작 추가 이후
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PlaceDetailPage(placeDetails: place3),
+                          ),
+                        );
                       },
                       child: Container(
                         width: 130, // 각 원의 너비
@@ -445,17 +743,25 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: NetworkImage(
-                                'https://source.unsplash.com/random'),
+                            image: AssetImage(
+                                place3["image"]), // place1에서 이미지 가져오기
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     );
-                  } else if (index == 4) {
+                  }
+                  // 다섯 번째 원
+                  else if (index == 4) {
                     return GestureDetector(
                       onTap: () {
-                        // 각 원을 탭했을 때의 동작 추가 이후
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PlaceDetailPage(placeDetails: place4),
+                          ),
+                        );
                       },
                       child: Container(
                         width: 130, // 각 원의 너비
@@ -464,17 +770,25 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: NetworkImage(
-                                'https://source.unsplash.com/random'),
+                            image: AssetImage(
+                                place4["image"]), // place1에서 이미지 가져오기
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     );
-                  } else {
+                  }
+                  // 예비 이미지
+                  else {
                     return GestureDetector(
                       onTap: () {
-                        // 각 원을 탭했을 때의 동작 추가 이후
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PlaceDetailPage(placeDetails: place5),
+                          ),
+                        );
                       },
                       child: Container(
                         width: 130, // 각 원의 너비
@@ -483,8 +797,8 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: NetworkImage(
-                                'https://source.unsplash.com/random'),
+                            image: AssetImage(
+                                place5["image"]), // place1에서 이미지 가져오기
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -552,6 +866,13 @@ class _PostCardState extends State<PostCard> {
                 itemCount: serviceTitles.length,
                 itemBuilder: (context, index) {
                   return InkWell(
+                    key: index == 0
+                        ? keyButton1
+                        : index == 1
+                            ? keyButton2
+                            : index == 2
+                                ? keyButton3
+                                : keyButton4,
                     onTap: () {
                       onServiceTap(index); // 서비스 클릭 이벤트를 실행합니다.
                     },

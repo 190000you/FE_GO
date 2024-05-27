@@ -47,6 +47,9 @@ dependencies:
   kakao_flutter_sdk: ^1.9.1+2 # 카카오 SDK
   kakao_flutter_sdk_share: ^1.9.1+2 # 카카오톡 공유 API 패키지
   flutter_rating_bar: ^4.0.1 # 별점 선택 API
+  tutorial_coach_mark: ^1.2.11 # 튜토리얼 가이드 UI
+  introduction_screen: ^3.1.9 # 소개 화면
+  latlong2: ^0.9.0 # ?
 
   intro_slider: ^4.2.1 # !! 이거 언제 쓰지? 앱 처음 시작 시, 인트로 슬라이드를 보여주는 라이브러리
   # flutter_naver_map: ^1.2.1 # 네이버 지도 API !! SDK 34부터 가능
@@ -58,8 +61,9 @@ dependencies:
   # package_info_plus: ^5.0.1 # 프로젝트 패키지 정보 확인
   
   # flutter_map: ^6.1.0
-  latlong2: ^0.9.0 # ?
-  introduction_screen: ^3.1.9
+  
+  
+  
 
 dev_dependencies:
   # The "flutter_lints" package below contains a set of recommended lints to

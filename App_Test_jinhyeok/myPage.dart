@@ -651,7 +651,18 @@ class MyPageState extends State<MyPage> {
                   },
                 );
               } else {
-                return Text("찜목록이 없습니다.");
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "찜목록이 없습니다.",
+                        style: TextStyle(fontSize: 16),
+                      ),
+                      SizedBox(height: 50), // 원하는 만큼의 여백 추가
+                    ],
+                  ),
+                );
               }
             },
           ),
@@ -833,7 +844,12 @@ class MyPageState extends State<MyPage> {
             ],
           );
         } else {
-          return Text("리뷰가 없습니다.");
+          return Center(
+            child: Text(
+              "리뷰가 없습니다.",
+              style: TextStyle(fontSize: 16),
+            ),
+          );
         }
       },
     );

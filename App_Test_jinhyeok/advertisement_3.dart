@@ -5,7 +5,8 @@ import 'package:go_test_ver/searchPage_info.dart';
 Map<String, dynamic> place1 = {
   "id": 466, // 사용
   "name": "화원유원지", // 사용
-  "image": "/media/%ED%99%94%EC%9B%90%EC%9C%A0%EC%9B%90%EC%A7%80.jpg", // 사용 X?
+  "image":
+      "/media/image/%ED%99%94%EC%9B%90%EC%9C%A0%EC%9B%90%EC%A7%80.jpg", // 사용 X?
   "classification": "일반유원지/일반놀이공원", // 사용
   "parking": true, // 사용
   "info": "낙동강의 푸른 물과 백사장, 그리고 깎아지른 절벽 등이 조화를 이룬다.", // 사용
@@ -31,7 +32,7 @@ Map<String, dynamic> place2 = {
   "id": 85, // 사용
   "name": "대구근대화골목", // 사용
   "image":
-      "/media/%EB%8C%80%EA%B5%AC%EA%B7%BC%EB%8C%80%ED%99%94%EA%B3%A8%EB%AA%A9.jpg", // 사용 X?
+      "/media/image/%EB%8C%80%EA%B5%AC%EA%B7%BC%EB%8C%80%ED%99%94%EA%B3%A8%EB%AA%A9.jpg", // 사용 X?
   "classification": "유명관광지", // 사용
   "parking": true, // 사용
   "info": "유명관광지", // 사용
@@ -48,7 +49,7 @@ Map<String, dynamic> place3 = {
   "id": 50, // 사용
   "name": "김광석다시그리기길", // 사용
   "image":
-      "/media/%EA%B9%80%EA%B4%91%EC%84%9D%EB%8B%A4%EC%8B%9C%EA%B7%B8%EB%A6%AC%EA%B8%B0%EA%B8%B8.jpg", // 사용 X?
+      "/media/image/%EA%B9%80%EA%B4%91%EC%84%9D%EB%8B%A4%EC%8B%9C%EA%B7%B8%EB%A6%AC%EA%B8%B0%EA%B8%B8.jpg", // 사용 X?
   "classification": "일반유원지/일반놀이공원", // 사용
   "parking": true, // 사용
   "info": "김광석의 삶과 음악을 테마로 조성한 벽화거리", // 사용

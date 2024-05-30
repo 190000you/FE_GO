@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 
 // 내부 import
-import 'package:go_test_ver/chatBot.dart';
 import 'package:go_test_ver/mainPage.dart';
 
 // 외부 import
-import 'package:introduction_screen/introduction_screen.dart'; // 사용자별 한 번 설무조사 UI
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // API 사용
-import 'dart:convert'; // API 호출 : 디코딩
 
 // 점수 매핑
 Map<int, int> createScoreMap() {
@@ -82,8 +80,18 @@ class SurveyAPI {
 }
 
 // 설문조사 제출 API
-Future<void> fetchSurvey(String Gender, int Age, int Nature, int Sleep, int New,
-    int Expensive, int Rest, int Popular, int J, int With) async {
+Future<void> fetchSurvey(
+    BuildContext context,
+    String Gender,
+    int Age,
+    int Nature,
+    int Sleep,
+    int New,
+    int Expensive,
+    int Rest,
+    int Popular,
+    int J,
+    int With) async {
   print("Survey API 시작");
   // storage 생성
   final storage = new FlutterSecureStorage();
@@ -121,15 +129,28 @@ Future<void> fetchSurvey(String Gender, int Age, int Nature, int Sleep, int New,
     body: surveyData.toJson(),
   );
 
-  print("API 연결 후");
+  print(response.statusCode);
   // 요청이 성공적으로 완료됨
   if (response.statusCode == 201) {
-    print("요청 성공");
-    final snackBar = SnackBar(content: Text("성공적으로 제출하였습니다."));
+    // print("요청 성공");
+    ScaffoldMessenger.of(context).showSnackBar(
+      await SnackBar(
+        content: Text("성공적으로 제출되었습니다!", style: GoogleFonts.oleoScript()),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.green,
+      ),
+    );
     // 각 변수에 값 넣기
   } else {
     // 서버로부터 오류 응답을 받음
-    final snackBar = SnackBar(content: Text("알 수 없는 오류가 발생하였습니다. 다시 시도해주세요."));
+    ScaffoldMessenger.of(context).showSnackBar(
+      await SnackBar(
+        content: Text("알 수 없는 오류가 발생하였습니다. 다시 시도해주세요.",
+            style: GoogleFonts.oleoScript()),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
   // 상태 업데이트
 }
@@ -422,6 +443,7 @@ class _SurveyPageState extends State<SurveyPage> {
                     // 조건 : 모두 설정했을 때
                     if (selectedGender != '') {
                       fetchSurvey(
+                          context,
                           selectedGender,
                           selectedAge,
                           selectedNature,
@@ -440,9 +462,14 @@ class _SurveyPageState extends State<SurveyPage> {
                             builder: (context) => MainPage()), // 다음 화면으로 이동
                       );
                     } else {
-                      print("API 호출 실패");
-                      final snackBar =
-                          SnackBar(content: Text("정보를 모두 입력해주세요."));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("정보를 모두 입력해주세요.",
+                              style: GoogleFonts.oleoScript()),
+                          duration: Duration(seconds: 2),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(

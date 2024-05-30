@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_test_ver/survey_again.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
@@ -343,6 +344,17 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: Icon(Icons.delete),
             onPressed: _clearMessages,
+          ),
+          IconButton(
+            icon: Icon(Icons.settings), // 톱니바퀴 아이콘 추가
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        SurveyAgainPage()), // SurveyAgainPage로 이동
+              );
+            },
           ),
         ],
       ),

@@ -7,7 +7,7 @@ import 'package:go_test_ver/searchPage_info.dart';
 Map<String, dynamic> place1 = {
   "id": 358, // 사용
   "name": "이월드", // 사용
-  "image": "/media/%EC%9D%B4%EC%9B%94%EB%93%9C.jpg", // 사용 X?
+  "image": "/media/image/%EC%9D%B4%EC%9B%94%EB%93%9C.jpg", // 사용 X?
   "classification": "기타유원시설업", // 사용
   "parking": true, // 사용
   "info": "남녀노소 누구나 즐길 수 있는 놀이기구, 전시. 예술공간, 깔끔한 식당.", // 사용
@@ -34,7 +34,7 @@ Map<String, dynamic> place2 = {
   "id": 250, // 사용
   "name": "송해공원 둘레길", // 사용
   "image":
-      "/media/%EC%86%A1%ED%95%B4%EA%B3%B5%EC%9B%90_%EB%91%98%EB%A0%88%EA%B8%B8.jpg", // 사용 X?
+      "/media/image/%EC%86%A1%ED%95%B4%EA%B3%B5%EC%9B%90_%EB%91%98%EB%A0%88%EA%B8%B8.jpg", // 사용 X?
   "classification": "관광지", // 사용
   "parking": true, // 사용
   "info": "관광지", // 사용
@@ -52,7 +52,7 @@ Map<String, dynamic> place2 = {
 Map<String, dynamic> place3 = {
   "id": 292, // 사용
   "name": "앞산공원", // 사용
-  "image": "/media/%EC%95%9E%EC%82%B0%EA%B3%B5%EC%9B%90.jpg", // 사용 X?
+  "image": "/media/image/%EC%95%9E%EC%82%B0%EA%B3%B5%EC%9B%90.jpg", // 사용 X?
   "classification": "관광지", // 사용
   "parking": true, // 사용
   "info": "도심에서 4.5㎞이내에 위치하여 시민들의 접근이 용이하고 자연경관이 수려하고 산림이 울창", // 사용

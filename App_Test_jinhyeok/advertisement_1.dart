@@ -5,7 +5,7 @@ import 'package:go_test_ver/searchPage_info.dart';
 Map<String, dynamic> place1 = {
   "id": 131, // 사용
   "name": "동산계곡", // 사용
-  "image": "/media/%EB%8F%99%EC%82%B0%EA%B3%84%EA%B3%A1.jpg", // 사용 X?
+  "image": "/media/image/%EB%8F%99%EC%82%B0%EA%B3%84%EA%B3%A1.jpg", // 사용 X?
   "classification": "폭포/계곡", // 사용
   "parking": true, // 사용
   "info": "폭포/계곡", // 사용
@@ -19,11 +19,11 @@ Map<String, dynamic> place1 = {
   "time": "체류시간 1시간", // 사용
 };
 
-// 2. 동산계곡 정보
+// 2. 스파밸리 정보
 Map<String, dynamic> place2 = {
   "id": 270, // 사용
   "name": "스파밸리", // 사용
-  "image": "/media/%EC%8A%A4%ED%8C%8C%EB%B0%B8%EB%A6%AC.jpg", // 사용 X?
+  "image": "/media/image/%EC%8A%A4%ED%8C%8C%EB%B0%B8%EB%A6%AC.jpg", // 사용 X?
   "classification": "기타유원시설업", // 사용
   "parking": true, // 사용
   "info": "겨울 온천수로 즐기는 워터파크 스파밸리!", // 사용
@@ -38,11 +38,12 @@ Map<String, dynamic> place2 = {
   "time": "체류시간 2시간이상", // 사용
 };
 
-// 3. 대구 수목원 정보
+// 3. 대구수목원 정보
 Map<String, dynamic> place3 = {
   "id": 91, // 사용
   "name": "대구수목원", // 사용
-  "image": "/media/%EB%8C%80%EA%B5%AC%EC%88%98%EB%AA%A9%EC%9B%90.jpg", // 사용 X?
+  "image":
+      "/media/image/%EB%8C%80%EA%B5%AC%EC%88%98%EB%AA%A9%EC%9B%90.jpg", // 사용 X?
   "classification": "휴양림/수목원", // 사용
   "parking": true, // 사용
   "info": "쓰레기 매립장을 생태적 식물공간으로 복원", // 사용

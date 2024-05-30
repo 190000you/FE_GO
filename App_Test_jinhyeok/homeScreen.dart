@@ -1,6 +1,9 @@
+// 내부 import
 import 'package:flutter/material.dart';
 import 'package:go_test_ver/postCard.dart';
+import 'package:go_test_ver/recommand.dart';
 
+// 외부 import
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 import 'package:geolocator/geolocator.dart'; // 실시간 위치 정보
 import 'package:http/http.dart' as http; // API 사용
@@ -16,13 +19,40 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<Map<String, dynamic>>? weatherData;
   bool isLoading = false;
 
+  // API 1. 매번 달라지는 추천 장소 5개
+  Future<List<Map<String, dynamic>>> fetchdailyrecommand() async {
+    String? userAccessToken = await storage.read(key: "login_access_token");
+
+    final url = Uri.parse('http://43.203.61.149/plan/dailyrecommand');
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $userAccessToken',
+        "Content-Type": "application/json"
+      },
+    );
+
+    if (response.statusCode == 200) {
+      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
+      List<dynamic> results = data['results'];
+
+      List<Map<String, dynamic>> places = results.map((place) {
+        return place as Map<String, dynamic>;
+      }).toList();
+
+      return places;
+    } else {
+      final snackBar = SnackBar(content: Text("정보 불러오기에 실패하였습니다."));
+      return [];
+    }
+  }
+
   void initState() {
     super.initState();
     // 1번만 데이터 업로드
     if (!isLoading && weatherData == null) {
       fetchData();
     }
-    // print("homeScreen.dart : Weather Data: $weatherData");
   }
 
   void fetchData() {
@@ -34,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }));
   }
 
-  // API 1. 현재 위치 + 행정 구역명 + 날씨 정보
+  // API 2. 현재 위치 + 행정 구역명 + 날씨 정보
   Future<Map<String, dynamic>> getLocation() async {
     Map<String, dynamic> result = {};
     try {
@@ -51,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
       String openweatherkey = "0e047ef5cce50504edc52d08b01c1933";
       var str =
           'http://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$openweatherkey&units=metric';
-      print("날씨 정보 : " + str);
+      // print("날씨 정보 : " + str);
 
       final response = await http.get(
         Uri.parse(str),
@@ -59,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (response.statusCode == 200) {
         var data = jsonDecode(response.body); // string to json
-        print('data = $data'); // 전체 데이터 출력
+        // print('data = $data'); // 전체 데이터 출력
         result['conditionId'] = data['weather'][0]['id'];
         result['temperature'] = data['main']['temp'].toString();
         result['temperature_min'] = data['main']['temp_min'].toString();
@@ -82,26 +112,68 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: FutureBuilder<Map<String, dynamic>>(
-          future: weatherData,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.hasData) {
-                return ListView.builder(
-                  itemCount: 1,
-                  itemBuilder: (BuildContext context, int index) {
-                    return PostCard(
-                      weatherData: snapshot.data!,
-                      number: index, // 새로고침 함수 전달
+        future: weatherData,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            if (snapshot.hasData) {
+              return FutureBuilder<List<Map<String, dynamic>>>(
+                future: fetchdailyrecommand(),
+                builder: (context, placesSnapshot) {
+                  if (placesSnapshot.connectionState == ConnectionState.done) {
+                    if (placesSnapshot.hasData &&
+                        placesSnapshot.data!.length >= 5) {
+                      return ListView.builder(
+                        itemCount: 1,
+                        itemBuilder: (BuildContext context, int index) {
+                          return PostCard(
+                            place1: placesSnapshot.data![0],
+                            place2: placesSnapshot.data![1],
+                            place3: placesSnapshot.data![2],
+                            place4: placesSnapshot.data![3],
+                            place5: placesSnapshot.data![4],
+                            weatherData: snapshot.data!,
+                            number: index,
+                          );
+                        },
+                      );
+                    } else if (placesSnapshot.hasError) {
+                      return Text('Error: ${placesSnapshot.error}');
+                    } else {
+                      return Text('Not enough data');
+                    }
+                  } else {
+                    return Center(
+                      child: SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                              Color(0xFF967BB6)), // 파스텔 진보라색
+                          backgroundColor: Color(0xFFEDE7F6),
+                          strokeWidth: 8.0,
+                        ),
+                      ),
                     );
-                  },
-                );
-              } else if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
+                  }
+                },
+              );
+            } else if (snapshot.hasError) {
+              return Text('Error: ${snapshot.error}');
+            } else {
+              return Center(
+                child: SizedBox(
+                  width: 50,
+                  height: 50,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFF967BB6)), // 파스텔 진보라색
+                    backgroundColor: Color(0xFFEDE7F6),
+                    strokeWidth: 8.0,
+                  ),
+                ),
+              );
             }
-            // While waiting for the future to complete, show a loading spinner.
-            // 수정된 부분: 중앙에 배치하기 위해 Center를 사용
-            // 유의할점 : 메인페이지를 클릭할 때마다 로딩해야함.
+          } else {
             return Center(
               child: SizedBox(
                 width: 50,
@@ -114,7 +186,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             );
-          }),
+          }
+        },
+      ),
     );
   }
 }

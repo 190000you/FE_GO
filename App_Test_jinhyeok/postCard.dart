@@ -3,8 +3,8 @@ import 'package:go_test_ver/advertisement_2.dart';
 import 'package:go_test_ver/advertisement_3.dart';
 import 'package:go_test_ver/searchPage.dart';
 import 'package:go_test_ver/searchPage_info.dart';
-
 import 'advertisement_1.dart'; // 광고 창
+import 'package:go_test_ver/recommand.dart';
 
 // 외부 import
 import 'package:flutter/material.dart';
@@ -13,13 +13,15 @@ import 'package:dots_indicator/dots_indicator.dart';
 import 'package:http/http.dart';
 import 'package:google_fonts/google_fonts.dart'; // Google Fonts 패키지를 가져옵니다.
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart'; // 튜토리얼 패키지
+import 'package:http/http.dart' as http; // API 사용
+import 'dart:convert'; // API 호출 : 디코딩
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 
 // 1. 스파밸리 정보
 Map<String, dynamic> place1 = {
   "id": 270, // 사용
   "name": "스파밸리", // 사용
-  "image":
-      "http://43.203.61.149/media/%EC%8A%A4%ED%8C%8C%EB%B0%B8%EB%A6%AC_VGHCHBH.jpg", // 사용 X?
+  "image": "/media/image/%EC%8A%A4%ED%8C%8C%EB%B0%B8%EB%A6%AC.jpg", // 사용 X?
   "classification": "기타유원시설업", // 사용
   "parking": true, // 사용
   "info": "겨울 온천수로 즐기는 워터파크 스파밸리!", // 사용
@@ -39,14 +41,14 @@ Map<String, dynamic> place2 = {
   "id": 21, // 사용
   "name": "고산골 공룡공원", // 사용
   "image":
-      "http://43.203.61.149/media/%EA%B3%A0%EC%82%B0%EA%B3%A8_%EA%B3%B5%EB%A3%A1%EA%B3%B5%EC%9B%90_WKwbQX0.jpg", // 사용 X?
+      "/media/image/%EA%B3%A0%EC%82%B0%EA%B3%A8_%EA%B3%B5%EB%A3%A1%EA%B3%B5%EC%9B%90.jpg", // 사용 X?
   "classification": "관광지", // 사용
   "parking": true, // 사용
   "info": "고산골 일대 1억년 전 중생대 백악기의 흔적을 볼 수 있는 곳", // 사용
   "call": "053-664-2782", // 사용
   "tag": [
     // 사용
-    {"#단풍명소"},
+    {"name": "#단풍명소"},
     {"name": "#산책로"},
     {"name": "#아이와놀자"},
     {"name": "#포토존"},
@@ -59,7 +61,7 @@ Map<String, dynamic> place3 = {
   "id": 262, // 사용
   "name": "수승대관광지", // 사용
   "image":
-      "http://43.203.61.149/media/%EC%88%98%EC%8A%B9%EB%8C%80%EA%B4%80%EA%B4%91%EC%A7%80_N8cFl3O.jpg", // 사용 X?
+      "/media/image/%EC%88%98%EC%8A%B9%EB%8C%80%EA%B4%80%EA%B4%91%EC%A7%80.jpg", // 사용 X?
   "classification": "관광지", // 사용
   "parking": true, // 사용
   "info": "관광지", // 사용
@@ -77,7 +79,7 @@ Map<String, dynamic> place4 = {
   "id": 295, // 사용
   "name": "앞산전망대", // 사용
   "image":
-      "http://43.203.61.149/media/%EC%95%9E%EC%82%B0%EC%A0%84%EB%A7%9D%EB%8C%80_Imn2Sh2.jpg", // 사용 X?
+      "/media/image/%EC%95%9E%EC%82%B0%EC%A0%84%EB%A7%9D%EB%8C%80.jpg", // 사용 X?
   "classification": "관광지", // 사용
   "parking": true, // 사용
   "info": "한국관광 100선 선정, 대구시가지 전경을 한눈에 내려다볼 수 있는 대표 야간관광지", // 사용
@@ -95,8 +97,7 @@ Map<String, dynamic> place4 = {
 Map<String, dynamic> place5 = {
   "id": 335, // 사용
   "name": "용문폭포", // 사용
-  "image":
-      "http://43.203.61.149/media/%EC%9A%A9%EB%AC%B8%ED%8F%AD%ED%8F%AC_65WDJRT.jpg", // 사용 X?
+  "image": "/media/image/%EC%9A%A9%EB%AC%B8%ED%8F%AD%ED%8F%AC.jpg", // 사용 X?
   "classification": "폭포/계곡", // 사용
   "parking": true, // 사용
   "info": "폭포/계곡", // 사용
@@ -110,10 +111,20 @@ Map<String, dynamic> place5 = {
 };
 
 class PostCard extends StatefulWidget {
-  final Map<String, dynamic> weatherData;
-  final int number;
+  final Map<String, dynamic> place1;
+  final Map<String, dynamic> place2;
+  final Map<String, dynamic> place3;
+  final Map<String, dynamic> place4;
+  final Map<String, dynamic> place5;
+  final Map<String, dynamic> weatherData; // 날씨 데이터 저장 1
+  final int number; // 날씨 데이터 저장 2
 
   PostCard({
+    required this.place1,
+    required this.place2,
+    required this.place3,
+    required this.place4,
+    required this.place5,
     Key? key,
     required this.weatherData,
     required this.number,
@@ -122,11 +133,11 @@ class PostCard extends StatefulWidget {
   @override
   _PostCardState createState() => _PostCardState();
 }
-// 밑에있는 페이지 컨트롤에 필요함, 따로 호출하지 않음 메인 페이지의 사진이 @초 마다 지나간다는 걸 컨트롤 할 때
 
+// 밑에있는 페이지 컨트롤에 필요함, 따로 호출하지 않음 메인 페이지의 사진이 @초 마다 지나간다는 걸 컨트롤 할 때
 class _PostCardState extends State<PostCard> {
-  // 이미지 컨트롤 타이머
-  PageController _pageController = PageController();
+  final storage = FlutterSecureStorage(); // Local 내부 저장소 사용
+  PageController _pageController = PageController(); // 이미지 컨트롤 타이머
   Timer? _timer;
   double _currentPage = 0;
 
@@ -134,8 +145,6 @@ class _PostCardState extends State<PostCard> {
   @override
   void initState() {
     super.initState();
-    // getLocation(); // 1. 사용자 위치 확인
-    // 2.
     _timer = Timer.periodic(Duration(seconds: 5), (timer) {
       if (_pageController.page == _pageController.initialPage + 2) {
         _pageController.animateToPage(
@@ -628,7 +637,7 @@ class _PostCardState extends State<PostCard> {
               color: Colors.white,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
-                itemCount: 5, // 원이 5개 있음
+                itemCount: 6, // 원이 6개 있음
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     // 1) 검색 페이지 이동
@@ -670,15 +679,15 @@ class _PostCardState extends State<PostCard> {
                       ),
                     );
                   }
-                  // 두 번째 원
+                  // 두 번째 원 (광고 시작)
                   else if (index == 1) {
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                PlaceDetailPage(placeDetails: place1),
+                            builder: (context) => PlaceDetailPage(
+                                placeDetails: place1), // 장소 상세보기로 이동
                           ),
                         );
                       },
@@ -689,23 +698,23 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: AssetImage(
-                                place1["image"]), // place1에서 이미지 가져오기
+                            image: NetworkImage(
+                                'http://43.203.61.149${place1['image']}'), // 기본 이미지로 대체
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     );
                   }
-                  // 세 번째 원
+                  // 세 번째 광고
                   else if (index == 2) {
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                PlaceDetailPage(placeDetails: place2),
+                            builder: (context) => PlaceDetailPage(
+                                placeDetails: place2), // 장소 상세보기로 이동
                           ),
                         );
                       },
@@ -716,23 +725,23 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: AssetImage(
-                                place2["image"]), // place1에서 이미지 가져오기
+                            image: NetworkImage(
+                                'http://43.203.61.149${place2['image']}'), // 기본 이미지로 대체
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     );
                   }
-                  // 네 번째 원
+                  // 네 번째 광고
                   else if (index == 3) {
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                PlaceDetailPage(placeDetails: place3),
+                            builder: (context) => PlaceDetailPage(
+                                placeDetails: place3), // 장소 상세보기로 이동
                           ),
                         );
                       },
@@ -743,23 +752,23 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: AssetImage(
-                                place3["image"]), // place1에서 이미지 가져오기
+                            image: NetworkImage(
+                                'http://43.203.61.149${place3['image']}'), // 기본 이미지로 대체
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     );
                   }
-                  // 다섯 번째 원
+                  // 다섯 번째 광고
                   else if (index == 4) {
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                PlaceDetailPage(placeDetails: place4),
+                            builder: (context) => PlaceDetailPage(
+                                placeDetails: place4), // 장소 상세보기로 이동
                           ),
                         );
                       },
@@ -770,23 +779,23 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: AssetImage(
-                                place4["image"]), // place1에서 이미지 가져오기
+                            image: NetworkImage(
+                                'http://43.203.61.149${place4['image']}'), // 기본 이미지로 대체
                             fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     );
                   }
-                  // 예비 이미지
-                  else {
+                  // 여섯 번째 광고
+                  else if (index == 5) {
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                PlaceDetailPage(placeDetails: place5),
+                            builder: (context) => PlaceDetailPage(
+                                placeDetails: place5), // 장소 상세보기로 이동
                           ),
                         );
                       },
@@ -797,8 +806,8 @@ class _PostCardState extends State<PostCard> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           image: DecorationImage(
-                            image: AssetImage(
-                                place5["image"]), // place1에서 이미지 가져오기
+                            image: NetworkImage(
+                                'http://43.203.61.149${place5['image']}'), // 기본 이미지로 대체
                             fit: BoxFit.cover,
                           ),
                         ),

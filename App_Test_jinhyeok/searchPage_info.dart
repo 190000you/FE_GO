@@ -2,6 +2,7 @@ import 'dart:ffi';
 
 // 외부 import
 import 'package:flutter/material.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
@@ -542,7 +543,30 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                     children: tagWidgets,
                   ),
                   SizedBox(height: 20),
+                  //7. 네이버 지도 추가
+                  Container(
+                    height: 200,
+                    child: NaverMap(
+                      options: NaverMapViewOptions(
+                        initialCameraPosition: NCameraPosition(
+                          target: NLatLng(widget.placeDetails['latitude'],
+                              widget.placeDetails['hardness']),
+                          zoom: 17,
+                        ),
+                      ),
+                      onMapReady: (controller) {
+                        final marker = NMarker(
+                          id: "test",
+                          position: NLatLng(widget.placeDetails['latitude'],
+                              widget.placeDetails['hardness']),
+                        );
+                        controller.addOverlay(marker);
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 20),
 
+                  // 실선 표시
                   // 실선 표시
                   Divider(thickness: 1),
                   SizedBox(height: 10),

@@ -1,5 +1,6 @@
 // 메인 페이지
 import 'package:flutter/material.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:go_test_ver/login.dart';
 import 'package:go_test_ver/mainPage.dart';
 
@@ -12,11 +13,13 @@ import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart';
 // import : 로그인 페이지로 이어짐
 // import 'package:go_test_ver/login.dart';
 
-void main() {
+Future<void> main() async {
   KakaoSdk.init(
     nativeAppKey: '21ec99e3bdf6dcb0e2d4e1eaba24cd9d',
     javaScriptAppKey: 'd33777b631cfbe4c9534dc2340196a1b',
   );
+  WidgetsFlutterBinding.ensureInitialized();
+  await NaverMapSdk.instance.initialize(clientId: 'kyr0076qg9');
   runApp(const MyApp());
 }
 

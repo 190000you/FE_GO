@@ -244,52 +244,74 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  void _showTagSelectionDialog() {
-    final allTags = ['#진달래', '#서원', '#역사적인', '#역사', '#공원', '#박물관', '#나들이'];
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('태그 선택'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: allTags.map((tag) {
-                final isSelected = selectedTags.contains(tag);
-                return CheckboxListTile(
-                  title: Text(tag),
-                  value: isSelected,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      if (value == true && !selectedTags.contains(tag)) {
-                        selectedTags.add(tag);
-                      } else if (value == false && selectedTags.contains(tag)) {
-                        selectedTags.remove(tag);
-                      }
-                    });
-                    Navigator.of(context).pop();
-                    _showTagSelectionDialog(); // 다이얼로그를 다시 열어 업데이트된 상태를 표시
-                  },
-                );
-              }).toList(),
+  Future<List<String>> fetchTags() async {
+    final response =
+        await http.get(Uri.parse('http://43.203.61.149/place/tag/'));
+    if (response.statusCode == 200) {
+      Map<String, dynamic> tagsJson = json
+          .decode(utf8.decode(response.bodyBytes)); // utf8.decode() 사용하여 디코딩
+      List<dynamic> results = tagsJson['results']; // 'results' 키의 값을 가져옴
+      List<String> tags = [];
+      for (var result in results) {
+        tags.add('${result['name']}');
+      }
+      return tags;
+    } else {
+      throw Exception('Failed to load tags');
+    }
+  }
+
+  void _showTagSelectionDialog() async {
+    try {
+      final allTags = await fetchTags(); // 태그를 HTTP 요청으로 가져옴
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('태그 선택'),
+            content: SingleChildScrollView(
+              child: ListBody(
+                children: allTags.map((tag) {
+                  final isSelected = selectedTags.contains(tag);
+                  return CheckboxListTile(
+                    title: Text(tag),
+                    value: isSelected,
+                    onChanged: (bool? value) {
+                      setState(() {
+                        if (value == true && !selectedTags.contains(tag)) {
+                          selectedTags.add(tag);
+                        } else if (value == false &&
+                            selectedTags.contains(tag)) {
+                          selectedTags.remove(tag);
+                        }
+                      });
+                      Navigator.of(context).pop();
+                      _showTagSelectionDialog(); // 다이얼로그를 다시 열어 업데이트된 상태를 표시
+                    },
+                  );
+                }).toList(),
+              ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: Text('확인'),
-              onPressed: () {
-                setState(() {
-                  _tags
-                    ..clear()
-                    ..addAll(['#태그'] + selectedTags);
-                });
-                Navigator.of(context).pop();
-                fetchSearchResult(query); // 태그 선택 후 검색 결과 업데이트
-              },
-            ),
-          ],
-        );
-      },
-    );
+            actions: <Widget>[
+              TextButton(
+                child: Text('확인'),
+                onPressed: () {
+                  setState(() {
+                    _tags
+                      ..clear()
+                      ..addAll(['#태그'] + selectedTags);
+                  });
+                  Navigator.of(context).pop();
+                  fetchSearchResult(query); // 태그 선택 후 검색 결과 업데이트
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } catch (e) {
+      print('Error fetching tags: $e');
+    }
   }
 
   Widget _buildMoreButton() {

@@ -3,16 +3,17 @@ import 'package:flutter/material.dart';
 
 // 이후 import로 더 추가할 예정
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
+import 'package:go_test_ver/searchPage_info.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // API 사용
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:intl/intl.dart'; // yyyy.mm.dd형식을 yy.mm.dd형식으로
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 
 // 아직 사용 X
 String? userAccessToken = "";
 String? userRefreshToken = "";
 
-// 플랜 불러오기 1
 class PlanDetailsPage extends StatefulWidget {
   final List<dynamic> schedule; // 스케줄 데이터 리스트를 받는다
 
@@ -22,68 +23,176 @@ class PlanDetailsPage extends StatefulWidget {
   _PlanDetailsPageState createState() => _PlanDetailsPageState();
 }
 
-// 플랜 불러오기 2
 class _PlanDetailsPageState extends State<PlanDetailsPage> {
+  late NaverMapController _mapController;
+  double sheetExtent = 0.5;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('여행 계획'),
       ),
-      body: Column(
+      body: Stack(
         children: <Widget>[
-          // 지도를 표시할 임시 컨테이너
-          Container(
-            height: 200, // 지도의 높이 설정
-            color: Colors.grey[300], // 임시 컨테이너의 배경색
-            child: Center(
-              child: Text('여기에 지도가 표시됩니다'), // 지도 위치 표시 임시 텍스트
-            ),
-          ),
-          Expanded(
-            child: ReorderableListView.builder(
-                itemCount: widget.schedule.length,
-                itemBuilder: (context, index) {
-                  DateTime startDate =
-                      DateTime.parse(widget.schedule[index]['start_date']);
-                  String formattedDate =
-                      DateFormat('yyyy-MM-dd, HH:mm').format(startDate);
-
-                  return Card(
-                    key: ValueKey(
-                        widget.schedule[index]['id']), // 각 요소의 고유 key를 설정합니다.
-                    margin: EdgeInsets.all(8.0),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        child: Text('${index + 1}',
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      title: Text(widget.schedule[index]['place'],
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Text("$formattedDate"),
-                      trailing: ReorderableDragStartListener(
-                        index: index,
-                        child: Icon(Icons.drag_handle), // 사용자 지정 드래그 핸들 아이콘
-                      ),
-                    ),
-                  );
-                },
-                onReorder: (int oldIndex, int newIndex) {
-                  setState(() {
-                    if (newIndex > oldIndex) {
-                      newIndex -= 1; // 새 인덱스 보정
-                    }
-                    final item = widget.schedule.removeAt(oldIndex);
-                    widget.schedule.insert(newIndex, item);
-                  });
-                },
-                buildDefaultDragHandles: false // 기본 드래그 핸들 비활성화
+          Column(
+            children: <Widget>[
+              // 지도를 표시할 임시 컨테이너
+              Expanded(
+                child: Container(
+                  color: Colors.grey[300], // 임시 컨테이너의 배경색
+                  child: widget.schedule.isEmpty
+                      ? Center(
+                          child: Text(
+                            '장소 없음',
+                            style:
+                                TextStyle(fontSize: 18, color: Colors.black54),
+                          ),
+                        )
+                      : NaverMap(
+                          onMapReady: (controller) {
+                            _mapController = controller;
+                            _addMarkers();
+                          },
+                          options: NaverMapViewOptions(
+                            initialCameraPosition: NCameraPosition(
+                              target: NLatLng(widget.schedule[0]['latitude'],
+                                  widget.schedule[0]['hardness']),
+                              zoom: 11,
+                            ),
+                          ),
+                        ),
                 ),
+              ),
+            ],
+          ),
+          NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              setState(() {
+                sheetExtent = notification.extent;
+              });
+              return true;
+            },
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.5, // initial height
+              minChildSize: 0.25, // minimum height
+              maxChildSize: 0.8, // maximum height
+              builder:
+                  (BuildContext context, ScrollController scrollController) {
+                return Container(
+                  color: Colors.white,
+                  child: Column(
+                    children: <Widget>[
+                      Container(
+                        height: 5,
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        child: Center(
+                          child: Icon(
+                            Icons.drag_handle,
+                            color: Color.fromARGB(255, 128, 128, 128),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: CustomScrollView(
+                          controller: scrollController,
+                          slivers: <Widget>[
+                            SliverReorderableList(
+                              itemCount: widget.schedule.length,
+                              itemBuilder: (context, index) {
+                                DateTime startDate = DateTime.parse(
+                                    widget.schedule[index]['start_date']);
+                                String formattedDate =
+                                    DateFormat('yyyy-MM-dd, HH:mm')
+                                        .format(startDate);
+
+                                return Card(
+                                  key: ValueKey(widget.schedule[index]['id']),
+                                  margin: EdgeInsets.all(8.0),
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          Theme.of(context).primaryColor,
+                                      child: Text('${index + 1}',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ),
+                                    title: GestureDetector(
+                                      onDoubleTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                PlaceDetailPage(
+                                              placeDetails:
+                                                  widget.schedule[index],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                          widget.schedule[index]['place'],
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                    subtitle: Text("$formattedDate"),
+                                    trailing: ReorderableDragStartListener(
+                                      index: index,
+                                      child: Icon(Icons.drag_handle),
+                                    ),
+                                    onTap: () {
+                                      print('종합 : ' +
+                                          widget.schedule[index]['place']);
+                                    },
+                                  ),
+                                );
+                              },
+                              onReorder: (int oldIndex, int newIndex) {
+                                setState(() {
+                                  if (newIndex > oldIndex) {
+                                    newIndex -= 1; // 새 인덱스 보정
+                                  }
+                                  final item =
+                                      widget.schedule.removeAt(oldIndex);
+                                  widget.schedule.insert(newIndex, item);
+                                  _updateMarkers();
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
     );
+  }
+
+  void _addMarkers() {
+    for (var i = 0; i < widget.schedule.length; i++) {
+      final marker = NMarker(
+        id: widget.schedule[i]['id'].toString(),
+        position: NLatLng(
+            widget.schedule[i]['latitude'], widget.schedule[i]['hardness']),
+        caption: NOverlayCaption(
+          text: '${i + 1}',
+          textSize: 15,
+          color: Colors.black,
+          haloColor: Colors.white,
+        ),
+      );
+      _mapController.addOverlay(marker);
+    }
+  }
+
+  void _updateMarkers() {
+    _mapController.clearOverlays();
+    _addMarkers();
   }
 }
 

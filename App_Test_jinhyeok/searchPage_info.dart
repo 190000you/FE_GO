@@ -4,6 +4,7 @@ import 'dart:ffi';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_test_ver/map.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,6 +19,10 @@ void main() {
   );
 }
 
+String formatTags(List<dynamic> tags) {
+  return tags.map((tag) => tag['name']).join(' ');
+}
+
 class KakaoShareManager {
 // 5-1. 카카오톡 설치 여부 확인
   Future<bool> isKakaotalkInstalled() async {
@@ -27,34 +32,65 @@ class KakaoShareManager {
   }
 
   // 5-2. 카카오톡 링크 공유
-  void shareMyCode() async {
+  void shareMyCode(Map<String, dynamic> placeDetails) async {
     // 카카오톡 실행 가능 여부 확인
     bool isKakaoTalkSharingAvailable =
         await ShareClient.instance.isKakaoTalkSharingAvailable();
 
-    // Map<String, dynamic> jsonMap = json.decode(inputJson);
-    // String url = jsonMap['url'];
+    // 태그 리스트를 문자열로 변환
+    String tags = formatTags(placeDetails['tag'] ?? []);
 
     // 카카오톡 공유하기 탬플릿 생성
-    var template = TextTemplate(
-      text:
-          '카카오톡 공유는 카카오 플랫폼 서비스의 대표 기능으로써 사용자의 모바일 기기에 설치된 카카오 플랫폼과 연동하여 다양한 기능을 실행할 수 있습니다.\n현재 이용할 수 있는 카카오톡 공유는 다음과 같습니다.\n카카오톡링크\n카카오톡을 실행하여 사용자가 선택한 채팅방으로 메시지를 전송합니다.',
-      link: Link(
-        webUrl: Uri.parse('https: //developers.kakao.com'),
-        mobileWebUrl: Uri.parse('https: //developers.kakao.com'),
+    final FeedTemplate defaultFeed = FeedTemplate(
+      content: Content(
+        title: placeDetails['classification'] ?? '분류 없음',
+        description: tags.isNotEmpty ? tags : '태그 없음',
+        imageUrl: Uri.parse('http://43.203.61.149${placeDetails['image']}' ??
+            'https://example.com/default.png'),
+        link: Link(
+            webUrl: Uri.parse('https://developers.kakao.com'),
+            mobileWebUrl: Uri.parse('https://developers.kakao.com')),
       ),
+      itemContent: ItemContent(
+        profileText: placeDetails['name'] ?? '이름 없음',
+        profileImageUrl: Uri.parse(
+            'http://43.203.61.149${placeDetails['image']}' ??
+                'https://example.com/default.png'),
+        titleImageUrl: Uri.parse(
+            'http://43.203.61.149${placeDetails['image']}' ??
+                'https://example.com/default.png'),
+        titleImageText: placeDetails['info'] ?? '분류 없음',
+        titleImageCategory: placeDetails['call'] ?? '분류 없음',
+      ),
+      // social: Social(likeCount: 286, commentCount: 45, sharedCount: 845),
+      buttons: [
+        Button(
+          title: '웹으로 보기',
+          link: Link(
+            webUrl: Uri.parse('https: //developers.kakao.com'),
+            mobileWebUrl: Uri.parse('https: //developers.kakao.com'),
+          ),
+        ),
+        Button(
+          title: '앱으로보기',
+          link: Link(
+            androidExecutionParams: {'key1': 'value1', 'key2': 'value2'},
+            iosExecutionParams: {'key1': 'value1', 'key2': 'value2'},
+          ),
+        ),
+      ],
     );
 
     // 설치 여부에 따른 로직 분기
     if (isKakaoTalkSharingAvailable) {
       // 카카오톡 O
-      Uri uri = await ShareClient.instance.shareDefault(template: template);
+      Uri uri = await ShareClient.instance.shareDefault(template: defaultFeed);
       await ShareClient.instance.launchKakaoTalk(uri);
       print('카카오톡 공유 완료');
     } else {
       // 카카오톡 X
       Uri shareUrl =
-          await WebSharerClient.instance.makeDefaultUrl(template: template);
+          await WebSharerClient.instance.makeDefaultUrl(template: defaultFeed);
       await launchBrowserTab(shareUrl, popupOpen: true);
     }
   }
@@ -68,10 +104,12 @@ class PlaceDetailPage extends StatefulWidget {
 }
 
 class PlaceDetailPageState extends State<PlaceDetailPage> {
+  String? userId_global = ""; // 사용자 ID 데이터
   KakaoShareManager kakaoShareManager = KakaoShareManager();
   final storage = FlutterSecureStorage();
   bool isFavorited = false; // 찜하기 상태를 초기화 (기본값은 false)
   Future<Map<String, dynamic>>? reviewData; // nullable 타입으로 선언
+  List<Map<String, dynamic>> userPlans = []; // 2. 플랜 정보
 
   // 처음 한 번
   void initState() {
@@ -82,8 +120,18 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   void updateFavoriteStatus() async {
+    userId_global = await storage.read(key: "login_id"); // 불러오기
     isFavorited = await fetchUserLikePlace(widget.placeDetails['name']);
     setState(() {});
+
+    // 2. 플랜 데이터 가져오기
+    fetchPlansForUser().then((plans) {
+      setState(() {
+        userPlans = plans;
+      });
+    }).catchError((error) {
+      print(error);
+    });
   }
 
   // API 1. 사용자의 찜하기 API
@@ -221,10 +269,12 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     );
 
     if (response.statusCode == 200) {
-      final responseData = jsonDecode(utf8.decode(response.bodyBytes));
-      List<dynamic> plans = responseData['results'];
+      final List<dynamic> responseData =
+          jsonDecode(utf8.decode(response.bodyBytes));
+      print("responseData : " + responseData.toString());
+
       List<Map<String, dynamic>> userPlans = [];
-      for (var plan in plans) {
+      for (var plan in responseData) {
         if (plan['user'].toString() == userId) {
           userPlans.add(plan);
         }
@@ -253,7 +303,9 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       }),
     );
 
-    if (response.statusCode == 200) {
+    print("addToPlan() 호출");
+    print(response.statusCode);
+    if (response.statusCode == 201) {
       print("장소 추가 성공");
     } else {
       print("장소 추가 실패: ${response.body}");
@@ -332,6 +384,123 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       };
     } else {
       throw Exception("리뷰 데이터 불러오기 실패: ${response.statusCode}");
+    }
+  }
+
+  // API 7. 새 플랜 작성하기
+  Future<void> _showAddPlanDialog() async {
+    TextEditingController _planNameController = TextEditingController();
+
+    // 이후에 UI 수정
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          backgroundColor: Colors.white,
+          contentPadding: EdgeInsets.fromLTRB(20.0, 30.0, 20.0, 30.0),
+          title: Text(
+            "새 플랜 이름 입력",
+            textAlign: TextAlign.center,
+            style: GoogleFonts.oleoScript(
+              // Google Fonts 폰트 스타일 사용
+              color: Colors.black,
+              fontSize: 20.0, // 폰트 크기를 20.0으로 설정
+            ),
+          ),
+          // TextField 꾸미기
+          content: TextField(
+            textAlign: TextAlign.center,
+            style: GoogleFonts.oleoScript(
+              // Google Fonts 폰트 스타일 사용
+              color: Colors.black,
+              fontSize: 16.0, // 폰트 크기를 20.0으로 설정
+            ),
+            controller: _planNameController,
+            decoration: InputDecoration(
+              hintText: "플랜 이름을 입력하세요",
+            ),
+          ),
+          // 취소 / 확인 버튼 UI
+          actionsAlignment: MainAxisAlignment.spaceBetween, // 버튼을 양 끝으로 정렬
+          // buttonPadding: EdgeInsets.fromLTRB(10.0, 0, 10.0, 0),
+          actions: <Widget>[
+            // 1. 취소 버튼
+            TextButton(
+              child: Text(
+                '취소',
+                style: GoogleFonts.oleoScript(
+                  color: Color.fromARGB(255, 124, 119, 119), // 폰트 색상을 흰색으로 설정
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Color.fromARGB(255, 219, 217, 217),
+                padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 32.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            // 2. 저장 버튼
+            TextButton(
+              child: Text(
+                '저장',
+                style: GoogleFonts.oleoScript(
+                  color: Colors.white, // 폰트 색상을 흰색으로 설정
+                ),
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.blue,
+                padding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 32.0),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              onPressed: () {
+                _createPlan(_planNameController.text).then((_) {
+                  Navigator.of(context).pop();
+                  // 플랜 목록 갱신
+                  fetchPlansForUser().then((plans) {
+                    setState(() {
+                      userPlans = plans;
+                    });
+                    print("플랜 생성 성공");
+                  }).catchError((error) {
+                    print(error);
+                  });
+                });
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // API 호출하여 서버에 새 플랜 데이터 전송
+  Future<void> _createPlan(String planName) async {
+    final response = await http.post(
+      Uri.parse('http://43.203.61.149/plan/plan/'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        "name": planName,
+        "user": userId_global,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 성공적으로 데이터가 생성되면 UI 업데이트 또는 알림
+      print('Plan created successfully.');
+    } else {
+      // 실패 처리
+      print('Failed to create plan. Error: ${response.body}');
     }
   }
 
@@ -493,7 +662,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                       GestureDetector(
                         onTap: () {
                           print('공유 버튼 클릭');
-                          kakaoShareManager.shareMyCode();
+                          kakaoShareManager.shareMyCode(widget.placeDetails);
                           // API 추가 (2) :  ??? / ???
                           // 공유하기 기능 수행
                         },
@@ -542,18 +711,24 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                     runSpacing: 8.0,
                     children: tagWidgets,
                   ),
-                  SizedBox(height: 20),
-                  //7. 네이버 지도 추가
+                  SizedBox(height: 30),
+                  // 7. 네이버 지도 추가
                   Container(
                     height: 200,
+                    // 네이버 지도
                     child: NaverMap(
+                      // 옵션들
                       options: NaverMapViewOptions(
+                        // 1) 처음 시작 위치
                         initialCameraPosition: NCameraPosition(
                           target: NLatLng(widget.placeDetails['latitude'],
                               widget.placeDetails['hardness']),
                           zoom: 17,
                         ),
+                        locationButtonEnable: true, // 옵션 2. 현재 위치 버튼 표시 여부 설정
+                        scaleBarEnable: true, // 옵션 3. 축적 바 (활성화)
                       ),
+                      // 2) 지도 준비될 때
                       onMapReady: (controller) {
                         final marker = NMarker(
                           id: "test",
@@ -561,6 +736,18 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                               widget.placeDetails['hardness']),
                         );
                         controller.addOverlay(marker);
+                      },
+                      // 지도를 클릭했을 때
+                      onMapTapped: (NPoint point, NLatLng latLng) {
+                        print("지도 클릭");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MapTest(
+                                widget.placeDetails['latitude'],
+                                widget.placeDetails['hardness']),
+                          ),
+                        );
                       },
                     ),
                   ),
@@ -810,6 +997,39 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
             actionsAlignment: MainAxisAlignment.center, // 버튼을 중간에 위치시킴
             buttonPadding: EdgeInsets.fromLTRB(5, 5, 5, 2.0), // 버튼 패딩 조정
             actions: <Widget>[
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 1.0), // 양옆 간격 조정
+                width: double.infinity, // 버튼의 너비를 확장
+                child: TextButton(
+                  child: Text(
+                    '새로운 플랜 만들기',
+                    style: GoogleFonts.oleoScript(
+                      color: Colors.white, // 폰트 색상을 흰색으로 설정
+                    ),
+                  ),
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(
+                        255, 151, 133, 182), // 버튼 배경 색상을 deepPurple로 설정
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0), // 버튼 모서리 둥글게
+                    ),
+                  ),
+                  onPressed: () async {
+                    // 여기 문제
+                    // 그렇다면, 바로 플랜 생성하는 API를 가져온다면?
+                    await _showAddPlanDialog();
+                    Navigator.of(context).pop();
+                    /*
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              MyPage(userId_global!)), // 다음 화면으로 이동
+                    );
+                    */
+                  },
+                ),
+              ),
               Container(
                 margin: EdgeInsets.symmetric(horizontal: 1.0), // 양옆 간격 조정
                 width: double.infinity, // 버튼의 너비를 확장

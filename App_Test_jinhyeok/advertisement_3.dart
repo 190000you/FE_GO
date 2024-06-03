@@ -11,6 +11,8 @@ Map<String, dynamic> place1 = {
   "parking": true, // 사용
   "info": "낙동강의 푸른 물과 백사장, 그리고 깎아지른 절벽 등이 조화를 이룬다.", // 사용
   "call": "053-659-4465", // 사용
+  "hardness": 128.4804381,
+  "latitude": 35.81207318,
   "tag": [
     // 사용
     {"name": "#벚꽃명소"},
@@ -37,6 +39,8 @@ Map<String, dynamic> place2 = {
   "parking": true, // 사용
   "info": "유명관광지", // 사용
   "call": "-", // 사용
+  "hardness": 128.590996,
+  "latitude": 35.8654283,
   "tag": [
     // 사용
     {"name": "#산책로"},
@@ -54,6 +58,8 @@ Map<String, dynamic> place3 = {
   "parking": true, // 사용
   "info": "김광석의 삶과 음악을 테마로 조성한 벽화거리", // 사용
   "call": "-", // 사용
+  "hardness": 128.6069438,
+  "latitude": 35.86035154,
   "tag": [
     // 사용
     {"name": "#나들이"},

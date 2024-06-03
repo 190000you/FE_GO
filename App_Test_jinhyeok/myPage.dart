@@ -1,19 +1,20 @@
-// 마이 페이지
+// 내부 import
 import 'package:flutter/material.dart';
+import 'package:go_test_ver/searchPage_info.dart'; // 경로 설정.
 
-// 이후 import로 더 추가할 예정
+// 외부 import
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
-import 'package:go_test_ver/searchPage_info.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // API 사용
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:intl/intl.dart'; // yyyy.mm.dd형식을 yy.mm.dd형식으로
-import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart'; // naver map
 
 // 아직 사용 X
 String? userAccessToken = "";
 String? userRefreshToken = "";
 
+// 플랜 불러오기 1
 class PlanDetailsPage extends StatefulWidget {
   final List<dynamic> schedule; // 스케줄 데이터 리스트를 받는다
 
@@ -23,7 +24,9 @@ class PlanDetailsPage extends StatefulWidget {
   _PlanDetailsPageState createState() => _PlanDetailsPageState();
 }
 
+// 플랜 불러오기 2
 class _PlanDetailsPageState extends State<PlanDetailsPage> {
+  // naver map 초기화
   late NaverMapController _mapController;
   double sheetExtent = 0.5;
 
@@ -173,6 +176,7 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
     );
   }
 
+  // 네이버 지도 마커 추가
   void _addMarkers() {
     for (var i = 0; i < widget.schedule.length; i++) {
       final marker = NMarker(
@@ -190,19 +194,24 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
     }
   }
 
+  // 네이버 지도 마커 수정
   void _updateMarkers() {
     _mapController.clearOverlays();
     _addMarkers();
   }
 }
 
-// 찜목록
 class FavoritePlace {
   final int id; // 장소 Id
   final String name; // 장소 이름
   final String streetNameAddress; // 주소
   final String imageUrl; // 이미지 url
   final String classification; // 분류
+  final String info; // 정보
+  final String call; // 전화번호
+  final bool parking; // 주차 여부
+  final List<String> tag; // 태그
+  final String time; // 운영 시간
 
   FavoritePlace({
     required this.id,
@@ -210,19 +219,29 @@ class FavoritePlace {
     required this.streetNameAddress,
     required this.imageUrl,
     required this.classification,
+    required this.info,
+    required this.call,
+    required this.parking,
+    required this.tag,
+    required this.time,
   });
 
   factory FavoritePlace.fromJson(Map<String, dynamic> json) {
     return FavoritePlace(
-      id: json['id'] as int? ?? 0, // 'id'가 null이면 0을 기본값으로 사용
-      name: json['name'] as String? ??
-          'Unknown', // 'name'이 null이면 'Unknown'을 기본값으로 사용
-      streetNameAddress: json['street_name_address'] as String? ??
-          'No address provided', // 주소가 null이면 기본 텍스트 제공
-      imageUrl:
-          json['image'] as String? ?? '', // 'image'가 null이면 빈 문자열을 기본값으로 사용
-      classification: json['classification'] as String? ??
-          'Unclassified', // 'classification'이 null이면 'Unclassified'를 기본값으로 사용
+      id: json['id'] as int? ?? 0,
+      name: json['name'] as String? ?? 'Unknown',
+      streetNameAddress:
+          json['street_name_address'] as String? ?? 'No address provided',
+      imageUrl: json['image'] as String? ?? '',
+      classification: json['classification'] as String? ?? 'Unclassified',
+      info: json['info'] as String? ?? 'No info available',
+      call: json['call'] as String? ?? 'No call available',
+      parking: json['parking'] as bool? ?? false,
+      tag: (json['tag'] as List<dynamic>?)
+              ?.map((item) => item as String)
+              .toList() ??
+          [],
+      time: json['time'] as String? ?? 'No time available',
     );
   }
 }
@@ -676,14 +695,24 @@ class MyPageState extends State<MyPage> {
                     return GestureDetector(
                       onTap: () {
                         // Uncomment the following line to navigate to the details page
-                        /*
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PlaceDetailsPage(placeId: favorite.id),
-                        ),
-                      );
-                      */
+
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                PlaceDetailPage(placeDetails: {
+                              'id': favorite.id,
+                              'name': favorite.name,
+                              'image': favorite.imageUrl,
+                              'classification': favorite.classification,
+                              'parking': favorite.parking,
+                              'info': favorite.info,
+                              'call': favorite.call,
+                              'tag': favorite.tag,
+                              'time': favorite.time,
+                            }),
+                          ),
+                        );
                       },
                       child: Card(
                         elevation: 2.0,

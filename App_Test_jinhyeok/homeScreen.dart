@@ -18,6 +18,8 @@ class _HomeScreenState extends State<HomeScreen> {
   static final storage = FlutterSecureStorage();
   Future<Map<String, dynamic>>? weatherData;
   bool isLoading = false;
+  String lat = "";
+  String lon = "";
 
   // API 1. 매번 달라지는 추천 장소 5개
   Future<List<Map<String, dynamic>>> fetchdailyrecommand() async {
@@ -72,8 +74,20 @@ class _HomeScreenState extends State<HomeScreen> {
       LocationPermission permission = await Geolocator.requestPermission();
       Position position = await Geolocator.getCurrentPosition(
           desiredAccuracy: LocationAccuracy.high);
-      String lat = position.latitude.toString(); // 위도
-      String lon = position.longitude.toString(); // 경도
+      lat = position.latitude.toString(); // 위도
+      lon = position.longitude.toString(); // 경도
+      print(lat + lon);
+      // storage에 저장 (1) - lat
+      await storage.write(
+        key: 'lat',
+        value: lat, // userId
+      );
+
+      // storage에 저장 (1) - lon
+      await storage.write(
+        key: 'lon',
+        value: lon, // userId
+      );
 
       // 2. 위도 경도 -> 행정 구역으로 바꿈 // 오류 발생
 
@@ -126,11 +140,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         itemCount: 1,
                         itemBuilder: (BuildContext context, int index) {
                           return PostCard(
-                            place1: placesSnapshot.data![0],
-                            place2: placesSnapshot.data![1],
-                            place3: placesSnapshot.data![2],
-                            place4: placesSnapshot.data![3],
-                            place5: placesSnapshot.data![4],
+                            lat: lat,
+                            lon: lon,
+                            // place1: placesSnapshot.data![0],
+                            // place2: placesSnapshot.data![1],
+                            // place3: placesSnapshot.data![2],
+                            // place4: placesSnapshot.data![3],
+                            // place5: placesSnapshot.data![4],
                             weatherData: snapshot.data!,
                             number: index,
                           );

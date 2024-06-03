@@ -10,6 +10,8 @@ Map<String, dynamic> place1 = {
   "parking": true, // 사용
   "info": "폭포/계곡", // 사용
   "call": "054-380-6544", // 사용
+  "hardness": 128.6683791,
+  "latitude": 36.0416996,
   "tag": [
     // 사용
     {"name": "#나들이"},
@@ -28,6 +30,8 @@ Map<String, dynamic> place2 = {
   "parking": true, // 사용
   "info": "겨울 온천수로 즐기는 워터파크 스파밸리!", // 사용
   "call": "1688-8511", // 사용
+  "hardness": 128.635446,
+  "latitude": 35.7880646,
   "tag": [
     // 사용
     {"name": "#물놀이"},
@@ -48,6 +52,8 @@ Map<String, dynamic> place3 = {
   "parking": true, // 사용
   "info": "쓰레기 매립장을 생태적 식물공간으로 복원", // 사용
   "call": "053-803-7270", // 사용
+  "hardness": 128.521057,
+  "latitude": 35.8004111,
   "tag": [
     // 사용
     {"name": "#걷기좋은"},

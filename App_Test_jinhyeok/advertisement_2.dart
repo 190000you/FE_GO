@@ -12,6 +12,8 @@ Map<String, dynamic> place1 = {
   "parking": true, // 사용
   "info": "남녀노소 누구나 즐길 수 있는 놀이기구, 전시. 예술공간, 깔끔한 식당.", // 사용
   "call": "070-7549-8112", // 사용
+  "hardness": 128.5658028,
+  "latitude": 35.85347913,
   "tag": [
     // 사용
     {"name": "#눈썰매"},
@@ -39,6 +41,8 @@ Map<String, dynamic> place2 = {
   "parking": true, // 사용
   "info": "관광지", // 사용
   "call": "-", // 사용
+  "hardness": 128.4801515,
+  "latitude": 35.7804052,
   "tag": [
     // 사용
     {"name": "#걷기좋은"},
@@ -57,6 +61,8 @@ Map<String, dynamic> place3 = {
   "parking": true, // 사용
   "info": "도심에서 4.5㎞이내에 위치하여 시민들의 접근이 용이하고 자연경관이 수려하고 산림이 울창", // 사용
   "call": "053-625-0967", // 사용
+  "hardness": 128.5891677,
+  "latitude": 35.8287144,
   "tag": [
     // 사용
     {"name": "#걷기좋은"},

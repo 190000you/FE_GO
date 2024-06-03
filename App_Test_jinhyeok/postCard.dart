@@ -1,10 +1,11 @@
 // 내부 import
 import 'package:go_test_ver/advertisement_2.dart';
 import 'package:go_test_ver/advertisement_3.dart';
+import 'package:go_test_ver/map.dart';
 import 'package:go_test_ver/searchPage.dart';
 import 'package:go_test_ver/searchPage_info.dart';
 import 'advertisement_1.dart'; // 광고 창
-import 'package:go_test_ver/recommand.dart';
+// import 'package:go_test_ver/recommand.dart';
 
 // 외부 import
 import 'package:flutter/material.dart';
@@ -17,6 +18,8 @@ import 'package:http/http.dart' as http; // API 사용
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 
+import 'package:flutter_naver_map/flutter_naver_map.dart';
+
 // 1. 스파밸리 정보
 Map<String, dynamic> place1 = {
   "id": 270, // 사용
@@ -26,6 +29,8 @@ Map<String, dynamic> place1 = {
   "parking": true, // 사용
   "info": "겨울 온천수로 즐기는 워터파크 스파밸리!", // 사용
   "call": "1688-8511", // 사용
+  "hardness": 128.635446,
+  "latitude": 35.7880646,
   "tag": [
     // 사용
     {"name": "#물놀이"},
@@ -46,6 +51,8 @@ Map<String, dynamic> place2 = {
   "parking": true, // 사용
   "info": "고산골 일대 1억년 전 중생대 백악기의 흔적을 볼 수 있는 곳", // 사용
   "call": "053-664-2782", // 사용
+  "hardness": 128.6037566,
+  "latitude": 35.8294673,
   "tag": [
     // 사용
     {"name": "#단풍명소"},
@@ -56,22 +63,24 @@ Map<String, dynamic> place2 = {
   "time": "체류시간 1시간 30분 ~ 2시간", // 사용
 };
 
-// 3. 수승대관광지 정보
+// 3. 동촌파크광장놀이공원
 Map<String, dynamic> place3 = {
-  "id": 262, // 사용
-  "name": "수승대관광지", // 사용
+  "id": 135, // 사용
+  "name": "동촌파크광장놀이공원", // 사용
   "image":
-      "/media/image/%EC%88%98%EC%8A%B9%EB%8C%80%EA%B4%80%EA%B4%91%EC%A7%80.jpg", // 사용 X?
-  "classification": "관광지", // 사용
+      "/media/image/%EB%8F%99%EC%B4%8C%ED%8C%8C%ED%81%AC%EA%B4%91%EC%9E%A5%EB%86%80%EC%9D%B4%EA%B3%B5%EC%9B%90.jpg",
+  "classification": "일반유원지/일반놀이공원", // 사용
   "parking": true, // 사용
-  "info": "관광지", // 사용
-  "call": "055-940-8530", // 사용
+  "info": "테마공원/유원지", // 사용
+  "call": "-", // 사용
+  "hardness": 128.6535591,
+  "latitude": 35.87874477,
   "tag": [
     // 사용
-    {"name": "#나들이"},
-    {"name": "#억새밭"},
+    {"name": "#아이와놀자"},
+    {"name": "#포토존"},
   ],
-  "time": "체류시간 1시간 30분 ~ 2시간", // 사용
+  "time": "체류시간 2시간이상", // 사용
 };
 
 // 4. 앞산전망대 정보
@@ -84,6 +93,8 @@ Map<String, dynamic> place4 = {
   "parking": true, // 사용
   "info": "한국관광 100선 선정, 대구시가지 전경을 한눈에 내려다볼 수 있는 대표 야간관광지", // 사용
   "call": "053-803-5450", // 사용
+  "hardness": 128.5794424,
+  "latitude": 35.8247849,
   "tag": [
     // 사용
     {"name": "#나들이"},
@@ -102,6 +113,8 @@ Map<String, dynamic> place5 = {
   "parking": true, // 사용
   "info": "폭포/계곡", // 사용
   "call": "-", // 사용
+  "hardness": 128.5279518,
+  "latitude": 35.78181812,
   "tag": [
     // 사용
     {"name": "#물놀이"},
@@ -111,23 +124,32 @@ Map<String, dynamic> place5 = {
 };
 
 class PostCard extends StatefulWidget {
+  /*
+  // 랜덤 장소
   final Map<String, dynamic> place1;
   final Map<String, dynamic> place2;
   final Map<String, dynamic> place3;
   final Map<String, dynamic> place4;
   final Map<String, dynamic> place5;
+  */
+  final String lat; // 위도 데이터 저장
+  final String lon; // 경도 데이터 저장
   final Map<String, dynamic> weatherData; // 날씨 데이터 저장 1
   final int number; // 날씨 데이터 저장 2
 
   PostCard({
+    Key? key,
+    required this.lat,
+    required this.lon,
+    required this.weatherData,
+    required this.number,
+    /*
     required this.place1,
     required this.place2,
     required this.place3,
     required this.place4,
     required this.place5,
-    Key? key,
-    required this.weatherData,
-    required this.number,
+    */
   }) : super(key: key);
 
   @override
@@ -183,6 +205,8 @@ class _PostCardState extends State<PostCard> {
   void onServiceTap(int index) {
     // index에 따라서 발동
     List<TargetFocus> targets = _createTargets(index);
+
+    // 튜토리얼 UI
     tutorialCoachMark = TutorialCoachMark(
       targets: targets,
       colorShadow: Color.fromARGB(255, 72, 22, 78),
@@ -220,9 +244,17 @@ class _PostCardState extends State<PostCard> {
     '장소 저장 ',
   ];
 
+  // 튜토리얼 & 가이드라인
   List<TargetFocus> _createTargets(int index) {
     List<TargetFocus> targets = []; // target[] 생성
     if (index == 0) {
+      // Scrollable.ensureBisible(
+      //  _widgetKey.currentcontext!,
+      //  duration: Durtaion(milliseconds: 300), // 동작 시간
+      //  curve: Cureves.easeInOut, // 효과?
+      //  aligmnet: 0 // Widget을 스크롤의 어느 위치에 보여줄지
+      //  // 0.5 : 위아래 살짝 보임, 1.0 : 아래 X, 위 많이 보임
+      // )
       // 타겟 1
       targets.add(
         TargetFocus(
@@ -258,6 +290,7 @@ class _PostCardState extends State<PostCard> {
           ],
         ),
       );
+      // 타겟 이어서 작성 =
     }
     if (index == 1) {
       // 타겟 2
@@ -393,8 +426,25 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
+  /*
+  Future<String> getAddress(double lat, double lon) async {
+    final response = await http.get(
+      Uri.parse(
+          'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lon&key=AIzaSyAYSmSk0dKqVRjel99PQMKZuSIUN2zn8fE'),
+    );
+
+    // print(response.statusCode);
+    print("위치 : ");
+    print(jsonDecode(response.body)['results'][0]['formatted_address']);
+    return jsonDecode(response.body)['results'][0]['formatted_address'];
+  }
+  */
+
   @override
   Widget build(BuildContext context) {
+    final double latitude = double.parse(widget.lat);
+    final double longitude = double.parse(widget.lon);
+
     int conditionId = widget.weatherData['conditionId'] ?? 0;
     String temperature =
         widget.weatherData['temperature']?.toString() ?? 'unknown';
@@ -587,6 +637,7 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
           ),
+          // 여백
           Container(
             height: 70,
             width: MediaQuery.of(context).size.width,
@@ -920,7 +971,7 @@ class _PostCardState extends State<PostCard> {
                 child: Column(
                   children: [
                     Text(
-                      '현재 위치로 여행 장소 찾기', // 제목
+                      '현재 위치는?', // 제목
                       style: GoogleFonts.oleoScript(
                         fontSize: 16, // 글자 크기
                         fontWeight: FontWeight.bold, // 글자 두께
@@ -954,31 +1005,52 @@ class _PostCardState extends State<PostCard> {
             width: double.infinity, // 필요에 따라 너비 조정
             height: 200, // 필요에 따라 높이 조정
             decoration: BoxDecoration(
-              color: Colors.blue[300], // 박스의 배경색 설정
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Positioned(
-                  bottom: 20, // 위치 필요에 따라 조정
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      "대구광역시 신당동", // 사용 가능하다면 동적 위치 데이터로 교체
-                      style: GoogleFonts.oleoScript(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ),
+            // 네이버 지도 사용
+            child: NaverMap(
+              // 옵션 :
+              options: NaverMapViewOptions(
+                // 옵션 1. 첫 로딩시 카메라 포지션 지정
+                initialCameraPosition: NCameraPosition(
+                  target: NLatLng(latitude, longitude), // 위도 + 경도
+                  zoom: 16,
                 ),
-              ],
+                locationButtonEnable: true, // 옵션 2. 현재 위치 버튼 표시 여부 설정
+                scaleBarEnable: true, // 옵션 3. 축적 바 (활성화)
+                rotationGesturesEnable: true, // 옵션 4. 제스처 - 회전 (활성화)
+                scrollGesturesEnable: true, // 옵션 5. 제스처 - 스크롤 (활성화)
+                zoomGesturesEnable: true, // 옵션 6. 제스처 - 줌 (활성화)
+                scrollGesturesFriction: 0.3, // 옵션 7. 스크롤 마찰계수
+                zoomGesturesFriction: 0.3, // 옵션 8. 줌 마찰계수
+              ),
+              // 지도가 준비되었을 때
+              onMapReady: (controller) {
+                final marker = NMarker(
+                  id: "test",
+                  position: NLatLng(latitude, longitude),
+                );
+                controller.addOverlay(marker);
+              },
+              // 지도를 클릭했을 때
+              onMapTapped: (NPoint point, NLatLng latLng) {
+                print("지도 클릭");
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MapTest(latitude, longitude),
+                  ),
+                );
+
+                /*
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AdvertisementPage_1(),
+                  ),
+                );
+                */
+              },
             ),
           ),
           SizedBox(height: 10),
@@ -987,6 +1059,42 @@ class _PostCardState extends State<PostCard> {
             width: MediaQuery.of(context).size.width,
             color: Colors.white,
           ),
+          /*
+          Container(
+            margin: EdgeInsets.all(8.0),
+            width: double.infinity, // 필요에 따라 너비 조정
+            height: 200, // 필요에 따라 높이 조정
+            decoration: BoxDecoration(
+              color: Colors.blue[300], // 박스의 배경색 설정
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: InkWell(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned(
+                    bottom: 20, // 위치 필요에 따라 조정
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        "대구광역시 신당동", // 사용 가능하다면 동적 위치 데이터로 교체
+                        style: GoogleFonts.oleoScript(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          */
         ],
       ),
     );

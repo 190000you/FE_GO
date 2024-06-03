@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_test_ver/searchPage_info.dart';
 import 'package:go_test_ver/survey_again.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -183,7 +186,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _fetchPlaceDetails(String placeName) async {
     String? storedUserId = await storage.read(key: 'login_id');
 
-    print('추천: ' + placeName);
+    //print('추천: ' + placeName);
     final body = jsonEncode({'name': placeName});
 
     final response = await http.post(
@@ -200,12 +203,18 @@ class _ChatScreenState extends State<ChatScreen> {
         if (placesByName.isNotEmpty) {
           final placeDetails = placesByName.first as Map<String, dynamic>;
           final placeId = placeDetails['id'].toString();
-          print('추천: ' + placeId);
+          final latitude = placeDetails['latitude'];
+          final hardness = placeDetails['hardness'];
+
+          //print('추천: ' + placeId);
+          //print('위도: $latitude, 경도: $hardness'); // 추가된 정보 출력
 
           setState(() {
             savedPlaces.add({
               'name': placeName,
               'id': placeId,
+              'latitude': latitude,
+              'hardness': hardness,
               'user_id': storedUserId,
             });
           });
@@ -284,7 +293,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (response.statusCode == 201) {
       final responseData = jsonDecode(response.body);
       planId = responseData['id'].toString();
-      print('플랜이 생성되었습니다. ID: $planId');
+      //print('플랜이 생성되었습니다. ID: $planId');
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => TravelPlanPage(
@@ -660,12 +669,35 @@ class TravelPlanPage extends StatefulWidget {
 }
 
 class _TravelPlanPageState extends State<TravelPlanPage> {
+  late NaverMapController _mapController;
+  double sheetExtent = 0.5;
   late List<Map<String, dynamic>> _places;
 
   @override
   void initState() {
     super.initState();
     _places = List<Map<String, dynamic>>.from(widget.places);
+  }
+
+  void _addMarkers() {
+    for (var i = 0; i < _places.length; i++) {
+      final marker = NMarker(
+        id: _places[i]['id'].toString(),
+        position: NLatLng(_places[i]['latitude'], _places[i]['hardness']),
+        caption: NOverlayCaption(
+          text: '${i + 1}',
+          textSize: 15,
+          color: Colors.black,
+          haloColor: Colors.white,
+        ),
+      );
+      _mapController.addOverlay(marker);
+    }
+  }
+
+  void _updateMarkers() {
+    _mapController.clearOverlays();
+    _addMarkers();
   }
 
   Future<void> addToPlan(String planId, String placeId) async {
@@ -686,9 +718,9 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
     );
 
     if (response.statusCode == 201) {
-      print("장소 추가 성공");
+      //print("장소 추가 성공");
     } else {
-      print("장소 추가 실패: ${response.body}");
+      //print("장소 추가 실패: ${response.body}");
     }
   }
 
@@ -709,54 +741,154 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
       appBar: AppBar(
         title: Text('여행 계획'),
       ),
-      body: Column(
-        children: [
-          Container(
-            height: 200,
-            color: Colors.grey[300],
-            child: Center(
-              child: Text(
-                '임시 컨테이너',
-                style: TextStyle(fontSize: 24),
+      body: Stack(
+        children: <Widget>[
+          Column(
+            children: <Widget>[
+              Expanded(
+                child: Container(
+                  color: Colors.grey[300], // 임시 컨테이너의 배경색
+                  child: _places.isEmpty
+                      ? Center(
+                          child: Text(
+                            '장소 없음',
+                            style:
+                                TextStyle(fontSize: 18, color: Colors.black54),
+                          ),
+                        )
+                      : NaverMap(
+                          onMapReady: (controller) {
+                            _mapController = controller;
+                            _addMarkers();
+                          },
+                          options: NaverMapViewOptions(
+                            initialCameraPosition: NCameraPosition(
+                              target: NLatLng(_places[0]['latitude'],
+                                  _places[0]['hardness']),
+                              zoom: 11,
+                            ),
+                          ),
+                        ),
+                ),
               ),
-            ),
+            ],
           ),
-          Expanded(
-            child: ReorderableListView(
-              onReorder: (int oldIndex, int newIndex) {
-                setState(() {
-                  if (newIndex > oldIndex) {
-                    newIndex -= 1; // 새 인덱스 보정
-                  }
-                  final item = _places.removeAt(oldIndex);
-                  _places.insert(newIndex, item);
-                });
-              },
-              buildDefaultDragHandles: false, // 사용자 지정 드래그 핸들 사용
-              children: [
-                for (int index = 0; index < _places.length; index++)
-                  ListTile(
-                    key: ValueKey(_places[index]['id']),
-                    title: Text(
-                      _places[index]['name'],
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    trailing: ReorderableDragStartListener(
-                      index: index,
-                      child: Icon(Icons.drag_handle),
-                    ),
+          NotificationListener<DraggableScrollableNotification>(
+            onNotification: (notification) {
+              setState(() {
+                sheetExtent = notification.extent;
+              });
+              return true;
+            },
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.5,
+              minChildSize: 0.25,
+              maxChildSize: 0.8,
+              builder:
+                  (BuildContext context, ScrollController scrollController) {
+                return Container(
+                  color: Colors.white,
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 5,
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        child: Center(
+                          child: Icon(
+                            Icons.drag_handle,
+                            color: Color.fromARGB(255, 128, 128, 128),
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: CustomScrollView(
+                          controller: scrollController,
+                          slivers: <Widget>[
+                            SliverReorderableList(
+                              itemCount: _places.length,
+                              itemBuilder: (context, index) {
+                                return Card(
+                                  key: ValueKey(_places[index]['id']),
+                                  margin: EdgeInsets.all(8.0),
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor:
+                                          Theme.of(context).primaryColor,
+                                      child: Text('${index + 1}',
+                                          style:
+                                              TextStyle(color: Colors.white)),
+                                    ),
+                                    title: GestureDetector(
+                                      onDoubleTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                PlaceDetailPage(
+                                              placeDetails: _places[index],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        _places[index]['name'],
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold),
+                                      ),
+                                    ),
+                                    trailing: ReorderableDragStartListener(
+                                      index: index,
+                                      child: Icon(Icons.drag_handle),
+                                    ),
+                                  ),
+                                );
+                              },
+                              onReorder: (int oldIndex, int newIndex) {
+                                setState(() {
+                                  if (newIndex > oldIndex) {
+                                    newIndex -= 1; // 새 인덱스 보정
+                                  }
+                                  final item = _places.removeAt(oldIndex);
+                                  _places.insert(newIndex, item);
+                                  _updateMarkers();
+                                });
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ElevatedButton(
+                          onPressed: _savePlan,
+                          child: Text('저장 하기'),
+                        ),
+                      ),
+                    ],
                   ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: ElevatedButton(
-              onPressed: _savePlan,
-              child: Text('저장 하기'),
+                );
+              },
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class PlaceDetailPage extends StatelessWidget {
+  final Map<String, dynamic> placeDetails;
+
+  PlaceDetailPage({required this.placeDetails});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(placeDetails['name']),
+      ),
+      body: Center(
+        child: Text('Place details for ${placeDetails['name']}'),
       ),
     );
   }

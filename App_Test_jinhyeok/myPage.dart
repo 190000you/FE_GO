@@ -1,20 +1,23 @@
-// 내부 import
-import 'package:flutter/material.dart';
-import 'package:go_test_ver/searchPage_info.dart'; // 경로 설정.
+import 'dart:convert';
+import 'package:go_test_ver/searchPage2.dart';
+import 'package:http/http.dart' as http;
 
-// 외부 import
+// 마이 페이지
+import 'package:flutter/material.dart';
+
+// 이후 import로 더 추가할 예정
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
+import 'package:go_test_ver/searchPage_info.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // API 사용
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:intl/intl.dart'; // yyyy.mm.dd형식을 yy.mm.dd형식으로
-import 'package:flutter_naver_map/flutter_naver_map.dart'; // naver map
+import 'package:flutter_naver_map/flutter_naver_map.dart';
 
 // 아직 사용 X
 String? userAccessToken = "";
 String? userRefreshToken = "";
 
-// 플랜 불러오기 1
 class PlanDetailsPage extends StatefulWidget {
   final List<dynamic> schedule; // 스케줄 데이터 리스트를 받는다
 
@@ -24,9 +27,7 @@ class PlanDetailsPage extends StatefulWidget {
   _PlanDetailsPageState createState() => _PlanDetailsPageState();
 }
 
-// 플랜 불러오기 2
 class _PlanDetailsPageState extends State<PlanDetailsPage> {
-  // naver map 초기화
   late NaverMapController _mapController;
   double sheetExtent = 0.5;
 
@@ -40,10 +41,9 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
         children: <Widget>[
           Column(
             children: <Widget>[
-              // 지도를 표시할 임시 컨테이너
               Expanded(
                 child: Container(
-                  color: Colors.grey[300], // 임시 컨테이너의 배경색
+                  color: Colors.grey[300],
                   child: widget.schedule.isEmpty
                       ? Center(
                           child: Text(
@@ -59,8 +59,10 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                           },
                           options: NaverMapViewOptions(
                             initialCameraPosition: NCameraPosition(
-                              target: NLatLng(widget.schedule[0]['latitude'],
-                                  widget.schedule[0]['hardness']),
+                              target: NLatLng(
+                                widget.schedule[0]['latitude'] ?? 0.0,
+                                widget.schedule[0]['hardness'] ?? 0.0,
+                              ),
                               zoom: 11,
                             ),
                           ),
@@ -77,9 +79,9 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
               return true;
             },
             child: DraggableScrollableSheet(
-              initialChildSize: 0.5, // initial height
-              minChildSize: 0.25, // minimum height
-              maxChildSize: 0.8, // maximum height
+              initialChildSize: 0.5,
+              minChildSize: 0.25,
+              maxChildSize: 0.8,
               builder:
                   (BuildContext context, ScrollController scrollController) {
                 return Container(
@@ -103,14 +105,14 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                             SliverReorderableList(
                               itemCount: widget.schedule.length,
                               itemBuilder: (context, index) {
-                                DateTime startDate = DateTime.parse(
-                                    widget.schedule[index]['start_date']);
+                                var item = widget.schedule[index];
+                                DateTime startDate =
+                                    DateTime.parse(item['start_date'] ?? '');
                                 String formattedDate =
                                     DateFormat('yyyy-MM-dd, HH:mm')
                                         .format(startDate);
-
                                 return Card(
-                                  key: ValueKey(widget.schedule[index]['id']),
+                                  key: ValueKey(item['id']),
                                   margin: EdgeInsets.all(8.0),
                                   child: ListTile(
                                     leading: CircleAvatar(
@@ -121,20 +123,7 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                                               TextStyle(color: Colors.white)),
                                     ),
                                     title: GestureDetector(
-                                      onDoubleTap: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                PlaceDetailPage(
-                                              placeDetails:
-                                                  widget.schedule[index],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                          widget.schedule[index]['place'],
+                                      child: Text(item['place'] ?? '',
                                           style: TextStyle(
                                               fontWeight: FontWeight.bold)),
                                     ),
@@ -143,9 +132,38 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                                       index: index,
                                       child: Icon(Icons.drag_handle),
                                     ),
-                                    onTap: () {
-                                      print('종합 : ' +
-                                          widget.schedule[index]['place']);
+                                    onTap: () async {
+                                      try {
+                                        final response = await http.post(
+                                          Uri.parse(
+                                              'http://43.203.61.149/place/find/'),
+                                          headers: {
+                                            "Content-Type": "application/json"
+                                          },
+                                          body: jsonEncode(
+                                              {"name": item['place']}),
+                                        );
+
+                                        if (response.statusCode == 200) {
+                                          var data = jsonDecode(
+                                              utf8.decode(response.bodyBytes));
+                                          print(data);
+
+                                          // searchPage2.dart로 데이터 전달
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  SearchPage2(placeData: data),
+                                            ),
+                                          );
+                                        } else {
+                                          print(
+                                              'Failed to fetch place data: ${response.statusCode}');
+                                        }
+                                      } catch (error) {
+                                        print('Error: $error');
+                                      }
                                     },
                                   ),
                                 );
@@ -153,7 +171,7 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                               onReorder: (int oldIndex, int newIndex) {
                                 setState(() {
                                   if (newIndex > oldIndex) {
-                                    newIndex -= 1; // 새 인덱스 보정
+                                    newIndex -= 1;
                                   }
                                   final item =
                                       widget.schedule.removeAt(oldIndex);
@@ -176,7 +194,6 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
     );
   }
 
-  // 네이버 지도 마커 추가
   void _addMarkers() {
     for (var i = 0; i < widget.schedule.length; i++) {
       final marker = NMarker(
@@ -194,24 +211,19 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
     }
   }
 
-  // 네이버 지도 마커 수정
   void _updateMarkers() {
     _mapController.clearOverlays();
     _addMarkers();
   }
 }
 
+// 찜목록
 class FavoritePlace {
   final int id; // 장소 Id
   final String name; // 장소 이름
   final String streetNameAddress; // 주소
   final String imageUrl; // 이미지 url
   final String classification; // 분류
-  final String info; // 정보
-  final String call; // 전화번호
-  final bool parking; // 주차 여부
-  final List<String> tag; // 태그
-  final String time; // 운영 시간
 
   FavoritePlace({
     required this.id,
@@ -219,29 +231,19 @@ class FavoritePlace {
     required this.streetNameAddress,
     required this.imageUrl,
     required this.classification,
-    required this.info,
-    required this.call,
-    required this.parking,
-    required this.tag,
-    required this.time,
   });
 
   factory FavoritePlace.fromJson(Map<String, dynamic> json) {
     return FavoritePlace(
-      id: json['id'] as int? ?? 0,
-      name: json['name'] as String? ?? 'Unknown',
-      streetNameAddress:
-          json['street_name_address'] as String? ?? 'No address provided',
-      imageUrl: json['image'] as String? ?? '',
-      classification: json['classification'] as String? ?? 'Unclassified',
-      info: json['info'] as String? ?? 'No info available',
-      call: json['call'] as String? ?? 'No call available',
-      parking: json['parking'] as bool? ?? false,
-      tag: (json['tag'] as List<dynamic>?)
-              ?.map((item) => item as String)
-              .toList() ??
-          [],
-      time: json['time'] as String? ?? 'No time available',
+      id: json['id'] as int? ?? 0, // 'id'가 null이면 0을 기본값으로 사용
+      name: json['name'] as String? ??
+          'Unknown', // 'name'이 null이면 'Unknown'을 기본값으로 사용
+      streetNameAddress: json['street_name_address'] as String? ??
+          'No address provided', // 주소가 null이면 기본 텍스트 제공
+      imageUrl:
+          json['image'] as String? ?? '', // 'image'가 null이면 빈 문자열을 기본값으로 사용
+      classification: json['classification'] as String? ??
+          'Unclassified', // 'classification'이 null이면 'Unclassified'를 기본값으로 사용
     );
   }
 }
@@ -695,24 +697,14 @@ class MyPageState extends State<MyPage> {
                     return GestureDetector(
                       onTap: () {
                         // Uncomment the following line to navigate to the details page
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                PlaceDetailPage(placeDetails: {
-                              'id': favorite.id,
-                              'name': favorite.name,
-                              'image': favorite.imageUrl,
-                              'classification': favorite.classification,
-                              'parking': favorite.parking,
-                              'info': favorite.info,
-                              'call': favorite.call,
-                              'tag': favorite.tag,
-                              'time': favorite.time,
-                            }),
-                          ),
-                        );
+                        /*
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PlaceDetailsPage(placeId: favorite.id),
+                        ),
+                      );
+                      */
                       },
                       child: Card(
                         elevation: 2.0,
@@ -818,28 +810,29 @@ class MyPageState extends State<MyPage> {
             itemCount: userPlans.length,
             itemBuilder: (context, index) {
               // 일정 시작일을 표시하기 위한 로직
-              String formattedDate = "미정"; // 기본값 설정
+              String formattedDate = "미정";
               if (userPlans[index]['schedule'].isNotEmpty) {
                 DateTime startDate = DateTime.parse(
                     userPlans[index]['schedule'][0]['start_date']);
                 formattedDate = DateFormat('yy.MM.dd').format(startDate);
               }
 
+              var plan = userPlans[index]; // index에 해당하는 item 가져오기
               return Card(
                 elevation: 4.0,
                 margin: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 child: ListTile(
                   leading:
                       Icon(Icons.map, color: Theme.of(context).primaryColor),
-                  title: Text(userPlans[index]['name'],
+                  title: Text(plan['name'],
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text("여행 시작일 : $formattedDate"),
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => PlanDetailsPage(
-                            schedule: userPlans[index]['schedule']),
+                        builder: (context) =>
+                            PlanDetailsPage(schedule: plan['schedule']),
                       ),
                     );
                   },
@@ -851,7 +844,7 @@ class MyPageState extends State<MyPage> {
         Padding(
           padding: EdgeInsets.all(10),
           child: ElevatedButton(
-            onPressed: _showAddPlanDialog, // 이후에 UI 수정
+            onPressed: _showAddPlanDialog,
             child: Text('새 플랜 작성'),
           ),
         ),

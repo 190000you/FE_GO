@@ -1,8 +1,11 @@
+// 내부 import
+import 'package:go_test_ver/searchPage_info.dart';
+import 'package:go_test_ver/survey_again.dart';
+
+// 외부 import
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:go_test_ver/searchPage_info.dart';
-import 'package:go_test_ver/survey_again.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +29,7 @@ class ChatScreen extends StatefulWidget {
   _ChatScreenState createState() => _ChatScreenState();
 }
 
+// 챗봇
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, dynamic>> messages = [];
@@ -41,6 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _loadMessages();
   }
 
+  // 메시지 전달
   Future<void> _loadMessages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? messagesJson = prefs.getString('chat_messages');
@@ -56,6 +61,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // 메시지 저장
   Future<void> _saveMessages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedUserId = await storage.read(key: 'login_id');
@@ -71,6 +77,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // 메시지 저장
   Future<List<Map<String, dynamic>>> _loadAllMessages() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? messagesJson = prefs.getString('chat_messages');
@@ -82,6 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // 메시지 보내기
   Future<void> sendMessage(String message) async {
     String? token = await storage.read(key: 'login_access_token');
     String? storedUserId = await storage.read(key: 'login_id');
@@ -264,6 +272,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  // 플랜 생성하기
   Future<void> _createPlan(String planName) async {
     String? storedUserId = await storage.read(key: 'login_id');
 
@@ -730,9 +739,13 @@ class _TravelPlanPageState extends State<TravelPlanPage> {
     }
     widget.onSaveComplete();
     Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('플랜이 성공적으로 저장되었습니다.'),
-    ));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("플랜이 성공적으로 저장되었습니다!", style: GoogleFonts.oleoScript()),
+        duration: Duration(seconds: 2),
+        backgroundColor: Colors.green,
+      ),
+    );
   }
 
   @override

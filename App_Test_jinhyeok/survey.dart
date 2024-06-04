@@ -153,6 +153,9 @@ Future<void> fetchSurvey(
     );
   }
   // 상태 업데이트
+  setState(){
+    
+  }
 }
 
 class SurveyPage extends StatefulWidget {

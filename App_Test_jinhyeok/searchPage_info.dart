@@ -201,6 +201,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       body: jsonEncode({'userId': userId, 'placeId': placeId}),
     );
 
+    print(placeId);
     if (response.statusCode == 204) {
       print("찜목록 삭제");
       isFavorited = false;
@@ -286,7 +287,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   // API 3. 플랜에 장소 추가 API 함수
-  Future<void> addToPlan(String planId, String placeId) async {
+  Future<void> addToPlan(context, String planId, String placeId) async {
     DateTime now = DateTime.now().toUtc(); // 현재 UTC 시간
     String formattedDate = now.toIso8601String(); // 현재 시간을 ISO 8601 포맷으로 변환
 
@@ -306,6 +307,13 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     print("addToPlan() 호출");
     print(response.statusCode);
     if (response.statusCode == 201) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("플랜 추가하기 성공", style: GoogleFonts.oleoScript()),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
+      );
       print("장소 추가 성공");
     } else {
       print("장소 추가 실패: ${response.body}");
@@ -334,7 +342,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       print("리뷰 작성 성공");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text("리뷰 작성 성공", style: GoogleFonts.oleoScript()),
+          content: Text("리뷰 작성하기 성공", style: GoogleFonts.oleoScript()),
           duration: Duration(seconds: 2),
           backgroundColor: const Color.fromARGB(255, 76, 83, 175),
         ),
@@ -618,7 +626,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                             if (selectedPlanId.isNotEmpty) {
                               String placeId =
                                   widget.placeDetails['id'].toString();
-                              await addToPlan(selectedPlanId, placeId);
+                              await addToPlan(context, selectedPlanId, placeId);
                             }
                           } catch (e) {
                             print(e.toString());

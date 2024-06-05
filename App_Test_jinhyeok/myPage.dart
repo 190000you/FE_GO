@@ -28,29 +28,31 @@ class PlanDetailsPage extends StatefulWidget {
   _PlanDetailsPageState createState() => _PlanDetailsPageState();
 }
 
+Future<void> deleteSchedule(int scheduleId) async {
+  final response = await http.delete(
+    Uri.parse('http://43.203.61.149/plan/schedule/delete'),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'schedule_id': scheduleId,
+    }),
+  );
+
+  print('Response status: ${response.statusCode}');
+  print('Response body: ${response.body}');
+
+  if (response.statusCode == 204) {
+    print('Schedule deleted successfully.');
+  } else {
+    print('Failed to delete schedule. Error: ${response.body}');
+    print('Schedule ID: $scheduleId');
+  }
+}
+
 class _PlanDetailsPageState extends State<PlanDetailsPage> {
   late NaverMapController _mapController;
   double sheetExtent = 0.5;
-
-  Future<void> updatePlan(int planId, List<dynamic> updatedSchedule) async {
-    final response = await http.patch(
-      Uri.parse('http://43.203.61.149/plan/plan/$planId/'),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'schedule': updatedSchedule,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      // 성공적으로 업데이트됨
-      print('Plan updated successfully.');
-    } else {
-      // 업데이트 실패
-      print('Failed to update plan. Error: ${response.body}');
-    }
-  }
 
   Future<void> deleteScheduleFromPlan(int planId, int scheduleId) async {
     final planResponse = await http.get(
@@ -65,8 +67,6 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
       List<dynamic> updatedSchedule =
           List<Map<String, dynamic>>.from(planData['schedule']);
       updatedSchedule.removeWhere((schedule) => schedule['id'] == scheduleId);
-
-      await updatePlan(planId, updatedSchedule);
     } else {
       print('Failed to fetch plan data. Error: ${planResponse.body}');
     }
@@ -202,9 +202,6 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                                         if (response.statusCode == 200) {
                                           var data = jsonDecode(
                                               utf8.decode(response.bodyBytes));
-                                          //print(data);
-
-                                          // searchPage2.dart로 데이터 전달
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
@@ -219,6 +216,42 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                                       } catch (error) {
                                         //print('Error: $error');
                                       }
+                                    },
+                                    onLongPress: () async {
+                                      showDialog(
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return AlertDialog(
+                                            title: Text('일정 삭제'),
+                                            content: Text('이 일정을 삭제하시겠습니까?'),
+                                            actions: <Widget>[
+                                              TextButton(
+                                                child: Text('취소'),
+                                                onPressed: () {
+                                                  Navigator.of(context).pop();
+                                                },
+                                              ),
+                                              TextButton(
+                                                child: Text('삭제'),
+                                                onPressed: () async {
+                                                  Navigator.of(context).pop();
+
+                                                  await deleteSchedule(
+                                                      item['id']);
+                                                  print('종합: ' +
+                                                      item['id']
+                                                          .toString()); // planId를 출력
+                                                  setState(() {
+                                                    widget.schedule
+                                                        .removeAt(index);
+                                                    _updateMarkers();
+                                                  });
+                                                },
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
                                     },
                                   ),
                                 );
@@ -455,16 +488,16 @@ class MyPageState extends State<MyPage> {
     final response =
         await http.get(Uri.parse('http://43.203.61.149/plan/plan/'));
 
-    //print("fetch");
     // 호출 성공 시
     if (response.statusCode == 200) {
       final responseData = jsonDecode(utf8.decode(response.bodyBytes));
-      //print("Response Data: $responseData");
+      print("Response Data: $responseData");
 
       if (responseData is List<dynamic>) {
         List<Map<String, dynamic>> tempUserPlans = [];
         for (var plan in responseData) {
           if (plan['user'].toString() == userId) {
+            print("Matching Plan ID: ${plan['id']}");
             tempUserPlans.add(plan);
           }
         }
@@ -911,7 +944,6 @@ class MyPageState extends State<MyPage> {
                     );
                   },
                   onLongPress: () {
-                    print('Plan ID: ${plan['id']}'); // Plan ID 출력
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {

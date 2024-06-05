@@ -43,6 +43,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _loadMessages();
+    _loadSavedPlaces();
   }
 
   // 메시지 전달
@@ -123,6 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
       try {
         final responseData = jsonDecode(utf8.decode(response.bodyBytes));
         setState(() {
+          savedPlaces.clear(); // savedPlaces 리스트 초기화
           messages.removeWhere((msg) =>
               msg['type'] == 'loading' && msg['user_id'] == storedUserId);
         });
@@ -168,6 +170,7 @@ class _ChatScreenState extends State<ChatScreen> {
             await _fetchPlaceDetails(place);
           }
         }
+        await _saveSavedPlaces(); // savedPlaces 저장
       } catch (e) {
         setState(() {
           messages.removeWhere((msg) =>
@@ -189,6 +192,22 @@ class _ChatScreenState extends State<ChatScreen> {
     }
     await _saveMessages();
     _scrollToBottom();
+  }
+
+  Future<void> _saveSavedPlaces() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('saved_places', jsonEncode(savedPlaces));
+  }
+
+  Future<void> _loadSavedPlaces() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? savedPlacesJson = prefs.getString('saved_places');
+    if (savedPlacesJson != null) {
+      setState(() {
+        savedPlaces =
+            List<Map<String, dynamic>>.from(jsonDecode(savedPlacesJson));
+      });
+    }
   }
 
   Future<void> _fetchPlaceDetails(String placeName) async {

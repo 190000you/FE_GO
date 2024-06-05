@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:go_test_ver/searchPage.dart';
 import 'package:go_test_ver/searchPage2.dart';
 import 'package:http/http.dart' as http;
 
@@ -31,11 +32,65 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
   late NaverMapController _mapController;
   double sheetExtent = 0.5;
 
+  Future<void> updatePlan(int planId, List<dynamic> updatedSchedule) async {
+    final response = await http.patch(
+      Uri.parse('http://43.203.61.149/plan/plan/$planId/'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'schedule': updatedSchedule,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 성공적으로 업데이트됨
+      print('Plan updated successfully.');
+    } else {
+      // 업데이트 실패
+      print('Failed to update plan. Error: ${response.body}');
+    }
+  }
+
+  Future<void> deleteScheduleFromPlan(int planId, int scheduleId) async {
+    final planResponse = await http.get(
+      Uri.parse('http://43.203.61.149/plan/plan/$planId/'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (planResponse.statusCode == 200) {
+      final planData = jsonDecode(planResponse.body);
+      List<dynamic> updatedSchedule =
+          List<Map<String, dynamic>>.from(planData['schedule']);
+      updatedSchedule.removeWhere((schedule) => schedule['id'] == scheduleId);
+
+      await updatePlan(planId, updatedSchedule);
+    } else {
+      print('Failed to fetch plan data. Error: ${planResponse.body}');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text('여행 계획'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => SearchPage()),
+              );
+            },
+            child: Text(
+              '장소 추가',
+              style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
+            ),
+          ),
+        ],
       ),
       body: Stack(
         children: <Widget>[
@@ -147,7 +202,7 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                                         if (response.statusCode == 200) {
                                           var data = jsonDecode(
                                               utf8.decode(response.bodyBytes));
-                                          print(data);
+                                          //print(data);
 
                                           // searchPage2.dart로 데이터 전달
                                           Navigator.push(
@@ -158,11 +213,11 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                                             ),
                                           );
                                         } else {
-                                          print(
-                                              'Failed to fetch place data: ${response.statusCode}');
+                                          //print
+                                          ('Failed to fetch place data: ${response.statusCode}');
                                         }
                                       } catch (error) {
-                                        print('Error: $error');
+                                        //print('Error: $error');
                                       }
                                     },
                                   ),
@@ -343,8 +398,8 @@ class MyPageState extends State<MyPage> {
         favorites = (data['results'] as List)
             .map((item) => FavoritePlace.fromJson(item))
             .toList();
-        print(data['results']);
-        print("찜목록 데이터 불러오기 성공");
+        //print(data['results']);
+        //print("찜목록 데이터 불러오기 성공");
       }
       // 2. 찜목록 데이터 없을 때
       else if (data['count'] == 0) {
@@ -353,7 +408,7 @@ class MyPageState extends State<MyPage> {
     }
     // API 호출 실패
     else {
-      print("API 호출 실패: ${response.statusCode}");
+      //print("API 호출 실패: ${response.statusCode}");
       return [];
     }
     return favorites; // FavoritePlace 리스트 반환
@@ -372,7 +427,7 @@ class MyPageState extends State<MyPage> {
           userFavorite = fetchFavorite;
         });
       }).catchError((error) {
-        print(error);
+        //print(error);
       });
 
       // 2. 플랜 데이터 가져오기
@@ -381,7 +436,7 @@ class MyPageState extends State<MyPage> {
           userPlans = plans;
         });
       }).catchError((error) {
-        print(error);
+        //print(error);
       });
 
       // 3. 리뷰 데이터 가져오기
@@ -390,7 +445,7 @@ class MyPageState extends State<MyPage> {
           userReviews = reviews;
         });
       }).catchError((error) {
-        print(error);
+        //print(error);
       });
     }
   }
@@ -400,11 +455,11 @@ class MyPageState extends State<MyPage> {
     final response =
         await http.get(Uri.parse('http://43.203.61.149/plan/plan/'));
 
-    print("fetch");
+    //print("fetch");
     // 호출 성공 시
     if (response.statusCode == 200) {
       final responseData = jsonDecode(utf8.decode(response.bodyBytes));
-      print("Response Data: $responseData");
+      //print("Response Data: $responseData");
 
       if (responseData is List<dynamic>) {
         List<Map<String, dynamic>> tempUserPlans = [];
@@ -447,8 +502,8 @@ class MyPageState extends State<MyPage> {
         reviews = (data['results'] as List)
             .map((item) => ReviewPlace.fromJson(item))
             .toList();
-        print(data['results']);
-        print("찜목록 데이터 불러오기 성공");
+        //print(data['results']);
+        //print("찜목록 데이터 불러오기 성공");
       }
       // 2. 찜목록 데이터 없을 때
       else if (data['count'] == 0) {
@@ -457,7 +512,7 @@ class MyPageState extends State<MyPage> {
     }
     // API 호출 실패
     else {
-      print("API 호출 실패: ${response.statusCode}");
+      //print("API 호출 실패: ${response.statusCode}");
       return [];
     }
     return reviews; // FavoritePlace 리스트 반환
@@ -592,6 +647,25 @@ class MyPageState extends State<MyPage> {
         ],
       ),
     );
+  }
+
+  // 플랜 삭제 AIP
+  Future<void> deletePlan(int planId) async {
+    final response = await http.delete(
+      Uri.parse('http://43.203.61.149/plan/plan/$planId/'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 204) {
+      // 성공적으로 삭제됨
+      print('Plan deleted successfully.');
+    } else {
+      // 삭제 실패
+      print('Failed to delete plan. Error: ${response.body}');
+      print(planId);
+    }
   }
 
   // 데이터 정보 불러오기
@@ -834,6 +908,38 @@ class MyPageState extends State<MyPage> {
                         builder: (context) =>
                             PlanDetailsPage(schedule: plan['schedule']),
                       ),
+                    );
+                  },
+                  onLongPress: () {
+                    print('Plan ID: ${plan['id']}'); // Plan ID 출력
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text('플랜 삭제'),
+                          content: Text('이 플랜을 삭제하시겠습니까?'),
+                          actions: <Widget>[
+                            TextButton(
+                              child: Text('취소'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            TextButton(
+                              child: Text('삭제'),
+                              onPressed: () async {
+                                Navigator.of(context).pop();
+                                await deletePlan(plan['id']);
+                                fetchPlansForUser().then((plans) {
+                                  setState(() {
+                                    userPlans = plans;
+                                  });
+                                });
+                              },
+                            ),
+                          ],
+                        );
+                      },
                     );
                   },
                 ),
@@ -1084,9 +1190,9 @@ class MyPageState extends State<MyPage> {
                     setState(() {
                       userPlans = plans;
                     });
-                    print("플랜 생성 성공");
+                    //print("플랜 생성 성공");
                   }).catchError((error) {
-                    print(error);
+                    //print(error);
                   });
                 });
               },
@@ -1112,10 +1218,10 @@ class MyPageState extends State<MyPage> {
 
     if (response.statusCode == 200) {
       // 성공적으로 데이터가 생성되면 UI 업데이트 또는 알림
-      print('Plan created successfully.');
+      //print('Plan created successfully.');
     } else {
       // 실패 처리
-      print('Failed to create plan. Error: ${response.body}');
+      //print('Failed to create plan. Error: ${response.body}');
     }
   }
 }

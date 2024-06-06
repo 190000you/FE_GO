@@ -21,34 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String lat = "";
   String lon = "";
 
-  // API 1. 매번 달라지는 추천 장소 5개
-  Future<List<Map<String, dynamic>>> fetchdailyrecommand() async {
-    String? userAccessToken = await storage.read(key: "login_access_token");
-
-    final url = Uri.parse('http://43.203.61.149/plan/dailyrecommand');
-    final response = await http.get(
-      url,
-      headers: {
-        'Authorization': 'Bearer $userAccessToken',
-        "Content-Type": "application/json"
-      },
-    );
-
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-      List<dynamic> results = data['results'];
-
-      List<Map<String, dynamic>> places = results.map((place) {
-        return place as Map<String, dynamic>;
-      }).toList();
-
-      return places;
-    } else {
-      final snackBar = SnackBar(content: Text("정보 불러오기에 실패하였습니다."));
-      return [];
-    }
-  }
-
   void initState() {
     super.initState();
     // 1번만 데이터 업로드
@@ -130,47 +102,15 @@ class _HomeScreenState extends State<HomeScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (snapshot.hasData) {
-              return FutureBuilder<List<Map<String, dynamic>>>(
-                future: fetchdailyrecommand(),
-                builder: (context, placesSnapshot) {
-                  if (placesSnapshot.connectionState == ConnectionState.done) {
-                    if (placesSnapshot.hasData &&
-                        placesSnapshot.data!.length >= 5) {
-                      return ListView.builder(
-                        itemCount: 1,
-                        itemBuilder: (BuildContext context, int index) {
-                          return PostCard(
-                            lat: lat,
-                            lon: lon,
-                            // place1: placesSnapshot.data![0],
-                            // place2: placesSnapshot.data![1],
-                            // place3: placesSnapshot.data![2],
-                            // place4: placesSnapshot.data![3],
-                            // place5: placesSnapshot.data![4],
-                            weatherData: snapshot.data!,
-                            number: index,
-                          );
-                        },
-                      );
-                    } else if (placesSnapshot.hasError) {
-                      return Text('Error: ${placesSnapshot.error}');
-                    } else {
-                      return Text('Not enough data');
-                    }
-                  } else {
-                    return Center(
-                      child: SizedBox(
-                        width: 50,
-                        height: 50,
-                        child: CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(0xFF967BB6)), // 파스텔 진보라색
-                          backgroundColor: Color(0xFFEDE7F6),
-                          strokeWidth: 8.0,
-                        ),
-                      ),
-                    );
-                  }
+              return ListView.builder(
+                itemCount: 1,
+                itemBuilder: (BuildContext context, int index) {
+                  return PostCard(
+                    lat: lat,
+                    lon: lon,
+                    weatherData: snapshot.data!,
+                    number: index,
+                  );
                 },
               );
             } else if (snapshot.hasError) {

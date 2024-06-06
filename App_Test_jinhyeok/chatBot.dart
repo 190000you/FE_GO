@@ -591,6 +591,12 @@ class _ChatScreenState extends State<ChatScreen> {
                       },
                     ),
                   ),
+                  onSubmitted: (value) {
+                    if (_controller.text.isNotEmpty) {
+                      sendMessage(_controller.text);
+                      _controller.clear();
+                    }
+                  },
                 ),
               ),
             ],

@@ -22,7 +22,7 @@ import 'package:flutter_naver_map/flutter_naver_map.dart';
 
 // 1. 스파밸리 정보
 Map<String, dynamic> place1 = {
-  "id": 270, // 사용
+  "id": 196, // 사용
   "name": "스파밸리", // 사용
   "image": "/media/image/%EC%8A%A4%ED%8C%8C%EB%B0%B8%EB%A6%AC.jpg", // 사용 X?
   "classification": "기타유원시설업", // 사용
@@ -43,7 +43,7 @@ Map<String, dynamic> place1 = {
 
 // 2. 고산골 공룡공원 정보
 Map<String, dynamic> place2 = {
-  "id": 21, // 사용
+  "id": 254, // 사용
   "name": "고산골 공룡공원", // 사용
   "image":
       "/media/image/%EA%B3%A0%EC%82%B0%EA%B3%A8_%EA%B3%B5%EB%A3%A1%EA%B3%B5%EC%9B%90.jpg", // 사용 X?
@@ -65,7 +65,7 @@ Map<String, dynamic> place2 = {
 
 // 3. 동촌파크광장놀이공원
 Map<String, dynamic> place3 = {
-  "id": 135, // 사용
+  "id": 168, // 사용
   "name": "동촌파크광장놀이공원", // 사용
   "image":
       "/media/image/%EB%8F%99%EC%B4%8C%ED%8C%8C%ED%81%AC%EA%B4%91%EC%9E%A5%EB%86%80%EC%9D%B4%EA%B3%B5%EC%9B%90.jpg",
@@ -85,7 +85,7 @@ Map<String, dynamic> place3 = {
 
 // 4. 앞산전망대 정보
 Map<String, dynamic> place4 = {
-  "id": 295, // 사용
+  "id": 326, // 사용
   "name": "앞산전망대", // 사용
   "image":
       "/media/image/%EC%95%9E%EC%82%B0%EC%A0%84%EB%A7%9D%EB%8C%80.jpg", // 사용 X?
@@ -106,7 +106,7 @@ Map<String, dynamic> place4 = {
 
 // 5. 용문폭포 정보
 Map<String, dynamic> place5 = {
-  "id": 335, // 사용
+  "id": 403, // 사용
   "name": "용문폭포", // 사용
   "image": "/media/image/%EC%9A%A9%EB%AC%B8%ED%8F%AD%ED%8F%AC.jpg", // 사용 X?
   "classification": "폭포/계곡", // 사용
@@ -238,10 +238,10 @@ class _PostCardState extends State<PostCard> {
 
   // 제공하는 서비스 - Text 수정
   final List<String> serviceTitles = [
-    '여행 정보',
-    '챗봇 추천',
-    '플랜 작성',
-    '장소 저장 ',
+    '여행 정보\n( Click! )',
+    '챗봇 추천\n( Click! )',
+    '플랜 작성\n( Click! )',
+    '장소 저장\n( Click! )',
   ];
 
   // 튜토리얼 & 가이드라인
@@ -265,25 +265,40 @@ class _PostCardState extends State<PostCard> {
             TargetContent(
               align: ContentAlign.top,
               builder: (context, controller) {
-                return const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      "여행 정보",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 25.0),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 10.0),
-                      child: Text(
-                        "'가볼까'는 시즌별 추천 장소와 정보는 물론이며,\n사용자에 맞는 여행 장소를 추천해줍니다!",
-                        style: TextStyle(color: Colors.white, fontSize: 15.0),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15.0),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16.0),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        "여행 정보",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                            fontSize: 25.0),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 10.0),
+                        child: Text(
+                          "다양한 방식을 통해 여행지 정보를 얻을 수 있습니다!\n\n1. 메인 배너 광고\n\n2. 장소 검색\n\n3. 지도 검색",
+                          style: TextStyle(color: Colors.black, fontSize: 15.0),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -303,25 +318,41 @@ class _PostCardState extends State<PostCard> {
             TargetContent(
               align: ContentAlign.top,
               builder: (context, controller) {
-                return const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      "챗봇 추천",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 25.0),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 10.0),
-                      child: Text(
-                        "아래 네비게이션 바의 채팅 아이콘을 누르면,\n챗봇이 맞춤형 장소를 추천해줍니다!",
-                        style: TextStyle(color: Colors.white, fontSize: 15.0),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white, // 흰색 배경
+                    borderRadius: BorderRadius.circular(15.0), // 둥근 테두리
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16.0),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        "챗봇 추천",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black, // 검은색 글씨
+                            fontSize: 25.0),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 10.0),
+                        child: Text(
+                          "아래 네비게이션 바의 채팅 아이콘을 누르면, 챗봇이 맞춤형 장소를 추천해줍니다!",
+                          style: TextStyle(
+                              color: Colors.black, fontSize: 15.0), // 검은색 글씨
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -338,27 +369,43 @@ class _PostCardState extends State<PostCard> {
           // 내용
           contents: [
             TargetContent(
-              align: ContentAlign.bottom,
+              align: ContentAlign.top,
               builder: (context, controller) {
-                return const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      "플랜 작성",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 25.0),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 10.0),
-                      child: Text(
-                        "챗봇을 통해 플랜을 저장할 수 있고,\n플랜을 직접 만들 수도 있어요!",
-                        style: TextStyle(color: Colors.white, fontSize: 15.0),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white, // 흰색 배경
+                    borderRadius: BorderRadius.circular(15.0), // 둥근 테두리
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16.0),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        "플랜 작성",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black, // 검은색 글씨
+                            fontSize: 25.0),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 10.0),
+                        child: Text(
+                          "챗봇을 통해 플랜을 저장할 수 있고, 플랜을 직접 만들 수도 있어요!",
+                          style: TextStyle(
+                              color: Colors.black, fontSize: 15.0), // 검은색 글씨
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -375,27 +422,43 @@ class _PostCardState extends State<PostCard> {
           // 내용
           contents: [
             TargetContent(
-              align: ContentAlign.bottom,
+              align: ContentAlign.top,
               builder: (context, controller) {
-                return const Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      "장소 저장",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          fontSize: 25.0),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 10.0),
-                      child: Text(
-                        "더 많은 장소를 한 번에 보고 싶을 때에는\n추천 장소를 찜하여 한 번에 볼 수 있어요!",
-                        style: TextStyle(color: Colors.white, fontSize: 15.0),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white, // 흰색 배경
+                    borderRadius: BorderRadius.circular(15.0), // 둥근 테두리
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                        offset: Offset(0, 3),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(16.0),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        "장소 저장",
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black, // 검은색 글씨
+                            fontSize: 25.0),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: 10.0),
+                        child: Text(
+                          "더 많은 장소를 한 번에 보고 싶을 때에는 추천 장소를 찜하여 한 번에 볼 수 있어요!",
+                          style: TextStyle(
+                              color: Colors.black, fontSize: 15.0), // 검은색 글씨
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               },
             ),
@@ -454,6 +517,7 @@ class _PostCardState extends State<PostCard> {
         widget.weatherData['temperature_max']?.toString() ?? 'unknown';
     String humidity = widget.weatherData['humidity']?.toString() ?? 'unknown';
     return Container(
+      color: Colors.white,
       child: Column(
         children: [
           // 1. 움직이는 캐러셀
@@ -1041,15 +1105,6 @@ class _PostCardState extends State<PostCard> {
                     builder: (context) => MapTest(latitude, longitude),
                   ),
                 );
-
-                /*
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AdvertisementPage_1(),
-                  ),
-                );
-                */
               },
             ),
           ),

@@ -138,6 +138,8 @@ class _SignUpPageState extends State<SignUpPage> {
     return Scaffold(
       // appBar : Appbar
       appBar: AppBar(
+        backgroundColor: Colors.white, // AppBar의 배경색을 흰색으로 설정
+        elevation: 0, // 그림자 제거
         // 뒤로가기 버튼
         leading: IconButton(
           icon: Icon(Icons.arrow_back), // 뒤로가기 아이콘
@@ -147,250 +149,260 @@ class _SignUpPageState extends State<SignUpPage> {
         ),
         title: SizedBox.shrink(),
       ),
-      // body : Padding
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
-          child: Form(
-            key: formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // 1. 회원가입 위 글자 삽입
-                SizedBox(height: 20),
-                Text(
-                  // 글자 및 폰트, 크기 수정
-                  'Let\'s go?',
-                  style: GoogleFonts.oleoScript(fontSize: 36),
-                ),
-                // 2. 이메일 인증
-                SizedBox(height: 20),
-                TextFormField(
-                  maxLength: 30, // 글자수 제한
-                  validator: (value) {
-                    if (value!.isEmpty || value.length < 2) {
-                      // 이메일 입력란이 비어있으면 '이메일을 입력해주세요' 리턴
-                      return "이메일을 입력해주세요";
-                    } else if (!EmailValidator.validate(value.toString())) {
-                      // 입력값이 이메일 형식에 맞지 않으면 '이메일 형식을 맞춰주세요를 리턴
-                      return "이메일 형식을 맞춰주세요";
-                    } else {
-                      return null;
-                    }
-                  },
-                  onSaved: (value) async {
-                    // 이메일 저장
-                    userEmail = value!;
-                  },
-                  onChanged: (value) {
-                    userEmail = value;
-                  },
-                  // obscureText: true, // *로 표시 설정/해제
-                  decoration: InputDecoration(
-                    labelText: '이메일 입력',
-                    border: OutlineInputBorder(),
-                  ),
-                  key: const ValueKey(1), // 이메일 오류
-                ),
-                // 3. 이름 입력칸
-                SizedBox(height: 20),
-                TextFormField(
-                  maxLength: 15, // 글자수 제한
-                  validator: (value) {
-                    if (value!.isEmpty) {
-                      // 이름 입력란이 비어 있을 때
-                      return "이름을 입력해주세요.\n영어 또는 한글만 지원합니다.";
-                    } else {
-                      return null;
-                    }
-                  },
-                  onSaved: (value) {
-                    // 이름 저장
-                    userName = value!;
-                  },
-                  onChanged: (value) {
-                    userName = value;
-                  },
-                  inputFormatters: [
-                    // 한글 입력만 제한
-                    FilteringTextInputFormatter(
-                      RegExp('[a-z A-Z ㄱ-ㅎ|가-힣|·|：]'),
-                      allow: true,
-                    )
-                  ],
-                  decoration: InputDecoration(
-                    labelText: '이름',
-                    border: OutlineInputBorder(),
-                  ),
-                  key: const ValueKey(2), // 이름 오류
-                ),
-                // 4. ID 입력칸
-                SizedBox(height: 20),
-                TextFormField(
-                  maxLength: 15, // 글자수 제한
-                  validator: (value) {
-                    if (value!.isEmpty || value.length < 6) {
-                      // ID 입력란이 비어 있거나, ID가 설정해둔 자릿수 미만이면, '최소 6자리로 ID를 설정해주세요' 리턴
-                      return "최소 6자리로 아이디를 설정해주세요";
-                    } else {
-                      return null;
-                    }
-                  },
-                  onSaved: (value) {
-                    // Id 저장
-                    userId = value!;
-                  },
-                  onChanged: (value) {
-                    userId = value;
-                  },
-                  decoration: InputDecoration(
-                    labelText: '아이디',
-                    border: OutlineInputBorder(),
-                  ),
-                  key: const ValueKey(3), // ID 오류
-                ),
-                // 5. PW 입력칸
-                SizedBox(height: 20),
-                TextFormField(
-                  maxLength: 15, // 글자수 제한
-                  validator: (value) {
-                    if (value!.isEmpty || value.length < 6) {
-                      // 비밀번호 입력란이 비어 있거나, 비밀번호가 설정해둔 자릿수 미만이면, '최소 6자리로 비밀번호를 설정해주세요' 리턴
-                      return "최소 6자리로 비밀번호를 설정해주세요";
-                    } else {
-                      return null;
-                    }
-                  },
-                  onSaved: (value) {
-                    userPassword = value!;
-                  },
-                  onChanged: (value) {
-                    userPassword = value;
-                  },
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: '비밀번호',
-                    border: OutlineInputBorder(),
-                  ),
-                  key: const ValueKey(4), // PW 오류
-                ),
-                // 6. 비밀번호 재입력
-                SizedBox(height: 20),
-                TextFormField(
-                  maxLength: 15, // 글자수 제한
-                  validator: (value) {
-                    if (value!.isEmpty ||
-                        value.length < 6 ||
-                        value != userPassword) {
-                      return '비밀번호를 다시 확인해주세요.';
-                    } else {
-                      return null;
-                    }
-                  },
-                  onSaved: (value) {
-                    userPasswordCheck = value!;
-                  },
-                  onChanged: (value) {
-                    userPasswordCheck = value;
-                  },
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: '비밀번호 재입력',
-                    border: OutlineInputBorder(),
-                  ),
-                  key: const ValueKey(5), // PW 확인 오류
-                ),
-                // 7. 회원가입 버튼
-                SizedBox(height: 20),
-                SizedBox(
-                  height: 60,
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      tryValidation(); // 인증 진행
-                      // 이메일 패스워드 확인
-                      if (userEmail != '' &&
-                          userName != '' &&
-                          userId != '' &&
-                          userPassword != '' &&
-                          userPasswordCheck != '' &&
-                          isOk == true) {
-                        await fetchsignUpAPI(userEmail, userName, userId,
-                            userPassword, userPasswordCheck);
-                        // 팝업창 띄우기
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                    20.0), // 외곽을 더 둥글게 만들기
-                              ),
-                              backgroundColor: Colors.white, // 팝업창 배경색을 흰색으로 설정
-                              contentPadding: EdgeInsets.fromLTRB(
-                                  20.0, 30.0, 20.0, 30.0), // 컨텐트 패딩 조정
-                              content: Text(
-                                '회원가입에 성공하였습니다!',
-                                textAlign: TextAlign.center,
-                                style: GoogleFonts.oleoScript(
-                                  // Google Fonts 폰트 스타일 사용
-                                  color: Colors.black,
-                                  fontSize: 16.0, // 폰트 크기를 20.0으로 설정
-                                ),
-                              ),
-                              actionsAlignment:
-                                  MainAxisAlignment.center, // 버튼을 중간에 위치시킴
-                              buttonPadding:
-                                  EdgeInsets.fromLTRB(5, 5, 5, 2.0), // 버튼 패딩 조정
-                              actions: <Widget>[
-                                Container(
-                                  margin: EdgeInsets.symmetric(
-                                      horizontal: 1.0), // 양옆 간격 조정
-                                  width: double.infinity, // 버튼의 너비를 확장
-                                  child: TextButton(
-                                    child: Text(
-                                      '확인',
-                                      style: GoogleFonts.oleoScript(
-                                        color: Colors.white, // 폰트 색상을 흰색으로 설정
-                                      ),
-                                    ),
-                                    style: TextButton.styleFrom(
-                                      backgroundColor: Colors
-                                          .deepPurple, // 버튼 배경 색상을 deepPurple로 설정
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                            10.0), // 버튼 모서리 둥글게
-                                      ),
-                                    ),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ).then((value) {
-                          // 확인 버튼을 누른 후에 로그인 페이지로 이동
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => LoginPage()),
-                          );
-                        });
-                      }
-                      // 실패 오류 메시지 출력
-                      else {}
-                    },
-                    child: Text(
-                      '회원가입',
-                      style: TextStyle(fontSize: 18),
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: Container(
+          // 여기서 배경색을 흰색으로 설정
+          color: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: SingleChildScrollView(
+              child: Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // 1. 회원가입 위 글자 삽입
+                    SizedBox(height: 20),
+                    Text(
+                      // 글자 및 폰트, 크기 수정
+                      'Let\'s go?',
+                      style: GoogleFonts.oleoScript(fontSize: 36),
                     ),
-                  ),
+                    // 2. 이메일 인증
+                    SizedBox(height: 20),
+                    TextFormField(
+                      maxLength: 30, // 글자수 제한
+                      validator: (value) {
+                        if (value!.isEmpty || value.length < 2) {
+                          // 이메일 입력란이 비어있으면 '이메일을 입력해주세요' 리턴
+                          return "이메일을 입력해주세요";
+                        } else if (!EmailValidator.validate(value.toString())) {
+                          // 입력값이 이메일 형식에 맞지 않으면 '이메일 형식을 맞춰주세요를 리턴
+                          return "이메일 형식을 맞춰주세요";
+                        } else {
+                          return null;
+                        }
+                      },
+                      onSaved: (value) async {
+                        // 이메일 저장
+                        userEmail = value!;
+                      },
+                      onChanged: (value) {
+                        userEmail = value;
+                      },
+                      // obscureText: true, // *로 표시 설정/해제
+                      decoration: InputDecoration(
+                        labelText: '이메일 입력',
+                        border: OutlineInputBorder(),
+                      ),
+                      key: const ValueKey(1), // 이메일 오류
+                    ),
+                    // 3. 이름 입력칸
+                    SizedBox(height: 20),
+                    TextFormField(
+                      maxLength: 15, // 글자수 제한
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          // 이름 입력란이 비어 있을 때
+                          return "이름을 입력해주세요.\n영어 또는 한글만 지원합니다.";
+                        } else {
+                          return null;
+                        }
+                      },
+                      onSaved: (value) {
+                        // 이름 저장
+                        userName = value!;
+                      },
+                      onChanged: (value) {
+                        userName = value;
+                      },
+                      inputFormatters: [
+                        // 한글 입력만 제한
+                        FilteringTextInputFormatter(
+                          RegExp('[a-z A-Z ㄱ-ㅎ|가-힣|·|：]'),
+                          allow: true,
+                        )
+                      ],
+                      decoration: InputDecoration(
+                        labelText: '이름',
+                        border: OutlineInputBorder(),
+                      ),
+                      key: const ValueKey(2), // 이름 오류
+                    ),
+                    // 4. ID 입력칸
+                    SizedBox(height: 20),
+                    TextFormField(
+                      maxLength: 15, // 글자수 제한
+                      validator: (value) {
+                        if (value!.isEmpty || value.length < 6) {
+                          // ID 입력란이 비어 있거나, ID가 설정해둔 자릿수 미만이면, '최소 6자리로 ID를 설정해주세요' 리턴
+                          return "최소 6자리로 아이디를 설정해주세요";
+                        } else {
+                          return null;
+                        }
+                      },
+                      onSaved: (value) {
+                        // Id 저장
+                        userId = value!;
+                      },
+                      onChanged: (value) {
+                        userId = value;
+                      },
+                      decoration: InputDecoration(
+                        labelText: '아이디',
+                        border: OutlineInputBorder(),
+                      ),
+                      key: const ValueKey(3), // ID 오류
+                    ),
+                    // 5. PW 입력칸
+                    SizedBox(height: 20),
+                    TextFormField(
+                      maxLength: 15, // 글자수 제한
+                      validator: (value) {
+                        if (value!.isEmpty || value.length < 6) {
+                          // 비밀번호 입력란이 비어 있거나, 비밀번호가 설정해둔 자릿수 미만이면, '최소 6자리로 비밀번호를 설정해주세요' 리턴
+                          return "최소 6자리로 비밀번호를 설정해주세요";
+                        } else {
+                          return null;
+                        }
+                      },
+                      onSaved: (value) {
+                        userPassword = value!;
+                      },
+                      onChanged: (value) {
+                        userPassword = value;
+                      },
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: '비밀번호',
+                        border: OutlineInputBorder(),
+                      ),
+                      key: const ValueKey(4), // PW 오류
+                    ),
+                    // 6. 비밀번호 재입력
+                    SizedBox(height: 20),
+                    TextFormField(
+                      maxLength: 15, // 글자수 제한
+                      validator: (value) {
+                        if (value!.isEmpty ||
+                            value.length < 6 ||
+                            value != userPassword) {
+                          return '비밀번호를 다시 확인해주세요.';
+                        } else {
+                          return null;
+                        }
+                      },
+                      onSaved: (value) {
+                        userPasswordCheck = value!;
+                      },
+                      onChanged: (value) {
+                        userPasswordCheck = value;
+                      },
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: '비밀번호 재입력',
+                        border: OutlineInputBorder(),
+                      ),
+                      key: const ValueKey(5), // PW 확인 오류
+                    ),
+                    // 7. 회원가입 버튼
+                    SizedBox(height: 20),
+                    SizedBox(
+                      height: 60,
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          tryValidation(); // 인증 진행
+                          // 이메일 패스워드 확인
+                          if (userEmail != '' &&
+                              userName != '' &&
+                              userId != '' &&
+                              userPassword != '' &&
+                              userPasswordCheck != '' &&
+                              isOk == true) {
+                            await fetchsignUpAPI(userEmail, userName, userId,
+                                userPassword, userPasswordCheck);
+                            // 팝업창 띄우기
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        20.0), // 외곽을 더 둥글게 만들기
+                                  ),
+                                  backgroundColor:
+                                      Colors.white, // 팝업창 배경색을 흰색으로 설정
+                                  contentPadding: EdgeInsets.fromLTRB(
+                                      20.0, 30.0, 20.0, 30.0), // 컨텐트 패딩 조정
+                                  content: Text(
+                                    '회원가입에 성공하였습니다!',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.oleoScript(
+                                      // Google Fonts 폰트 스타일 사용
+                                      color: Colors.black,
+                                      fontSize: 16.0, // 폰트 크기를 20.0으로 설정
+                                    ),
+                                  ),
+                                  actionsAlignment:
+                                      MainAxisAlignment.center, // 버튼을 중간에 위치시킴
+                                  buttonPadding: EdgeInsets.fromLTRB(
+                                      5, 5, 5, 2.0), // 버튼 패딩 조정
+                                  actions: <Widget>[
+                                    Container(
+                                      margin: EdgeInsets.symmetric(
+                                          horizontal: 1.0), // 양옆 간격 조정
+                                      width: double.infinity, // 버튼의 너비를 확장
+                                      child: TextButton(
+                                        child: Text(
+                                          '확인',
+                                          style: GoogleFonts.oleoScript(
+                                            color:
+                                                Colors.white, // 폰트 색상을 흰색으로 설정
+                                          ),
+                                        ),
+                                        style: TextButton.styleFrom(
+                                          backgroundColor: Colors
+                                              .deepPurple, // 버튼 배경 색상을 deepPurple로 설정
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                                10.0), // 버튼 모서리 둥글게
+                                          ),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ).then((value) {
+                              // 확인 버튼을 누른 후에 로그인 페이지로 이동
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => LoginPage()),
+                              );
+                            });
+                          }
+                          // 실패 오류 메시지 출력
+                          else {}
+                        },
+                        child: Text(
+                          '회원가입',
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      ),
+                    ),
+                    // 빈 공간 추가
+                    SizedBox(height: 20),
+                  ],
                 ),
-                // 빈 공간 추가
-                SizedBox(height: 20),
-              ],
+              ),
             ),
           ),
         ),

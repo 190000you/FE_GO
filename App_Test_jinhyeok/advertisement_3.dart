@@ -3,7 +3,7 @@ import 'package:go_test_ver/searchPage_info.dart';
 
 // 1. 화원유원지 정보
 Map<String, dynamic> place1 = {
-  "id": 466, // 사용
+  "id": 439, // 사용
   "name": "화원유원지", // 사용
   "image":
       "/media/image/%ED%99%94%EC%9B%90%EC%9C%A0%EC%9B%90%EC%A7%80.jpg", // 사용 X?
@@ -31,7 +31,7 @@ Map<String, dynamic> place1 = {
 
 // 2. 대구 근대화 골목 정보
 Map<String, dynamic> place2 = {
-  "id": 85, // 사용
+  "id": 295, // 사용
   "name": "대구근대화골목", // 사용
   "image":
       "/media/image/%EB%8C%80%EA%B5%AC%EA%B7%BC%EB%8C%80%ED%99%94%EA%B3%A8%EB%AA%A9.jpg", // 사용 X?
@@ -50,7 +50,7 @@ Map<String, dynamic> place2 = {
 
 // 3. 김광석 다시 그리기 길 정보
 Map<String, dynamic> place3 = {
-  "id": 50, // 사용
+  "id": 246, // 사용
   "name": "김광석다시그리기길", // 사용
   "image":
       "/media/image/%EA%B9%80%EA%B4%91%EC%84%9D%EB%8B%A4%EC%8B%9C%EA%B7%B8%EB%A6%AC%EA%B8%B0%EA%B8%B8.jpg", // 사용 X?

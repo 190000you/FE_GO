@@ -1,19 +1,19 @@
-import 'dart:convert';
+// 내부 import
 import 'package:go_test_ver/searchPage.dart';
-import 'package:go_test_ver/searchPage2.dart';
-import 'package:http/http.dart' as http;
-
-// 마이 페이지
-import 'package:flutter/material.dart';
-
-// 이후 import로 더 추가할 예정
-import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 import 'package:go_test_ver/searchPage_info.dart';
+import 'package:go_test_ver/searchPage2_info.dart';
+
+// 외부 import
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'; // Token 저장
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // API 사용
 import 'dart:convert'; // API 호출 : 디코딩
 import 'package:intl/intl.dart'; // yyyy.mm.dd형식을 yy.mm.dd형식으로
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart'; // 튜토리얼 패키지
 
 // 아직 사용 X
 String? userAccessToken = "";
@@ -28,31 +28,29 @@ class PlanDetailsPage extends StatefulWidget {
   _PlanDetailsPageState createState() => _PlanDetailsPageState();
 }
 
-Future<void> deleteSchedule(int scheduleId) async {
-  final response = await http.delete(
-    Uri.parse('http://43.203.61.149/plan/schedule/delete'),
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'schedule_id': scheduleId,
-    }),
-  );
-
-  print('Response status: ${response.statusCode}');
-  print('Response body: ${response.body}');
-
-  if (response.statusCode == 204) {
-    print('Schedule deleted successfully.');
-  } else {
-    print('Failed to delete schedule. Error: ${response.body}');
-    print('Schedule ID: $scheduleId');
-  }
-}
-
 class _PlanDetailsPageState extends State<PlanDetailsPage> {
   late NaverMapController _mapController;
   double sheetExtent = 0.5;
+
+  Future<void> updatePlan(int planId, List<dynamic> updatedSchedule) async {
+    final response = await http.patch(
+      Uri.parse('http://43.203.61.149/plan/plan/$planId/'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'schedule': updatedSchedule,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // 성공적으로 업데이트됨
+      print('Plan updated successfully.');
+    } else {
+      // 업데이트 실패
+      print('Failed to update plan. Error: ${response.body}');
+    }
+  }
 
   Future<void> deleteScheduleFromPlan(int planId, int scheduleId) async {
     final planResponse = await http.get(
@@ -67,6 +65,8 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
       List<dynamic> updatedSchedule =
           List<Map<String, dynamic>>.from(planData['schedule']);
       updatedSchedule.removeWhere((schedule) => schedule['id'] == scheduleId);
+
+      await updatePlan(planId, updatedSchedule);
     } else {
       print('Failed to fetch plan data. Error: ${planResponse.body}');
     }
@@ -77,20 +77,6 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('여행 계획'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SearchPage()),
-              );
-            },
-            child: Text(
-              '장소 추가',
-              style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
-            ),
-          ),
-        ],
       ),
       body: Stack(
         children: <Widget>[
@@ -202,6 +188,9 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                                         if (response.statusCode == 200) {
                                           var data = jsonDecode(
                                               utf8.decode(response.bodyBytes));
+                                          //print(data);
+
+                                          // searchPage2.dart로 데이터 전달
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
@@ -216,42 +205,6 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                                       } catch (error) {
                                         //print('Error: $error');
                                       }
-                                    },
-                                    onLongPress: () async {
-                                      showDialog(
-                                        context: context,
-                                        builder: (BuildContext context) {
-                                          return AlertDialog(
-                                            title: Text('일정 삭제'),
-                                            content: Text('이 일정을 삭제하시겠습니까?'),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                child: Text('취소'),
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                              ),
-                                              TextButton(
-                                                child: Text('삭제'),
-                                                onPressed: () async {
-                                                  Navigator.of(context).pop();
-
-                                                  await deleteSchedule(
-                                                      item['id']);
-                                                  print('종합: ' +
-                                                      item['id']
-                                                          .toString()); // planId를 출력
-                                                  setState(() {
-                                                    widget.schedule
-                                                        .removeAt(index);
-                                                    _updateMarkers();
-                                                  });
-                                                },
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      );
                                     },
                                   ),
                                 );
@@ -269,6 +222,29 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
                               },
                             ),
                           ],
+                        ),
+                      ),
+                      // 여기로 "장소 추가" 버튼을 추가
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SearchPage()),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 15.0, horizontal: 20.0),
+                            textStyle: TextStyle(fontSize: 15.0),
+                          ),
+                          child: Text(
+                            '장소 추가',
+                            style: TextStyle(
+                                color: const Color.fromARGB(255, 70, 0, 0)),
+                          ),
                         ),
                       ),
                     ],
@@ -398,6 +374,196 @@ class MyPageState extends State<MyPage> {
   List<ReviewPlace> userReviews = []; // 3. 리뷰 정보
   Map<int, String> placeNamesCache = {}; // 3.1 placeId -> placeName
 
+  // 튜토리얼
+  late TutorialCoachMark tutorialCoachMark; // 생성
+  GlobalKey keyButton1 = GlobalKey(); // 찜목록
+  GlobalKey keyButton2 = GlobalKey(); // 플랜
+  GlobalKey keyButton3 = GlobalKey(); // 리뷰
+
+  void showTutorial() {
+    tutorialCoachMark = TutorialCoachMark(
+      targets: _createTargets(),
+      colorShadow: Color.fromARGB(255, 72, 22, 78),
+      textSkip: "SKIP",
+      paddingFocus: 2,
+      opacityShadow: 0.8,
+      onFinish: () {
+        print("finish");
+      },
+      onClickTarget: (target) {
+        print('onClickTarget: $target');
+      },
+      onClickTargetWithTapPosition: (target, tapDetails) {
+        print("target: $target");
+        print(
+            "clicked at position local: ${tapDetails.localPosition} - global: ${tapDetails.globalPosition}");
+      },
+      onClickOverlay: (target) {
+        print('onClickOverlay: $target');
+      },
+      onSkip: () {
+        print("skip");
+        return true;
+      },
+    );
+
+    tutorialCoachMark.show(context: context);
+  }
+
+  List<TargetFocus> _createTargets() {
+    List<TargetFocus> targets = [];
+    targets.add(
+      TargetFocus(
+        identify: "Target 1",
+        keyTarget: keyButton1,
+        shape: ShapeLightFocus.Circle,
+        radius: 20, // 강조되는 원의 크기 조절
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      spreadRadius: 1,
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16.0),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "찜목록",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 20.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "'찜목록'을 통해 원하는 장소를 한눈에 볼 수 있습니다!\n\n1. 원하는 장소 검색\n\n2. 장소에서 찜하기(하트) 누르기",
+                        style: TextStyle(color: Colors.black, fontSize: 15.0),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+    // 플랜
+    targets.add(
+      TargetFocus(
+        identify: "Target 2",
+        keyTarget: keyButton2,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      spreadRadius: 1,
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16.0),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "플랜 목록",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 20.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "'플랜'을 통해 계획표를 한눈에 볼 수 있습니다!\n\n1. 챗봇을 통해 생성\n\n2. 직접 플랜 만들고 장소 넣기\n\n3. 플랜 또는 장소를 꾹~ 누르면 삭제할 수 있어요!",
+                        style: TextStyle(color: Colors.black, fontSize: 15.0),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+    // 리뷰
+    targets.add(
+      TargetFocus(
+        identify: "Target 3",
+        keyTarget: keyButton3,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            builder: (context, controller) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      spreadRadius: 1,
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                padding: const EdgeInsets.all(16.0),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      "리뷰 목록",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 20.0),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(top: 10.0),
+                      child: Text(
+                        "'리뷰'를 통해 내가 작성한 리뷰를 한눈에 볼 수 있습니다!\n\n1. 리뷰 작성\n\n2. 리뷰 전체 보기",
+                        style: TextStyle(color: Colors.black, fontSize: 15.0),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    return targets;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -427,20 +593,19 @@ class MyPageState extends State<MyPage> {
     if (response.statusCode == 200) {
       var data = json.decode(utf8.decode(response.bodyBytes)); // UTF-8 인코딩 명시
       // 1. 찜목록 데이터 있을 때
-      if (data['results'] != null && data['results'].isNotEmpty) {
-        favorites = (data['results'] as List)
-            .map((item) => FavoritePlace.fromJson(item))
+      if (data != null && data.isNotEmpty) {
+        favorites = data
+            .map<FavoritePlace>((item) => FavoritePlace.fromJson(item))
             .toList();
-        //print(data['results']);
+        //print(data);
         //print("찜목록 데이터 불러오기 성공");
       }
       // 2. 찜목록 데이터 없을 때
-      else if (data['count'] == 0) {
+      else {
         return [];
       }
-    }
-    // API 호출 실패
-    else {
+    } else {
+      // API 호출 실패
       //print("API 호출 실패: ${response.statusCode}");
       return [];
     }
@@ -530,21 +695,20 @@ class MyPageState extends State<MyPage> {
     // API 정상 응답
     if (response.statusCode == 200) {
       var data = json.decode(utf8.decode(response.bodyBytes)); // UTF-8 인코딩 명시
+
       // 1. 찜목록 데이터 있을 때
-      if (data['results'] != null && data['results'].isNotEmpty) {
-        reviews = (data['results'] as List)
-            .map((item) => ReviewPlace.fromJson(item))
+      if (data != null && data.isNotEmpty) {
+        reviews = data
+            .map<ReviewPlace>((item) => ReviewPlace.fromJson(item))
             .toList();
-        //print(data['results']);
+        //print(data);
         //print("찜목록 데이터 불러오기 성공");
-      }
-      // 2. 찜목록 데이터 없을 때
-      else if (data['count'] == 0) {
+      } else {
+        // 2. 찜목록 데이터 없을 때
         return [];
       }
-    }
-    // API 호출 실패
-    else {
+    } else {
+      // API 호출 실패
       //print("API 호출 실패: ${response.statusCode}");
       return [];
     }
@@ -652,6 +816,7 @@ class MyPageState extends State<MyPage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               Expanded(
+                key: keyButton1,
                 child: ElevatedButton(
                   onPressed: () => _toggleSelection(1),
                   style: _buttonStyle(isFavoriteSelected),
@@ -659,6 +824,7 @@ class MyPageState extends State<MyPage> {
                 ),
               ),
               Expanded(
+                key: keyButton2,
                 child: ElevatedButton(
                   onPressed: () => _toggleSelection(2),
                   style: _buttonStyle(isPlanSelected),
@@ -666,6 +832,7 @@ class MyPageState extends State<MyPage> {
                 ),
               ),
               Expanded(
+                key: keyButton3,
                 child: ElevatedButton(
                   onPressed: () => _toggleSelection(3),
                   style: _buttonStyle(isReviewSelected),
@@ -802,16 +969,34 @@ class MyPageState extends State<MyPage> {
                   itemBuilder: (context, index) {
                     var favorite = snapshot.data![index];
                     return GestureDetector(
-                      onTap: () {
-                        // Uncomment the following line to navigate to the details page
-                        /*
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PlaceDetailsPage(placeId: favorite.id),
-                        ),
-                      );
-                      */
+                      onTap: () async {
+                        print("찜목록 클릭");
+                        try {
+                          final response = await http.post(
+                            Uri.parse('http://43.203.61.149/place/find/'),
+                            headers: {"Content-Type": "application/json"},
+                            body: jsonEncode({"name": favorite.name}),
+                          );
+
+                          if (response.statusCode == 200) {
+                            var data =
+                                jsonDecode(utf8.decode(response.bodyBytes));
+                            print("data = ");
+                            print(data);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    SearchPage2(placeData: data),
+                              ),
+                            );
+                          } else {
+                            //print
+                            ('Failed to fetch place data: ${response.statusCode}');
+                          }
+                        } catch (error) {
+                          //print('Error: $error');
+                        }
                       },
                       child: Card(
                         elevation: 2.0,
@@ -944,6 +1129,7 @@ class MyPageState extends State<MyPage> {
                     );
                   },
                   onLongPress: () {
+                    print('Plan ID: ${plan['id']}'); // Plan ID 출력
                     showDialog(
                       context: context,
                       builder: (BuildContext context) {
@@ -981,9 +1167,31 @@ class MyPageState extends State<MyPage> {
         ),
         Padding(
           padding: EdgeInsets.all(10),
-          child: ElevatedButton(
-            onPressed: _showAddPlanDialog,
-            child: Text('새 플랜 작성'),
+          child: Stack(
+            children: [
+              Center(
+                child: ElevatedButton(
+                  onPressed: _showAddPlanDialog,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                        vertical: 15.0, horizontal: 20.0), // 버튼 크기 조절
+                    textStyle: TextStyle(fontSize: 15.0), // 텍스트 크기 조절
+                  ),
+                  child: Text('새 플랜 작성'),
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: showTutorial,
+                  style: ElevatedButton.styleFrom(
+                    shape: CircleBorder(),
+                    padding: EdgeInsets.all(15),
+                  ),
+                  child: Text('Help'),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -1053,16 +1261,38 @@ class MyPageState extends State<MyPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   GestureDetector(
-                                    onTap: () {
-                                      // 장소 상세 페이지로 이동하는 로직
-                                      /*
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => PlaceDetailsPage(placeId: review.place),
-                                        ),
-                                      );
-                                      */
+                                    onTap: () async {
+                                      print("리뷰 클릭");
+                                      try {
+                                        final response = await http.post(
+                                          Uri.parse(
+                                              'http://43.203.61.149/place/find/'),
+                                          headers: {
+                                            "Content-Type": "application/json"
+                                          },
+                                          body: jsonEncode(
+                                              {"name": placeSnapshot.data}),
+                                        );
+
+                                        if (response.statusCode == 200) {
+                                          var data = jsonDecode(
+                                              utf8.decode(response.bodyBytes));
+                                          print("data = ");
+                                          print(data);
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  SearchPage2(placeData: data),
+                                            ),
+                                          );
+                                        } else {
+                                          //print
+                                          ('Failed to fetch place data: ${response.statusCode}');
+                                        }
+                                      } catch (error) {
+                                        //print('Error: $error');
+                                      }
                                     },
                                     child: Row(
                                       children: [

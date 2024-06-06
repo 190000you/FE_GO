@@ -121,7 +121,12 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
 
   void updateFavoriteStatus() async {
     userId_global = await storage.read(key: "login_id"); // 불러오기
-    isFavorited = await fetchUserLikePlace(widget.placeDetails['name']);
+
+    // 찜목록 업데이트
+    bool favorited = await fetchUserLikePlace(widget.placeDetails['name']);
+    setState(() {
+      isFavorited = favorited;
+    });
 
     // 2. 플랜 데이터 가져오기
     fetchPlansForUser().then((plans) {
@@ -138,12 +143,6 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
 
-    // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
-
-    // print("장소 상세 정보 - id : " + widget.placeDetails['id'].toString());
-    print("userId : " + (userId ?? "Unknown"));
-    print("Token : " + (userAccessToken ?? "Unknown"));
-
     final url = Uri.parse('http://43.203.61.149/user/likeplace/'); // API 엔드포인트
     final response = await http.post(
       url,
@@ -156,8 +155,11 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     );
 
     if (response.statusCode == 202) {
-      isFavorited = true;
+      setState(() {
+        isFavorited = true;
+      });
       print("좋아요 버튼 누르기 성공");
+      print(isFavorited);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("찜하기 성공", style: GoogleFonts.oleoScript()),
@@ -200,10 +202,12 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       body: jsonEncode({'userId': userId, 'placeId': placeId}),
     );
 
-    print(placeId);
+    // print(placeId);
     if (response.statusCode == 204) {
       print("찜목록 삭제");
-      isFavorited = false;
+      setState(() {
+        isFavorited = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("찜하기 취소", style: GoogleFonts.oleoScript()),
@@ -245,15 +249,14 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       },
     );
 
-    var decodedData = utf8.decode(response.bodyBytes);
-    var data = json.decode(decodedData);
-
     if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body); // 응답 데이터를 리스트로 디코딩
+      var decodedData = utf8.decode(response.bodyBytes);
+      List<dynamic> data = json.decode(decodedData); // 응답 데이터를 리스트로 디코딩
       if (data.isNotEmpty) {
-        // 데이터를 처리하는 로직 추가
         for (var item in data) {
-          print(item['name']); // 예시로 이름을 출력
+          if (item['name'] == placeName) {
+            return true; // 일치하는 항목이 있으면 true 반환
+          }
         }
       } else {
         print('데이터가 없습니다.');
@@ -593,19 +596,13 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                     children: <Widget>[
                       GestureDetector(
                         onTap: () {
-                          setState(() {
-                            isFavorited = !isFavorited;
-                            // 찜하기
-                            if (isFavorited) {
-                              fetchLikePlace(context,
-                                  widget.placeDetails['name']); // 찜하기 API 실행 코드
-                            }
-                            // 찜하기 해제
-                            else {
-                              fetchDislikePlace(
-                                  context, widget.placeDetails['id']);
-                            }
-                          });
+                          if (isFavorited) {
+                            fetchDislikePlace(
+                                context, widget.placeDetails['id']);
+                          } else {
+                            fetchLikePlace(
+                                context, widget.placeDetails['name']);
+                          }
                         },
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -881,13 +878,13 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
         return Dialog(
           insetPadding: EdgeInsets.all(30),
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.9,
-            height: MediaQuery.of(context).size.height * 0.5,
+            width: MediaQuery.of(context).size.width * 1.5,
+            height: MediaQuery.of(context).size.height * 0.6,
             padding: EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text('리뷰 작성', style: GoogleFonts.oleoScript(fontSize: 30)),
+                Text('리뷰 작성', style: GoogleFonts.oleoScript(fontSize: 20)),
                 SizedBox(height: 20),
                 RatingBar.builder(
                   initialRating: 0,
@@ -895,7 +892,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                   direction: Axis.horizontal,
                   allowHalfRating: false,
                   itemCount: 5,
-                  itemPadding: EdgeInsets.symmetric(horizontal: 4.0),
+                  itemPadding: EdgeInsets.symmetric(horizontal: 1.0),
                   itemBuilder: (context, _) =>
                       Icon(Icons.star, color: Colors.amber),
                   onRatingUpdate: (rating) {
@@ -1040,18 +1037,8 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                     ),
                   ),
                   onPressed: () async {
-                    // 여기 문제
-                    // 그렇다면, 바로 플랜 생성하는 API를 가져온다면?
                     await _showAddPlanDialog();
                     Navigator.of(context).pop();
-                    /*
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              MyPage(userId_global!)), // 다음 화면으로 이동
-                    );
-                    */
                   },
                 ),
               ),
@@ -1089,7 +1076,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
           return SimpleDialog(
             title: Text(
               '플랜을 선택하세요',
-              style: GoogleFonts.oleoScript(fontSize: 28.0), // 제목 크기 키우기
+              style: GoogleFonts.oleoScript(fontSize: 20.0), // 제목 크기 키우기
             ),
             children: [
               Divider(), // 구분선 추가

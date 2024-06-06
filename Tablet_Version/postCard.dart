@@ -725,7 +725,7 @@ class _PostCardState extends State<PostCard> {
             width: MediaQuery.of(context).size.width,
             color: Colors.white,
           ),
-          /*
+
           // 2. 동그라미 광고판
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 30),
@@ -916,7 +916,7 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
           ),
-          */
+
           Container(
             height: 100,
             width: MediaQuery.of(context).size.width,

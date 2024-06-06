@@ -74,9 +74,11 @@ class _SearchPage2State extends State<SearchPage2> {
   }
 
   void updateFavoriteStatus() async {
-    isFavorited =
+    bool favorited =
         await fetchUserLikePlace(widget.placeData['places_by_name'][0]['name']);
-    setState(() {});
+    setState(() {
+      isFavorited = favorited;
+    });
   }
 
   // API 1. 사용자의 찜하기 API
@@ -165,24 +167,28 @@ class _SearchPage2State extends State<SearchPage2> {
         Uri.parse('http://43.203.61.149/user/like/${userId}'); // API 엔드포인트
     final response = await http.get(
       url,
+      // 헤더에 Authorization 추가해서 access Token값 넣기
       headers: {
         'Authorization': 'Bearer $userAccessToken',
         "content-type": "application/json"
       },
     );
 
-    var decodedData = utf8.decode(response.bodyBytes);
-    var data = json.decode(decodedData);
-
-    if (response.statusCode == 200 && data['results'].isNotEmpty) {
-      for (var result in data['results']) {
-        if (result['name'] == placeName) {
-          print("Match found: ${result['name']}");
-          return true; // placeName과 일치하는 경우
+    if (response.statusCode == 200) {
+      var decodedData = utf8.decode(response.bodyBytes);
+      List<dynamic> data = json.decode(decodedData); // 응답 데이터를 리스트로 디코딩
+      if (data.isNotEmpty) {
+        for (var item in data) {
+          if (item['name'] == placeName) {
+            return true; // 일치하는 항목이 있으면 true 반환
+          }
         }
+      } else {
+        print('데이터가 없습니다.');
       }
+    } else {
+      print('Failed to fetch data: ${response.statusCode}');
     }
-    print("No match found or results are empty");
     return false; // 일치하는 항목이 없거나 배열이 비어있으면
   }
 
@@ -228,18 +234,11 @@ class _SearchPage2State extends State<SearchPage2> {
               children: <Widget>[
                 GestureDetector(
                   onTap: () {
-                    setState(() {
-                      isFavorited = !isFavorited;
-                      // 찜하기
-                      if (isFavorited) {
-                        fetchLikePlace(
-                            context, placeDetails['name']); // 찜하기 API 실행 코드
-                      }
-                      // 찜하기 해제
-                      else {
-                        fetchDislikePlace(context, placeDetails['id']);
-                      }
-                    });
+                    if (isFavorited) {
+                      fetchDislikePlace(context, placeDetails['name']);
+                    } else {
+                      fetchDislikePlace(context, placeDetails['id']);
+                    }
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

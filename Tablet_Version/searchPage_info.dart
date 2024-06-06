@@ -121,8 +121,10 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
 
   void updateFavoriteStatus() async {
     userId_global = await storage.read(key: "login_id"); // 불러오기
-    isFavorited = await fetchUserLikePlace(widget.placeDetails['name']);
-
+    bool favorited = await fetchUserLikePlace(widget.placeDetails['name']);
+    setState(() {
+      isFavorited = favorited;
+    });
     // 2. 플랜 데이터 가져오기
     fetchPlansForUser().then((plans) {
       setState(() {
@@ -138,11 +140,8 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
 
-    // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
-
-    // print("장소 상세 정보 - id : " + widget.placeDetails['id'].toString());
-    print("userId : " + (userId ?? "Unknown"));
-    print("Token : " + (userAccessToken ?? "Unknown"));
+    // print("userId : " + (userId ?? "Unknown"));
+    // print("Token : " + (userAccessToken ?? "Unknown"));
 
     final url = Uri.parse('http://43.203.61.149/user/likeplace/'); // API 엔드포인트
     final response = await http.post(
@@ -156,8 +155,11 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     );
 
     if (response.statusCode == 202) {
-      isFavorited = true;
+      setState(() {
+        isFavorited = true;
+      });
       print("좋아요 버튼 누르기 성공");
+      print(isFavorited);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("찜하기 성공", style: GoogleFonts.oleoScript()),
@@ -182,11 +184,9 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
   Future<void> fetchDislikePlace(context, int placeId) async {
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
-    // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
 
-    // print("장소 상세 정보 - id : " + widget.placeDetails['id'].toString());
-    print("userId : " + (userId ?? "Unknown"));
-    print("Token : " + (userAccessToken ?? "Unknown"));
+    // print("userId : " + (userId ?? "Unknown"));
+    // print("Token : " + (userAccessToken ?? "Unknown"));
 
     final url = Uri.parse(
         'http://43.203.61.149/user/${userId}/delLike/${placeId}'); // API 엔드포인트
@@ -200,10 +200,12 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       body: jsonEncode({'userId': userId, 'placeId': placeId}),
     );
 
-    print(placeId);
+    // print(placeId);
     if (response.statusCode == 204) {
       print("찜목록 삭제");
-      isFavorited = false;
+      setState(() {
+        isFavorited = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text("찜하기 취소", style: GoogleFonts.oleoScript()),
@@ -229,11 +231,6 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     String? userId = await storage.read(key: "login_id");
     String? userAccessToken = await storage.read(key: "login_access_token");
 
-    // String? userRefreshToken = await storage.read(key: "login_refresh_token"); // 아직 사용 X
-    // print("장소 상세 정보 - id : " + widget.placeDetails['id'].toString());
-    // print("userId : " + (userId ?? "Unknown"));
-    // print("Token : " + (userAccessToken ?? "Unknown"));
-
     final url =
         Uri.parse('http://43.203.61.149/user/like/${userId}'); // API 엔드포인트
     final response = await http.get(
@@ -245,15 +242,14 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       },
     );
 
-    var decodedData = utf8.decode(response.bodyBytes);
-    var data = json.decode(decodedData);
-
     if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body); // 응답 데이터를 리스트로 디코딩
+      var decodedData = utf8.decode(response.bodyBytes);
+      List<dynamic> data = json.decode(decodedData); // 응답 데이터를 리스트로 디코딩
       if (data.isNotEmpty) {
-        // 데이터를 처리하는 로직 추가
         for (var item in data) {
-          print(item['name']); // 예시로 이름을 출력
+          if (item['name'] == placeName) {
+            return true; // 일치하는 항목이 있으면 true 반환
+          }
         }
       } else {
         print('데이터가 없습니다.');
@@ -526,7 +522,6 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     List<Widget> tagWidgets = widget.placeDetails['tag']
         .map<Widget>((tag) => Chip(
@@ -593,19 +588,13 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                     children: <Widget>[
                       GestureDetector(
                         onTap: () {
-                          setState(() {
-                            isFavorited = !isFavorited;
-                            // 찜하기
-                            if (isFavorited) {
-                              fetchLikePlace(context,
-                                  widget.placeDetails['name']); // 찜하기 API 실행 코드
-                            }
-                            // 찜하기 해제
-                            else {
-                              fetchDislikePlace(
-                                  context, widget.placeDetails['id']);
-                            }
-                          });
+                          if (isFavorited) {
+                            fetchDislikePlace(
+                                context, widget.placeDetails['id']);
+                          } else {
+                            fetchLikePlace(
+                                context, widget.placeDetails['name']);
+                          }
                         },
                         child: Column(
                           mainAxisSize: MainAxisSize.min,

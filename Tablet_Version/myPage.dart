@@ -77,22 +77,6 @@ class _PlanDetailsPageState extends State<PlanDetailsPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('여행 계획'),
-        /*
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => SearchPage()),
-              );
-            },
-            child: Text(
-              '장소 추가',
-              style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
-            ),
-          ),
-        ],
-        */
       ),
       body: Stack(
         children: <Widget>[
@@ -1019,16 +1003,34 @@ class MyPageState extends State<MyPage> {
                   itemBuilder: (context, index) {
                     var favorite = snapshot.data![index];
                     return GestureDetector(
-                      onTap: () {
-                        // Uncomment the following line to navigate to the details page
-                        /*
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => PlaceDetailsPage(placeId: favorite.id),
-                        ),
-                      );
-                      */
+                      onTap: () async {
+                        print("찜목록 클릭");
+                        try {
+                          final response = await http.post(
+                            Uri.parse('http://43.203.61.149/place/find/'),
+                            headers: {"Content-Type": "application/json"},
+                            body: jsonEncode({"name": favorite.name}),
+                          );
+
+                          if (response.statusCode == 200) {
+                            var data =
+                                jsonDecode(utf8.decode(response.bodyBytes));
+                            print("data = ");
+                            print(data);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    SearchPage2(placeData: data),
+                              ),
+                            );
+                          } else {
+                            //print
+                            ('Failed to fetch place data: ${response.statusCode}');
+                          }
+                        } catch (error) {
+                          //print('Error: $error');
+                        }
                       },
                       child: Card(
                         elevation: 2.0,
@@ -1053,7 +1055,7 @@ class MyPageState extends State<MyPage> {
                                 height: viewMode == 1
                                     ? 500
                                     : (viewMode == 2
-                                        ? 370
+                                        ? 380
                                         : 250), // 이미지 높이를 viewMode에 따라 조정
                               ),
                             ),
@@ -1090,7 +1092,7 @@ class MyPageState extends State<MyPage> {
                                   Text(
                                     favorite.streetNameAddress,
                                     style: TextStyle(
-                                        fontSize: 14, color: Colors.grey[600]),
+                                        fontSize: 12, color: Colors.grey[600]),
                                     overflow: TextOverflow.ellipsis,
                                     maxLines: 2,
                                   ),
@@ -1197,27 +1199,29 @@ class MyPageState extends State<MyPage> {
         ),
         Padding(
           padding: EdgeInsets.all(10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Stack(
             children: [
-              Spacer(), // 좌측 공간을 채우기 위한 Spacer
-              ElevatedButton(
-                onPressed: _showAddPlanDialog,
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(
-                      vertical: 20.0, horizontal: 24.0), // 버튼 크기 조절
-                  textStyle: TextStyle(fontSize: 18.0), // 텍스트 크기 조절
+              Center(
+                child: ElevatedButton(
+                  onPressed: _showAddPlanDialog,
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                        vertical: 20.0, horizontal: 24.0), // 버튼 크기 조절
+                    textStyle: TextStyle(fontSize: 18.0), // 텍스트 크기 조절
+                  ),
+                  child: Text('새 플랜 작성'),
                 ),
-                child: Text('새 플랜 작성'),
               ),
-              Spacer(), // 우측 공간을 채우기 위한 Spacer
-              ElevatedButton(
-                onPressed: showTutorial,
-                style: ElevatedButton.styleFrom(
-                  shape: CircleBorder(),
-                  padding: EdgeInsets.all(20),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: showTutorial,
+                  style: ElevatedButton.styleFrom(
+                    shape: CircleBorder(),
+                    padding: EdgeInsets.all(20),
+                  ),
+                  child: Text('Help'),
                 ),
-                child: Text('Help'),
               ),
             ],
           ),
@@ -1289,16 +1293,38 @@ class MyPageState extends State<MyPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   GestureDetector(
-                                    onTap: () {
-                                      // 장소 상세 페이지로 이동하는 로직
-                                      /*
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => PlaceDetailsPage(placeId: review.place),
-                                        ),
-                                      );
-                                      */
+                                    onTap: () async {
+                                      print("리뷰 클릭");
+                                      try {
+                                        final response = await http.post(
+                                          Uri.parse(
+                                              'http://43.203.61.149/place/find/'),
+                                          headers: {
+                                            "Content-Type": "application/json"
+                                          },
+                                          body: jsonEncode(
+                                              {"name": placeSnapshot.data}),
+                                        );
+
+                                        if (response.statusCode == 200) {
+                                          var data = jsonDecode(
+                                              utf8.decode(response.bodyBytes));
+                                          print("data = ");
+                                          print(data);
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  SearchPage2(placeData: data),
+                                            ),
+                                          );
+                                        } else {
+                                          //print
+                                          ('Failed to fetch place data: ${response.statusCode}');
+                                        }
+                                      } catch (error) {
+                                        //print('Error: $error');
+                                      }
                                     },
                                     child: Row(
                                       children: [
@@ -1352,7 +1378,7 @@ class MyPageState extends State<MyPage> {
           return Center(
             child: Text(
               "리뷰가 없습니다.",
-              style: TextStyle(fontSize: 16),
+              style: TextStyle(fontSize: 30),
             ),
           );
         }

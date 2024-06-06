@@ -21,36 +21,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String lat = "";
   String lon = "";
 
-  /*
-  // API 1. 매번 달라지는 추천 장소 5개
-  Future<List<Map<String, dynamic>>> fetchdailyrecommand() async {
-    String? userAccessToken = await storage.read(key: "login_access_token");
-
-    final url = Uri.parse('http://43.203.61.149/plan/dailyrecommand');
-    final response = await http.get(
-      url,
-      headers: {
-        'Authorization': 'Bearer $userAccessToken',
-        "Content-Type": "application/json"
-      },
-    );
-
-    if (response.statusCode == 200) {
-      Map<String, dynamic> data = jsonDecode(utf8.decode(response.bodyBytes));
-      List<dynamic> results = data['results'];
-
-      List<Map<String, dynamic>> places = results.map((place) {
-        return place as Map<String, dynamic>;
-      }).toList();
-
-      return places;
-    } else {
-      final snackBar = SnackBar(content: Text("정보 불러오기에 실패하였습니다."));
-      return [];
-    }
-  }
-  */
-
   void initState() {
     super.initState();
     // 1번만 데이터 업로드

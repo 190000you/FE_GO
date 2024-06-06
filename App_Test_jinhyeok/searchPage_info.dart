@@ -122,7 +122,6 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
   void updateFavoriteStatus() async {
     userId_global = await storage.read(key: "login_id"); // 불러오기
     isFavorited = await fetchUserLikePlace(widget.placeDetails['name']);
-    setState(() {});
 
     // 2. 플랜 데이터 가져오기
     fetchPlansForUser().then((plans) {
@@ -249,15 +248,19 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
     var decodedData = utf8.decode(response.bodyBytes);
     var data = json.decode(decodedData);
 
-    if (response.statusCode == 200 && data['results'].isNotEmpty) {
-      for (var result in data['results']) {
-        if (result['name'] == placeName) {
-          print("Match found: ${result['name']}");
-          return true; // placeName과 일치하는 경우
+    if (response.statusCode == 200) {
+      List<dynamic> data = jsonDecode(response.body); // 응답 데이터를 리스트로 디코딩
+      if (data.isNotEmpty) {
+        // 데이터를 처리하는 로직 추가
+        for (var item in data) {
+          print(item['name']); // 예시로 이름을 출력
         }
+      } else {
+        print('데이터가 없습니다.');
       }
+    } else {
+      print('Failed to fetch data: ${response.statusCode}');
     }
-    print("No match found or results are empty");
     return false; // 일치하는 항목이 없거나 배열이 비어있으면
   }
 
@@ -347,6 +350,8 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
           backgroundColor: const Color.fromARGB(255, 76, 83, 175),
         ),
       );
+      fetchReviewData(place);
+
       print("리뷰 작성 이후 성공");
     } else {
       print("리뷰 작성 실패: ${response.statusCode}");
@@ -377,15 +382,18 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       },
     );
 
+    // print("리뷰 데이터 가져오기 실행중");
     if (response.statusCode == 200) {
       var decodedResponse = utf8.decode(response.bodyBytes);
-      Map<String, dynamic> data = json.decode(decodedResponse);
+      List<dynamic> data = json.decode(decodedResponse);
 
       // placeId의 리뷰만을 찾기
-      List<dynamic> relevantReviews = data['results']
-          .where((review) => review['place'] == placeId)
-          .toList();
+      List<dynamic> relevantReviews =
+          data.where((review) => review['place'] == placeId).toList();
+
       print("리뷰 데이터 불러오기 성공");
+      print(relevantReviews);
+
       return {
         'count': relevantReviews.length,
         'reviews': relevantReviews,
@@ -721,6 +729,12 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                   ),
                   SizedBox(height: 30),
                   // 7. 네이버 지도 추가
+                  Text(
+                    '지도',
+                    style: GoogleFonts.oleoScript(
+                        fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 30),
                   Container(
                     height: 200,
                     // 네이버 지도
@@ -803,14 +817,14 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                                 Text(
                                   '${review['writer']} | ${formatDateTime(review['created_at'])}',
                                   style: TextStyle(
-                                      color: Colors.grey, fontSize: 12),
+                                      color: Colors.grey, fontSize: 15),
                                 ),
                                 SizedBox(height: 10),
                                 // 3. 리뷰 내용
                                 Text(
                                   review['content'],
                                   style: TextStyle(
-                                      fontSize: 16, fontFamily: 'Roboto'),
+                                      fontSize: 18, fontFamily: 'Roboto'),
                                   overflow:
                                       TextOverflow.ellipsis, // 너무 긴 텍스트 처리
                                   maxLines: 3, // 최대 줄 수 제한
@@ -865,7 +879,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          insetPadding: EdgeInsets.all(10),
+          insetPadding: EdgeInsets.all(30),
           child: Container(
             width: MediaQuery.of(context).size.width * 0.9,
             height: MediaQuery.of(context).size.height * 0.5,
@@ -873,7 +887,7 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
-                Text('리뷰 작성', style: GoogleFonts.oleoScript(fontSize: 24)),
+                Text('리뷰 작성', style: GoogleFonts.oleoScript(fontSize: 30)),
                 SizedBox(height: 20),
                 RatingBar.builder(
                   initialRating: 0,
@@ -894,6 +908,9 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
                   controller: _contentController,
                   decoration: InputDecoration(
                     labelText: '리뷰 내용',
+                    labelStyle: TextStyle(
+                      fontSize: 20.0, // 원하는 크기로 설정
+                    ),
                     hintText: '리뷰 내용을 작성하세요',
                   ),
                   maxLines: 3,
@@ -1070,13 +1087,24 @@ class PlaceDetailPageState extends State<PlaceDetailPage> {
         context: context,
         builder: (BuildContext context) {
           return SimpleDialog(
-            title: Text('플랜을 선택하세요', style: GoogleFonts.oleoScript()),
-            children: plans.map((Map<String, dynamic> plan) {
-              return SimpleDialogOption(
-                onPressed: () => Navigator.pop(context, plan['id'].toString()),
-                child: Text(plan['name'], style: GoogleFonts.oleoScript()),
-              );
-            }).toList(),
+            title: Text(
+              '플랜을 선택하세요',
+              style: GoogleFonts.oleoScript(fontSize: 28.0), // 제목 크기 키우기
+            ),
+            children: [
+              Divider(), // 구분선 추가
+              ...plans.map((Map<String, dynamic> plan) {
+                return SimpleDialogOption(
+                  onPressed: () =>
+                      Navigator.pop(context, plan['id'].toString()),
+                  child: Text(
+                    plan['name'],
+                    style:
+                        GoogleFonts.oleoScript(fontSize: 18.0), // 자식 텍스트 크기 키우기
+                  ),
+                );
+              }).toList(),
+            ],
           );
         },
       );
